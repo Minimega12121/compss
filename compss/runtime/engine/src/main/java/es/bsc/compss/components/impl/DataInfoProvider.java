@@ -80,7 +80,6 @@ public class DataInfoProvider {
     public DataInfoProvider() {
         this.idToData = new TreeMap<>();
         this.valuesOnMain = new TreeSet<>();
-
         LOGGER.info("Initialization finished");
     }
 
@@ -364,18 +363,6 @@ public class DataInfoProvider {
     }
 
     /**
-     * Returns whether a given data has been accessed or not.
-     *
-     * @param data data whose last version is wanted to be obtained
-     * @return {@code true} if the data has been accessed, {@code false} otherwise.
-     */
-    public boolean alreadyAccessed(DataParams data) {
-        LOGGER.debug("Check already accessed: " + data.getDescription());
-        DataInfo dInfo = data.getDataInfo();
-        return dInfo != null;
-    }
-
-    /**
      * Returns whether the data is registered in the master or not.
      *
      * @param data Data Params.
@@ -385,27 +372,6 @@ public class DataInfoProvider {
         DataInfo oInfo = data.getDataInfo();
         DataInstanceId dId = oInfo.getCurrentDataVersion().getDataInstanceId();
         return this.valuesOnMain.contains(dId.getRenaming());
-    }
-
-    /**
-     * Waits until data is ready for its safe deletion.
-     *
-     * @param data data to wait to be ready to delete
-     * @param sem element to notify the operations completeness.
-     * @throws ValueUnawareRuntimeException the runtime is not aware of the data
-     * @throws NonExistingValueException the data to delete does not actually exist
-     */
-    public void waitForDataReadyToDelete(DataParams data, Semaphore sem)
-        throws ValueUnawareRuntimeException, NonExistingValueException {
-        LOGGER.debug("Waiting for data " + data.getDescription() + " to be ready for deletion");
-        DataInfo dataInfo = data.getDataInfo();
-        if (dataInfo == null) {
-            if (DEBUG) {
-                LOGGER.debug("No data found for data associated to " + data.getDescription());
-            }
-            throw new ValueUnawareRuntimeException();
-        }
-        dataInfo.waitForDataReadyToDelete(sem);
     }
 
     /**
@@ -536,12 +502,4 @@ public class DataInfoProvider {
 
         return null;
     }
-
-    /**
-     * Shuts down the component.
-     */
-    public void shutdown() {
-        // Nothing to do
-    }
-
 }

@@ -20,6 +20,7 @@ import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
+import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.tracing.TraceEvent;
 import java.util.concurrent.Semaphore;
@@ -63,8 +64,9 @@ public class AlreadyAccessedRequest extends APRequest {
 
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td) {
-        boolean aa = dip.alreadyAccessed(this.data);
-        this.response = aa;
+        LOGGER.debug("Check already accessed: " + data.getDescription());
+        DataInfo dInfo = data.getDataInfo();
+        this.response = dInfo != null;
         this.sem.release();
     }
 
