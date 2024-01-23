@@ -75,8 +75,7 @@ public class FileAccessParams<D extends FileData> extends AccessParams<D> {
     }
 
     @Override
-    public void registeredAsFirstVersionForData(DataInfo dInfo) {
-        DataVersion dv = dInfo.getCurrentDataVersion();
+    public void registerValueForVersion(DataVersion dv) {
         if (mode != AccessMode.W) {
             DataInstanceId lastDID = dv.getDataInstanceId();
             String renaming = lastDID.getRenaming();

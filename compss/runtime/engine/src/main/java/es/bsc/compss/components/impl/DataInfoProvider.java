@@ -38,7 +38,6 @@ import es.bsc.compss.types.data.operation.DirectoryTransferable;
 import es.bsc.compss.types.data.operation.FileTransferable;
 import es.bsc.compss.types.data.operation.ResultListener;
 import es.bsc.compss.types.data.params.DataParams;
-import es.bsc.compss.types.request.exceptions.NonExistingValueException;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.types.tracing.TraceEvent;
 import es.bsc.compss.util.ErrorManager;
@@ -47,7 +46,6 @@ import es.bsc.compss.util.Tracer;
 import java.io.File;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.Semaphore;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -158,7 +156,8 @@ public class DataInfoProvider {
                 LOGGER.debug("FIRST access to " + access.getDataDescription());
             }
             dInfo = registerData(access.getData());
-            access.registeredAsFirstVersionForData(dInfo);
+            DataVersion dv = dInfo.getCurrentDataVersion();
+            access.registerValueForVersion(dv);
         } else {
             if (DEBUG) {
                 LOGGER.debug("Another access to " + access.getDataDescription());

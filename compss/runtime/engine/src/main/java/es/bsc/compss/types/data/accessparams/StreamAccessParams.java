@@ -20,6 +20,7 @@ import es.bsc.compss.comm.Comm;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.annotations.parameter.Direction;
 import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.DataVersion;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.params.StreamData;
 import es.bsc.distrostreamlib.api.DistroStream;
@@ -54,8 +55,8 @@ public class StreamAccessParams<T extends Object, D extends StreamData> extends 
     }
 
     @Override
-    public void registeredAsFirstVersionForData(DataInfo dInfo) {
-        DataInstanceId lastDID = dInfo.getCurrentDataVersion().getDataInstanceId();
+    public void registerValueForVersion(DataVersion dv) {
+        DataInstanceId lastDID = dv.getDataInstanceId();
         String renaming = lastDID.getRenaming();
         Comm.registerValue(renaming, this.getValue());
     }

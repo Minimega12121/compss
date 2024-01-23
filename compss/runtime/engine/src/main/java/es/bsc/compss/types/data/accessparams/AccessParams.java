@@ -20,6 +20,7 @@ import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.annotations.parameter.Direction;
+import es.bsc.compss.types.data.DataVersion;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
@@ -137,7 +138,7 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
      */
     public abstract void checkAccessValidity(DataInfoProvider dip) throws ValueUnawareRuntimeException;
 
-    public abstract void registeredAsFirstVersionForData(DataInfo dInfo);
+    public abstract void registerValueForVersion(DataVersion dv);
 
     /**
      * Returns whether the result of the access should be marked as remaining on the Main process memory.
