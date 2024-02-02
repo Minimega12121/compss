@@ -66,8 +66,10 @@ try:
 
     NP = numpy
 except ImportError:
-    print("WARNING: No Numpy available. "
-          "Cache using Numpy objects will not be available")
+    print(
+        "WARNING: No Numpy available. "
+        "Cache using Numpy objects will not be available"
+    )
 
 
 def __set_cuda_libs__():
