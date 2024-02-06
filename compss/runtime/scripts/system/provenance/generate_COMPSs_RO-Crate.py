@@ -999,7 +999,12 @@ def add_dataset_file_to_crate(
             for i, item in enumerate(common_paths):  # All files must have a match
                 if url_parts.path.startswith(item):
                     cwd_endslash = os.getcwd() + '/'  # os.getcwd does not add the final slash
-                    if cwd_endslash == item:
+                    if cwd_endslash.startswith("/gpfs/home/"):
+                        # MN4 hack, /gpfs/home/ and /home/ are equivalent
+                        cwd_final = cwd_endslash[5:]
+                    else:
+                        cwd_final = cwd_endslash
+                    if cwd_final == item:
                         # Check if it is the working directory. When this script runs, user application has finished,
                         # so we can ensure cwd is the original folder where the application was started
                         # Workingdir dataset folder, add it to the root
