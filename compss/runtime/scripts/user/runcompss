@@ -292,7 +292,7 @@ get_args() {
         provenance=true
         if [ -z "$output_profile" ] ; then
           echo "PROVENANCE | Setting output_profile to App_Profile.json by default"
-          output_profile="App_Profile.json"
+          output_profile="${PWD}/App_Profile.json"
         fi
         if [ -z "$graph" ] ; then
           echo "PROVENANCE | Setting --graph to true by default"
@@ -636,7 +636,7 @@ get_args() {
             provenance=true
             if [ -z "$output_profile" ] ; then
               echo "PROVENANCE | Setting output_profile to App_Profile.json by default"
-              output_profile="App_Profile.json"
+              output_profile="${PWD}/App_Profile.json"
             fi
             if [ -z "$graph" ] ; then
               echo "PROVENANCE | Setting --graph to true by default"
@@ -747,8 +747,10 @@ if [ ${provenance} ]; then
   echo "PROVENANCE | STARTING WORKFLOW PROVENANCE SCRIPT"
   python3 "${COMPSS_HOME}Runtime/scripts/system/provenance/generate_COMPSs_RO-Crate.py" "ro-crate-info.yaml" "${specific_log_dir}/dataprovenance.log"
   if [ $? == 0 ]; then # Check if generation has ended correctly, if not, do not cleanup
-    if [ "${output_profile}" == "App_Profile.json" ]; then # Auto-generated, user doesn't want it
-      rm -f App_Profile.json compss_submission_command_line.txt "${specific_log_dir}/monitor/complete_graph.svg"
+    if [ "${output_profile}" == "${PWD}/App_Profile.json" ]; then # Auto-generated, user doesn't want it
+      rm -f "${PWD}/App_Profile.json" compss_submission_command_line.txt "${specific_log_dir}/monitor/complete_graph.svg"
+    else
+      rm -f compss_submission_command_line.txt "${specific_log_dir}/monitor/complete_graph.svg"
     fi
   else
     echo "PROVENANCE | WORKFLOW PROVENANCE GENERATION HAS FAILED"

@@ -700,8 +700,8 @@ def add_file_to_crate(
             compss_crate.add_file(complete_graph, properties=file_properties)
         else:
             print(
-                "PROVENANCE | WARNING: complete_graph.svg file not found. "
-                "Provenance will be generated without image property"
+                "PROVENANCE | WARNING: complete_graph.svg file not found.\n"
+                "\tProvenance will be generated without image property"
             )
 
         # out_profile
@@ -732,9 +732,9 @@ def add_file_to_crate(
             compss_crate.add_file(out_profile, properties=file_properties)
         else:
             print(
-                "PROVENANCE | WARNING: COMPSs application profile has not been generated. \
-                  Make sure you use runcompss with --output_profile=file_name \
-                  Provenance will be generated without profiling information"
+                "PROVENANCE | WARNING: COMPSs application profile has not been generated.\n"
+                "\tMake sure you use runcompss with --output_profile=file_name\n"
+                "\tProvenance will be generated without profiling information"
             )
 
         # compss_submission_command_line.txt. Old compss_command_line_arguments.txt
