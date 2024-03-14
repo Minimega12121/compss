@@ -23,6 +23,9 @@
 
 from pathlib import Path
 from urllib.parse import urlsplit
+from hashlib import sha256
+from mmap import mmap, ACCESS_READ
+from datetime import datetime, timezone
 import os
 import uuid
 import typing
@@ -43,7 +46,7 @@ from rocrate.model.contextentity import ContextEntity
 from rocrate.utils import iso_now
 
 PROFILES_BASE = "https://w3id.org/ro/wfrun"
-PROFILES_VERSION = "0.1"
+PROFILES_VERSION = "0.4"
 WROC_PROFILE_VERSION = "1.0"
 
 
@@ -697,6 +700,11 @@ def add_file_to_crate(
                     },
                 )
             )
+
+            # Adding checksum for the file. sha3_256 is stronger, but slower and not installed by default in may systems
+            with open(complete_graph) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+                file_properties["sha256"] = sha256(file).hexdigest()
+
             compss_crate.add_file(complete_graph, properties=file_properties)
         else:
             print(
@@ -729,6 +737,11 @@ def add_file_to_crate(
                     {"@type": "WebSite", "name": "JSON Data Interchange Format"},
                 )
             )
+
+            # Adding checksum for the file. sha3_256 is stronger, but slower and not installed by default in may systems
+            with open(out_profile) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+                file_properties["sha256"] = sha256(file).hexdigest()
+
             compss_crate.add_file(out_profile, properties=file_properties)
         else:
             print(
@@ -747,6 +760,8 @@ def add_file_to_crate(
             "description"
         ] = "COMPSs submission command line (runcompss / enqueue_compss), including flags and parameters passed to the application"
         file_properties["encodingFormat"] = "text/plain"
+        with open("compss_submission_command_line.txt") as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+            file_properties["sha256"] = sha256(file).hexdigest()
         compss_crate.add_file(
             "compss_submission_command_line.txt", properties=file_properties
         )
@@ -771,6 +786,10 @@ def add_file_to_crate(
                 {"@type": "WebSite", "name": "YAML"},
             )
         )
+
+        with open("ro-crate-info.yaml") as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+            file_properties["sha256"] = sha256(file).hexdigest()
+
         compss_crate.add_file("ro-crate-info.yaml", properties=file_properties)
 
         return ""
@@ -1366,6 +1385,18 @@ def wrroc_create_action(
         "name": name_property,
         "description": description_property,
     }
+
+    if job_id:
+        sacct_command = ['sacct', '-j', str(job_id), '--format=Start', '--noheader']
+        head_command = ['head', '-n', '1']
+        sacct_process = subprocess.Popen(sacct_command, stdout=subprocess.PIPE)
+        head_process = subprocess.Popen(head_command, stdin=sacct_process.stdout, stdout=subprocess.PIPE)
+        output, _ = head_process.communicate()
+        start_time_str = output.decode('utf-8').strip()
+        # Convert start time to datetime object
+        start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S")
+        create_action_properties["startTime"] = start_time.astimezone(timezone.utc).isoformat()
+
     if submitter:
         create_action_properties["agent"] = submitter
 
@@ -1389,6 +1420,19 @@ def wrroc_create_action(
     for item in outs:
         create_action.append_to("result", {"@id": fix_dir_url(item)})
     create_action.append_to("result", {"@id": "./"})  # The generated RO-Crate
+
+    # Add out and err logs in SLURM executions
+    if job_id:
+        suffix = [".out", ".err"]
+        msg = ["output", "error"]
+        for f_suffix, f_msg in zip(suffix, msg):
+            file_properties = {}
+            file_properties["name"] = "compss-" + job_id + f_suffix
+            file_properties["contentSize"] = os.path.getsize(file_properties["name"])
+            file_properties["description"] = "COMPSs console standard " + f_msg + " log file"
+            file_properties["encodingFormat"] = "text/plain"
+            file_properties["about"] = create_action_id
+            compss_crate.add_file(file_properties["name"], properties=file_properties)
 
     return run_uuid
 
@@ -1818,6 +1862,27 @@ def main():
         )
     )
     compss_crate.root_dataset["conformsTo"] = profiles
+
+    # Add Checksum algorithm to context???
+
+    # {
+    #     "@context": [
+    #         "https://w3id.org/ro/crate/1.1/context",
+    #         {
+    #             "sha1": "https://w3id.org/ro/terms/workflow-run#sha1"
+    #         }
+    #     ],
+    #     "@graph": [
+    #         ...
+    #         {
+    #             "@id": "foo.txt",
+    #             "@type": "File",
+    #             "sha1": "5b96d8196aba2f47e5b63fa3f5ddbe8c1f927435"
+    #         },
+    #         ...
+    #     ]
+    # }
+
 
     # Debug
     # for e in compss_crate.get_entities():
