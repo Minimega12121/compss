@@ -1005,7 +1005,7 @@ def add_dataset_file_to_crate(
     file_properties = {
         "name": final_item_name,
         "sdDatePublished": iso_now(),
-        "dateModified": dt.datetime.utcfromtimestamp(os.path.getmtime(url_parts.path))
+        "dateModified": dt.datetime.fromtimestamp(os.path.getmtime(url_parts.path), timezone.utc)
         .replace(microsecond=0)
         .isoformat(),  # Schema.org
     }  # Register when the Data Entity was last accessible
@@ -1087,8 +1087,8 @@ def add_dataset_file_to_crate(
                 dir_f_properties = {
                     "name": f_name,
                     "sdDatePublished": iso_now(),  # Register when the Data Entity was last accessible
-                    "dateModified": dt.datetime.utcfromtimestamp(
-                        os.path.getmtime(listed_file)
+                    "dateModified": dt.datetime.fromtimestamp(
+                        os.path.getmtime(listed_file), timezone.utc
                     )
                     .replace(microsecond=0)
                     .isoformat(),
@@ -1126,8 +1126,8 @@ def add_dataset_file_to_crate(
                     # print(f"PROVENANCE DEBUG | Adding an empty directory in data persistence. root ({root}), full_dir_name ({full_dir_name})")
                     dir_properties = {
                         "sdDatePublished": iso_now(),
-                        "dateModified": dt.datetime.utcfromtimestamp(
-                            os.path.getmtime(full_dir_name)
+                        "dateModified": dt.datetime.fromtimestamp(
+                            os.path.getmtime(full_dir_name), timezone.utc
                         )
                         .replace(microsecond=0)
                         .isoformat(),  # Schema.org
@@ -1180,8 +1180,8 @@ def add_dataset_file_to_crate(
                 dir_properties = {
                     "name": ".gitkeep",
                     "sdDatePublished": iso_now(),
-                    "dateModified": dt.datetime.utcfromtimestamp(
-                        os.path.getmtime(url_parts.path)
+                    "dateModified": dt.datetime.fromtimestamp(
+                        os.path.getmtime(url_parts.path), timezone.utc
                     )
                     .replace(microsecond=0)
                     .isoformat(),  # Schema.org
