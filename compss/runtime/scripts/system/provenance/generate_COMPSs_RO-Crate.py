@@ -1891,6 +1891,7 @@ def main():
     # Dump to file
     part_time = time.time()
     folder = "COMPSs_RO-Crate_" + run_uuid + "/"
+    sys.stdout.flush()  # All pending stdout to the log file
     compss_crate.write(folder)
     print(f"PROVENANCE | RO-Crate writing to disk TIME: {time.time() - part_time} s")
     print(
