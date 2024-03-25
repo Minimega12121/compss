@@ -702,7 +702,9 @@ def add_file_to_crate(
             )
 
             # Adding checksum for the file. sha3_256 is stronger, but slower and not installed by default in may systems
-            with open(complete_graph) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+            with open(complete_graph) as file, mmap(
+                file.fileno(), 0, access=ACCESS_READ
+            ) as file:
                 file_properties["sha256"] = sha256(file).hexdigest()
 
             compss_crate.add_file(complete_graph, properties=file_properties)
@@ -739,7 +741,9 @@ def add_file_to_crate(
             )
 
             # Adding checksum for the file. sha3_256 is stronger, but slower and not installed by default in may systems
-            with open(out_profile) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+            with open(out_profile) as file, mmap(
+                file.fileno(), 0, access=ACCESS_READ
+            ) as file:
                 file_properties["sha256"] = sha256(file).hexdigest()
 
             compss_crate.add_file(out_profile, properties=file_properties)
@@ -760,7 +764,9 @@ def add_file_to_crate(
             "description"
         ] = "COMPSs submission command line (runcompss / enqueue_compss), including flags and parameters passed to the application"
         file_properties["encodingFormat"] = "text/plain"
-        with open("compss_submission_command_line.txt") as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+        with open("compss_submission_command_line.txt") as file, mmap(
+            file.fileno(), 0, access=ACCESS_READ
+        ) as file:
             file_properties["sha256"] = sha256(file).hexdigest()
         compss_crate.add_file(
             "compss_submission_command_line.txt", properties=file_properties
@@ -787,7 +793,9 @@ def add_file_to_crate(
             )
         )
 
-        with open("ro-crate-info.yaml") as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+        with open("ro-crate-info.yaml") as file, mmap(
+            file.fileno(), 0, access=ACCESS_READ
+        ) as file:
             file_properties["sha256"] = sha256(file).hexdigest()
 
         compss_crate.add_file("ro-crate-info.yaml", properties=file_properties)
@@ -1005,7 +1013,9 @@ def add_dataset_file_to_crate(
     file_properties = {
         "name": final_item_name,
         "sdDatePublished": iso_now(),
-        "dateModified": dt.datetime.fromtimestamp(os.path.getmtime(url_parts.path), timezone.utc)
+        "dateModified": dt.datetime.fromtimestamp(
+            os.path.getmtime(url_parts.path), timezone.utc
+        )
         .replace(microsecond=0)
         .isoformat(),  # Schema.org
     }  # Register when the Data Entity was last accessible
@@ -1017,7 +1027,9 @@ def add_dataset_file_to_crate(
         if persist:  # Remove scheme so it is added as a regular file
             for i, item in enumerate(common_paths):  # All files must have a match
                 if url_parts.path.startswith(item):
-                    cwd_endslash = os.getcwd() + '/'  # os.getcwd does not add the final slash
+                    cwd_endslash = (
+                        os.getcwd() + "/"
+                    )  # os.getcwd does not add the final slash
                     if cwd_endslash.startswith("/gpfs/home/"):
                         # MN4 hack, /gpfs/home/ and /home/ are equivalent
                         cwd_final = cwd_endslash[5:]
@@ -1040,7 +1052,7 @@ def add_dataset_file_to_crate(
                             + cp_path.parts[
                                 -1
                             ]  # Base name of the identified common path. Now it does not avoid collisions if the user defines the same folder name in two different locations
-                            + '/'  # Common part now always ends with '/'
+                            + "/"  # Common part now always ends with '/'
                             + url_parts.path[len(item) :]
                         )  # Slice out the common part of the path
                     break
@@ -1097,8 +1109,10 @@ def add_dataset_file_to_crate(
                 }
                 if persist:
                     # url_parts.path includes a final '/'
-                    filtered_url = listed_file[len(url_parts.path) :]  # Does not include an initial '/'
-                    dir_f_url = "dataset/" + final_item_name + '/'+ filtered_url
+                    filtered_url = listed_file[
+                        len(url_parts.path) :
+                    ]  # Does not include an initial '/'
+                    dir_f_url = "dataset/" + final_item_name + "/" + filtered_url
                     # print(f"PROVENANCE DEBUG | Adding DATASET FILE {listed_file} as {dir_f_url}")
                     compss_crate.add_file(
                         source=listed_file,
@@ -1204,7 +1218,7 @@ def add_dataset_file_to_crate(
                     properties=dir_properties,
                 )
                 has_part_list.append({"@id": path_in_crate})
-                path_in_crate = ("dataset/" + final_item_name + "/")
+                path_in_crate = "dataset/" + final_item_name + "/"
                 # fetch_remote and validate_url false by default. add_dataset also ensures the URL ends with '/'
                 dir_properties["name"] = final_item_name
                 dir_properties["hasPart"] = has_part_list
@@ -1217,7 +1231,9 @@ def add_dataset_file_to_crate(
                 return path_in_crate
             else:
                 # Directories must finish with slash
-                compss_crate.add_dataset(source=fix_dir_url(in_url), properties=file_properties)
+                compss_crate.add_dataset(
+                    source=fix_dir_url(in_url), properties=file_properties
+                )
         else:
             # Directory had content
             file_properties["hasPart"] = has_part_list
@@ -1387,15 +1403,19 @@ def wrroc_create_action(
     }
 
     if job_id:
-        sacct_command = ['sacct', '-j', str(job_id), '--format=Start', '--noheader']
-        head_command = ['head', '-n', '1']
+        sacct_command = ["sacct", "-j", str(job_id), "--format=Start", "--noheader"]
+        head_command = ["head", "-n", "1"]
         sacct_process = subprocess.Popen(sacct_command, stdout=subprocess.PIPE)
-        head_process = subprocess.Popen(head_command, stdin=sacct_process.stdout, stdout=subprocess.PIPE)
+        head_process = subprocess.Popen(
+            head_command, stdin=sacct_process.stdout, stdout=subprocess.PIPE
+        )
         output, _ = head_process.communicate()
-        start_time_str = output.decode('utf-8').strip()
+        start_time_str = output.decode("utf-8").strip()
         # Convert start time to datetime object
         start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S")
-        create_action_properties["startTime"] = start_time.astimezone(timezone.utc).isoformat()
+        create_action_properties["startTime"] = start_time.astimezone(
+            timezone.utc
+        ).isoformat()
 
     if submitter:
         create_action_properties["agent"] = submitter
@@ -1429,7 +1449,9 @@ def wrroc_create_action(
             file_properties = {}
             file_properties["name"] = "compss-" + job_id + f_suffix
             file_properties["contentSize"] = os.path.getsize(file_properties["name"])
-            file_properties["description"] = "COMPSs console standard " + f_msg + " log file"
+            file_properties["description"] = (
+                "COMPSs console standard " + f_msg + " log file"
+            )
             file_properties["encodingFormat"] = "text/plain"
             file_properties["about"] = create_action_id
             compss_crate.add_file(file_properties["name"], properties=file_properties)
@@ -1487,7 +1509,9 @@ def get_common_paths(url_list: list) -> list:
 
         url_parts = urlsplit(item)
         # Remove schema and hostname
-        tmp = os.path.commonpath([url_parts.path, common_path])  # url_parts.path does not end with '/'
+        tmp = os.path.commonpath(
+            [url_parts.path, common_path]
+        )  # url_parts.path does not end with '/'
         if tmp != "/":  # String not empty, they have a common path
             # print(f"PROVENANCE DEBUG | Searching. Previous common path is: {common_path}. tmp: {tmp}")
             common_path = tmp
@@ -1505,8 +1529,8 @@ def get_common_paths(url_list: list) -> list:
 
     # All paths internally need to finish with a '/'
     for item in list_common_paths:
-        if item[-1] != '/':
-            list_common_paths.append(item + '/')
+        if item[-1] != "/":
+            list_common_paths.append(item + "/")
             list_common_paths.remove(item)
 
     # print(f"PROVENANCE DEBUG | Resulting list of common paths is: {list_common_paths}")
@@ -1525,7 +1549,6 @@ def add_manual_datasets(yaml_term: str, compss_wf_info: dict, data_list: list) -
 
     :returns: Updated List of identified common paths among the URLs
     """
-
 
     # Add entities defined by the user
     # Input files or directories added by hand from the user
@@ -1863,26 +1886,10 @@ def main():
     )
     compss_crate.root_dataset["conformsTo"] = profiles
 
-    # Add Checksum algorithm to context???
-
-    # {
-    #     "@context": [
-    #         "https://w3id.org/ro/crate/1.1/context",
-    #         {
-    #             "sha1": "https://w3id.org/ro/terms/workflow-run#sha1"
-    #         }
-    #     ],
-    #     "@graph": [
-    #         ...
-    #         {
-    #             "@id": "foo.txt",
-    #             "@type": "File",
-    #             "sha1": "5b96d8196aba2f47e5b63fa3f5ddbe8c1f927435"
-    #         },
-    #         ...
-    #     ]
-    # }
-
+    # Add Checksum algorithm and "environment" to context
+    compss_crate.metadata.extra_contexts.append(
+        "https://w3id.org/ro/terms/workflow-run"
+    )
 
     # Debug
     # for e in compss_crate.get_entities():
