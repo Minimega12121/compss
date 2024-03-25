@@ -1322,20 +1322,22 @@ def wrroc_create_action(
 
     # SLURM interesting variables: SLURM_JOB_NAME, SLURM_JOB_QOS, SLURM_JOB_USER, SLURM_SUBMIT_DIR, SLURM_NNODES or
     # SLURM_JOB_NUM_NODES, SLURM_JOB_CPUS_PER_NODE, SLURM_MEM_PER_CPU, SLURM_JOB_NODELIST or SLURM_NODELIST.
-    slurm_env_vars = ""
+
+    environment_property = []
     for name, value in os.environ.items():
         if (
             name.startswith(("SLURM_JOB", "SLURM_MEM", "SLURM_SUBMIT", "COMPSS"))
             and name != "SLURM_JOBID"
         ):
-            slurm_env_vars += f"{name}={value} "
+            # Changed to 'environment' term in WRROC v0.4
+            env_var = {}
+            env_var["@id"] = "#" + name.lower()
+            env_var["@type"] = "PropertyValue"
+            env_var["name"] = name
+            env_var["value"] = value
+            environment_property.append(env_var)
 
-    if len(slurm_env_vars) > 0:
-        description_property = (
-            uname_out + " " + slurm_env_vars[:-1]
-        )  # Remove blank space
-    else:
-        description_property = uname_out
+    description_property = uname_out
 
     resolved_main_entity = main_entity
     for entity in compss_crate.get_entities():
@@ -1401,6 +1403,8 @@ def wrroc_create_action(
         "name": name_property,
         "description": description_property,
     }
+    if len(environment_property) > 0:
+        create_action_properties["environment"] = environment_property
 
     if job_id:
         sacct_command = ["sacct", "-j", str(job_id), "--format=Start", "--noheader"]
