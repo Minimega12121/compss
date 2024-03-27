@@ -217,7 +217,7 @@ show_opts() {
     --shutdown_in_node_failure=<bool>       Stop the whole execution in case of Node Failure.
                                             Default: ${DEFAULT_SHUTDOWN_IN_NODE_FAILURE}
     --provenance=<yaml>,
-    --provenance, -p                        Generate COMPSs workflow provenance data in RO-Crate format from YAML file. Automatically activates --graph and --output_profile.
+    --provenance, -p                        Generate COMPSs workflow provenance data in RO-Crate format using a YAML configuration file. Automatically activates --graph and --output_profile.
                                             Default: ro-crate-info.yaml
 
 * Application name:

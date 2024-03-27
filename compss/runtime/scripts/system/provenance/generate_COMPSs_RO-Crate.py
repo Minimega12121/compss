@@ -1032,7 +1032,7 @@ def add_dataset_file_to_crate(
                         os.getcwd() + "/"
                     )  # os.getcwd does not add the final slash
                     if cwd_endslash.startswith("/gpfs/home/"):
-                        # MN4 hack, /gpfs/home/ and /home/ are equivalent
+                        # BSC hack, /gpfs/home/ and /home/ are equivalent
                         cwd_final = cwd_endslash[5:]
                     else:
                         cwd_final = cwd_endslash
@@ -1584,7 +1584,14 @@ def add_manual_datasets(yaml_term: str, compss_wf_info: dict, data_list: list) -
                 f"({item})"
             )
             continue
-        resolved_data_entity = str(path_data_entity.resolve())
+        first_resolved_data_entity = str(path_data_entity.resolve())
+
+        # BSC hack: /gpfs/home/ and /home/ are the same path
+        if first_resolved_data_entity.startswith("/gpfs/home/"):
+            # BSC hack, /gpfs/home/ and /home/ are equivalent
+            resolved_data_entity = first_resolved_data_entity[5:]
+        else:
+            resolved_data_entity = first_resolved_data_entity
 
         if os.path.isfile(resolved_data_entity):
             new_data_entity = "file://" + socket.gethostname() + resolved_data_entity
