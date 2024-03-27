@@ -116,7 +116,7 @@ def root_entity(compss_crate: ROCrate, yaml_content: dict) -> typing.Tuple[dict,
             properties_dict["name"] = author["name"]  # MUST in WorkflowHub
         except KeyError:
             print(
-                f"PROVENANCE | ERROR in your ro-crate-info.yaml file. Both 'orcid' and 'name' must be defined together for an Author"
+                f"PROVENANCE | ERROR in your {INFO_YAML} file. Both 'orcid' and 'name' must be defined together for an Author"
             )
             raise
         if "ror" in author:
@@ -135,7 +135,7 @@ def root_entity(compss_crate: ROCrate, yaml_content: dict) -> typing.Tuple[dict,
                 )
             except KeyError:
                 print(
-                    f"PROVENANCE | ERROR in your ro-crate-info.yaml file. Both 'ror' and 'organisation_name' must be defined together for an Organisation"
+                    f"PROVENANCE | ERROR in your {INFO_YAML} file. Both 'ror' and 'organisation_name' must be defined together for an Organisation"
                 )
                 raise
         if "e-mail" in author:
@@ -239,9 +239,9 @@ def get_main_entities(wf_info: dict) -> typing.Tuple[str, str, str]:
             main_entity = detected_app
         else:
             print(
-                f"PROVENANCE | ERROR: No 'sources' defined at ro-crate-info.yaml, and detected mainEntity not found in Current Working Directory"
+                f"PROVENANCE | ERROR: No 'sources' defined at {INFO_YAML}, and detected mainEntity not found in Current Working Directory"
             )
-            raise KeyError("No 'sources' key defined at ro-crate-info.yaml")
+            raise KeyError(f"No 'sources' key defined at {INFO_YAML}")
 
     # Find a backup_main_entity while building the full list of source files
     for source in yaml_sources_list:
@@ -289,7 +289,7 @@ def get_main_entities(wf_info: dict) -> typing.Tuple[str, str, str]:
                 )
         else:
             print(
-                f"PROVENANCE | WARNING: Specified file or directory in ro-crate-info.yaml 'sources' does not exist ({path_source})"
+                f"PROVENANCE | WARNING: Specified file or directory in {INFO_YAML} 'sources' does not exist ({path_source})"
             )
 
     # Can't get backup_main_entity from sources_main_file, because we do not know if it really exists
@@ -346,7 +346,7 @@ def get_main_entities(wf_info: dict) -> typing.Tuple[str, str, str]:
             else:
                 print(
                     f"PROVENANCE | WARNING: The file defined at sources_main_file "
-                    f"({resolved_sources_main_file}) in ro-crate-info.yaml does not match with the "
+                    f"({resolved_sources_main_file}) in {INFO_YAML} does not match with the "
                     f"automatically identified mainEntity ({main_entity})"
                 )
             main_entity = resolved_sources_main_file
@@ -372,7 +372,7 @@ def get_main_entities(wf_info: dict) -> typing.Tuple[str, str, str]:
                         if resolved_sources_main_file != main_entity:
                             print(
                                 f"PROVENANCE | WARNING: The file defined at sources_main_file "
-                                f"({resolved_sources_main_file}) in ro-crate-info.yaml does not match with the "
+                                f"({resolved_sources_main_file}) in {INFO_YAML} does not match with the "
                                 f"automatically identified mainEntity ({main_entity})"
                             )
                         # else: the user has defined exactly the file we found
@@ -390,7 +390,7 @@ def get_main_entities(wf_info: dict) -> typing.Tuple[str, str, str]:
                         if file != main_entity:
                             print(
                                 f"PROVENANCE | WARNING: The file defined at sources_main_file "
-                                f"({file}) in ro-crate-info.yaml does not match with the "
+                                f"({file}) in {INFO_YAML} does not match with the "
                                 f"automatically identified mainEntity ({main_entity})"
                             )
                         # else: the user has defined exactly the file we found
@@ -402,7 +402,7 @@ def get_main_entities(wf_info: dict) -> typing.Tuple[str, str, str]:
             if not found:
                 print(
                     f"PROVENANCE | WARNING: the defined 'sources_main_file' ({wf_info['sources_main_file']}) does "
-                    f"not exist in the defined 'sources'. Check your ro-crate-info.yaml."
+                    f"not exist in the defined 'sources'. Check your {INFO_YAML}."
                 )
                 # If we identified the mainEntity automatically, we select it when the one defined
                 # by the user is not found
@@ -413,13 +413,13 @@ def get_main_entities(wf_info: dict) -> typing.Tuple[str, str, str]:
             # We have a fatal problem
             print(
                 f"PROVENANCE | ERROR: no mainEntity has been found. Check the definition of 'sources' and "
-                f"'sources_main_file' in ro-crate-info.yaml"
+                f"'sources_main_file' in {INFO_YAML}"
             )
             raise FileNotFoundError
         main_entity = backup_main_entity
         print(
             f"PROVENANCE | WARNING: the detected mainEntity {detected_app} does not exist in the list "
-            f"of application files provided in ro-crate-info.yaml. Setting {main_entity} as mainEntity"
+            f"of application files provided in {INFO_YAML}. Setting {main_entity} as mainEntity"
         )
 
     print(
@@ -773,9 +773,10 @@ def add_file_to_crate(
         )
 
         # ro-crate-info.yaml
+        yaml_path = Path(INFO_YAML)
         file_properties = {}
-        file_properties["name"] = "ro-crate-info.yaml"
-        file_properties["contentSize"] = os.path.getsize("ro-crate-info.yaml")
+        file_properties["name"] = yaml_path.name
+        file_properties["contentSize"] = os.path.getsize(yaml_path)
         file_properties[
             "description"
         ] = "COMPSs Workflow Provenance YAML configuration file"
@@ -793,12 +794,12 @@ def add_file_to_crate(
             )
         )
 
-        with open("ro-crate-info.yaml") as file, mmap(
+        with open(INFO_YAML) as file, mmap(
             file.fileno(), 0, access=ACCESS_READ
         ) as file:
             file_properties["sha256"] = sha256(file).hexdigest()
 
-        compss_crate.add_file("ro-crate-info.yaml", properties=file_properties)
+        compss_crate.add_file(yaml_path, properties=file_properties)
 
         return ""
 
@@ -863,7 +864,7 @@ def add_application_source_files(
         path_source = Path(source).expanduser()
         if not path_source.exists():
             print(
-                f"PROVENANCE | WARNING: A file or directory defined as 'sources' in ro-crate-info.yaml does not exist "
+                f"PROVENANCE | WARNING: A file or directory defined as 'sources' in {INFO_YAML} does not exist "
                 f"({source})"
             )
             continue
@@ -1387,12 +1388,12 @@ def wrroc_create_action(
         if author_list:
             submitter = author_list[0]
             print(
-                "PROVENANCE | WARNING: 'Submitter' not specified in ro-crate-info.yaml. First author selected by default."
+                f"PROVENANCE | WARNING: 'Submitter' not specified in {INFO_YAML}. First author selected by default."
             )
         else:
             submitter = None
             print(
-                "PROVENANCE | WARNING: No 'Authors' or 'Submitter' specified in ro-crate-info.yaml"
+                f"PROVENANCE | WARNING: No 'Authors' or 'Submitter' specified in {INFO_YAML}"
             )
 
     create_action_properties = {
@@ -1420,6 +1421,19 @@ def wrroc_create_action(
         create_action_properties["startTime"] = start_time.astimezone(
             timezone.utc
         ).isoformat()
+    else:
+        # Take startTime from dataprovenance.log when no queuing system is involved
+        # The string generated by the runtime is already in UTC
+        with open(DP_LOG, "r", encoding="UTF-8") as dp_file:
+            for i, line in enumerate(dp_file):
+                if i == 3:
+                    start_time = datetime.strptime(
+                        line.strip(), "%Y-%m-%dT%H:%M:%S.%f%z"
+                    )
+                    create_action_properties["startTime"] = start_time.replace(
+                        microsecond=0
+                    ).isoformat()
+                    break
 
     if submitter:
         create_action_properties["agent"] = submitter
@@ -1566,7 +1580,7 @@ def add_manual_datasets(yaml_term: str, compss_wf_info: dict, data_list: list) -
 
         if not path_data_entity.exists():
             print(
-                f"PROVENANCE | WARNING: A file or directory defined as '{yaml_term}' in ro-crate-info.yaml does not exist "
+                f"PROVENANCE | WARNING: A file or directory defined as '{yaml_term}' in {INFO_YAML} does not exist "
                 f"({item})"
             )
             continue
@@ -1588,7 +1602,7 @@ def add_manual_datasets(yaml_term: str, compss_wf_info: dict, data_list: list) -
             data_list.append(new_data_entity)
         else:
             print(
-                f"PROVENANCE | WARNING: A file or directory defined as '{yaml_term}' in ro-crate-info.yaml was already part of the dataset "
+                f"PROVENANCE | WARNING: A file or directory defined as '{yaml_term}' in {INFO_YAML} was already part of the dataset "
                 f"({item})"
             )
     data_list.sort()  # Sort again, needed for next methods applied to the list
@@ -1765,7 +1779,7 @@ def main():
         with open("ro-crate-info_TEMPLATE.yaml", "w", encoding="utf-8") as f_t:
             f_t.write(yaml_template)
             print(
-                "PROVENANCE | ERROR: YAML file ro-crate-info.yaml not found in your working directory. A template"
+                f"PROVENANCE | ERROR: YAML file {INFO_YAML} not found in your working directory. A template"
                 " has been generated in file ro-crate-info_TEMPLATE.yaml"
             )
         raise
@@ -1919,7 +1933,7 @@ if __name__ == "__main__":
     if len(sys.argv) != 3:
         print(
             "PROVENANCE | Usage: python /path_to/generate_COMPSs_RO-Crate.py "
-            "ro-crate-info.yaml /path_to/dataprovenance.log"
+            "/path_to/your_info.yaml /path_to/dataprovenance.log"
         )
         sys.exit()
     else:
