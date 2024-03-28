@@ -93,13 +93,14 @@ def root_entity(compss_crate: ROCrate, yaml_content: dict) -> typing.Tuple[dict,
 
     # COMPSs Workflow RO Crate generation
     # Root Entity
-    compss_crate.name = compss_wf_info[
-        "name"
-    ]  # SHOULD in RO-Crate 1.1. MUST in WorkflowHub
+
+    # SHOULD in RO-Crate 1.1. MUST in WorkflowHub
+    compss_crate.name = compss_wf_info["name"]
+
     if "description" in compss_wf_info:
-        compss_crate.description = compss_wf_info[
-            "description"
-        ]  # SHOULD in Workflow Profile and WorkflowHub
+        # SHOULD in Workflow Profile and WorkflowHub
+        compss_crate.description = compss_wf_info["description"]
+
     if "license" in compss_wf_info:
         # License details could be also added as a Contextual Entity. MUST in Workflow RO-Crate Profile, but WorkflowHub does not consider it a mandatory field
         compss_crate.license = compss_wf_info["license"]
@@ -108,54 +109,14 @@ def root_entity(compss_crate: ROCrate, yaml_content: dict) -> typing.Tuple[dict,
     org_list = []
 
     for author in authors_info:
-        properties_dict = {}
-        if author["orcid"] not in author_list:
-            # orcid is MANDATORY in RO-Crate 1.1
+        if "orcid" in author and author["orcid"] in author_list:
+            break
+        if add_person_definition(compss_crate, "Author", author):
             author_list.append(author["orcid"])
-        try:
-            properties_dict["name"] = author["name"]  # MUST in WorkflowHub
-        except KeyError:
-            print(
-                f"PROVENANCE | ERROR in your {INFO_YAML} file. Both 'orcid' and 'name' must be defined together for an Author"
-            )
-            raise
-        if "ror" in author:
-            # ror is not mandatory on any profile
-            if author["ror"] not in org_list:
-                org_list.append(author["ror"])
-            properties_dict["affiliation"] = {"@id": author["ror"]}
-            # If ror defined, organisation_name becomes mandatory, if it is to be shown in WorkflowHub
-            try:
-                compss_crate.add(
-                    ContextEntity(
-                        compss_crate,
-                        author["ror"],
-                        {"@type": "Organization", "name": author["organisation_name"]},
-                    )
-                )
-            except KeyError:
-                print(
-                    f"PROVENANCE | ERROR in your {INFO_YAML} file. Both 'ror' and 'organisation_name' must be defined together for an Organisation"
-                )
-                raise
-        if "e-mail" in author:
-            properties_dict["contactPoint"] = {"@id": "mailto:" + author["e-mail"]}
-            compss_crate.add(
-                ContextEntity(
-                    compss_crate,
-                    "mailto:" + author["e-mail"],
-                    {
-                        "@type": "ContactPoint",
-                        "contactType": "Author",
-                        "email": author["e-mail"],
-                        "identifier": author["e-mail"],
-                        "url": author["orcid"],
-                    },
-                )
-            )
+            if "ror" in author and author["ror"] not in org_list:
+                 org_list.append(author["ror"])
 
-        compss_crate.add(Person(compss_crate, author["orcid"], properties_dict))
-
+    # Generate 'creator' and 'publisher' terms
     crate_author_list = []
     crate_org_list = []
     for author_orcid in author_list:
@@ -172,6 +133,9 @@ def root_entity(compss_crate: ROCrate, yaml_content: dict) -> typing.Tuple[dict,
             compss_crate.publisher = crate_author_list
     else:
         compss_crate.publisher = crate_org_list
+
+    if len(crate_author_list) == 0:
+        print(f"PROVENANCE | WARNING: No valid 'Authors' specified in {INFO_YAML}")
 
     return compss_wf_info, crate_author_list
 
@@ -1261,6 +1225,66 @@ def add_dataset_file_to_crate(
     return fix_dir_url(in_url)
 
 
+def add_person_definition(
+    compss_crate: ROCrate,
+    contact_type: str,
+    yaml_author: dict,
+) -> bool:
+    """
+    Check if a specified person has enough defined terms to be added in the RO-Crate.
+
+    :param compss_crate: The COMPSs RO-Crate being generated
+    :param contact_type: contactType definition for the ContactPoint. "Author" or "Agent"
+    :param yaml_author: Content of the YAML file describing the user
+
+    :returns: If the person is valid. It is added if True
+    """
+
+    # Expected Person fields
+    # orcid - Mandatory in RO-Crate 1.1
+    # name - Mandatory in WorkflowHub
+    # e-mail - Optional
+    #
+    # ror - Optional
+    # organisation_name - Optional even if ror is defined. But won't show anything at WorkflowHub
+
+    person_dict = {}
+    mail_dict = {}
+    org_dict ={}
+
+    if not "orcid" in yaml_author:
+        print(f"PROVENANCE | ERROR in your {INFO_YAML} file. A 'Person' is ignored, since it has no 'orcid' defined")
+        return False
+    if "name" in yaml_author:
+        person_dict["name"] = yaml_author["name"]
+    # Name is no longer mandatory in WFHub
+    # else:
+    #     print(f"PROVENANCE | ERROR in your {INFO_YAML} file. A 'Person' is ignored, since it has 'orcid' but no 'name' defined")
+    #     return False
+    if "e-mail" in yaml_author:
+        person_dict["contactPoint"] = {"@id": "mailto:" + yaml_author["e-mail"]}
+        mail_dict["@type"] = "ContactPoint"
+        mail_dict["contactType"] = contact_type
+        mail_dict["email"] = yaml_author["e-mail"]
+        mail_dict["identifier"] = yaml_author["e-mail"]
+        mail_dict["url"] = yaml_author["orcid"]
+        compss_crate.add(ContextEntity(compss_crate, "mailto:" + yaml_author["e-mail"], mail_dict))
+    if "ror" in yaml_author:
+        person_dict["affiliation"] = {"@id": yaml_author["ror"]}
+        # If ror defined, organisation_name becomes mandatory, if it is to be shown in WorkflowHub
+        org_dict["@type"] = "Organization"
+        if "organisation_name" in yaml_author:
+            org_dict["name"] = yaml_author["organisation_name"]
+            compss_crate.add(ContextEntity(compss_crate, yaml_author["ror"], org_dict))
+        else:
+            print(
+                f"PROVENANCE | WARNING in your {INFO_YAML} file. 'organisation_name' not defined for an 'Organisation'"
+            )
+    compss_crate.add(Person(compss_crate, yaml_author["orcid"], person_dict))
+
+    return True
+
+
 def wrroc_create_action(
     compss_crate: ROCrate,
     main_entity: str,
@@ -1346,54 +1370,18 @@ def wrroc_create_action(
             resolved_main_entity = entity.id
 
     # Register user submitting the workflow
-    if "Submitter" in yaml_content:
-        compss_crate.add(
-            Person(
-                compss_crate,
-                yaml_content["Submitter"]["orcid"],
-                {
-                    "name": yaml_content["Submitter"]["name"],
-                    "contactPoint": {
-                        "@id": "mailto:" + yaml_content["Submitter"]["e-mail"]
-                    },
-                    "affiliation": {"@id": yaml_content["Submitter"]["ror"]},
-                },
-            )
-        )
-        compss_crate.add(
-            ContextEntity(
-                compss_crate,
-                "mailto:" + yaml_content["Submitter"]["e-mail"],
-                {
-                    "@type": "ContactPoint",
-                    "contactType": "Author",
-                    "email": yaml_content["Submitter"]["e-mail"],
-                    "identifier": yaml_content["Submitter"]["e-mail"],
-                    "url": yaml_content["Submitter"]["orcid"],
-                },
-            )
-        )
-        compss_crate.add(
-            ContextEntity(
-                compss_crate,
-                yaml_content["Submitter"]["ror"],
-                {
-                    "@type": "Organization",
-                    "name": yaml_content["Submitter"]["organisation_name"],
-                },
-            )
-        )
-        submitter = {"@id": yaml_content["Submitter"]["orcid"]}
+    if "Agent" in yaml_content and add_person_definition(compss_crate, "Agent", yaml_content["Agent"]):
+        agent = {"@id": yaml_content["Agent"]["orcid"]}
     else:  # Choose first author, to avoid leaving it empty. May be true most of the times
         if author_list:
-            submitter = author_list[0]
+            agent = author_list[0]
             print(
-                f"PROVENANCE | WARNING: 'Submitter' not specified in {INFO_YAML}. First author selected by default."
+                f"PROVENANCE | WARNING: 'Agent' not specified in {INFO_YAML}. First author selected by default."
             )
         else:
-            submitter = None
+            agent = None
             print(
-                f"PROVENANCE | WARNING: No 'Authors' or 'Submitter' specified in {INFO_YAML}"
+                f"PROVENANCE | WARNING: No 'Authors' or 'Agent' specified in {INFO_YAML}"
             )
 
     create_action_properties = {
@@ -1435,8 +1423,8 @@ def wrroc_create_action(
                     ).isoformat()
                     break
 
-    if submitter:
-        create_action_properties["agent"] = submitter
+    if agent:
+        create_action_properties["agent"] = agent
 
     create_action = compss_crate.add(
         ContextEntity(compss_crate, create_action_id, create_action_properties)
@@ -1763,11 +1751,11 @@ def main():
         "    ror: https://ror.org/YYYYYYYYY\n"
         "      # Find them in ror.org\n"
         "\n"
-        "Submitter:\n"
+        "Agent:\n"
         "  name: Name\n"
-        "  e-mail: submitter@email.com\n"
+        "  e-mail: agent@email.com\n"
         "  orcid: https://orcid.org/XXXX-XXXX-XXXX-XXXX\n"
-        "  organisation_name: Submitter Institution name\n"
+        "  organisation_name: Agent Institution name\n"
         "  ror: https://ror.org/XXXXXXXXX\n"
         "    # Find them in ror.org\n"
     )
