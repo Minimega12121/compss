@@ -762,7 +762,9 @@ if [ ${provenance} ]; then
   echo "PROVENANCE | If needed, Provenance generation can be triggered by hand using the following commands:"
   echo "PROVENANCE | ${COMPSS_HOME}Runtime/scripts/utils/compss_gengraph svg ${specific_log_dir}/monitor/complete_graph.dot"
   echo "PROVENANCE | python3 ${COMPSS_HOME}Runtime/scripts/system/provenance/generate_COMPSs_RO-Crate.py ${provenance_yaml} ${specific_log_dir}/dataprovenance.log"
-  echo "PROVENANCE | TIP for cluster users. Before hand triggering generation, run first: salloc -p interactive"
+  if [ ! -z "${BSC_MACHINE}" ]; then
+    echo "PROVENANCE | TIP for BSC cluster users: before triggering generation by hand, run first: salloc -p interactive"
+  fi
   echo "PROVENANCE | Generating graph for Workflow Provenance"
   edges=`grep "\->" ${specific_log_dir}/monitor/complete_graph.dot | wc -l`
   echo "PROVENANCE | Number of edges in the graph: ${edges}"

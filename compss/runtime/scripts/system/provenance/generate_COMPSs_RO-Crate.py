@@ -975,15 +975,20 @@ def add_dataset_file_to_crate(
     url_path = Path(url_parts.path)
     final_item_name = url_path.name
 
-    file_properties = {
-        "name": final_item_name,
-        "sdDatePublished": iso_now(),
-        "dateModified": dt.datetime.fromtimestamp(
-            os.path.getmtime(url_parts.path), timezone.utc
-        )
-        .replace(microsecond=0)
-        .isoformat(),  # Schema.org
-    }  # Register when the Data Entity was last accessible
+    if url_parts.scheme == "dir" or url_parts.scheme == "file":
+    # Dealing with a local file
+        file_properties = {
+            "name": final_item_name,
+            "sdDatePublished": iso_now(),
+            "dateModified": dt.datetime.fromtimestamp(
+                os.path.getmtime(url_parts.path), timezone.utc
+            )
+            .replace(microsecond=0)
+            .isoformat(),  # Schema.org
+        }  # Register when the Data Entity was last accessible
+    else:
+        # Remote file
+        file_properties = {"name": final_item_name}
 
     if url_parts.scheme == "file":  # Dealing with a local file
         file_properties["contentSize"] = os.path.getsize(url_parts.path)
@@ -1216,9 +1221,14 @@ def add_dataset_file_to_crate(
             # fetch_remote and validate_url false by default. add_dataset also ensures the URL ends with '/'
             compss_crate.add_dataset(fix_dir_url(in_url), properties=file_properties)
 
-    else:  # Remote file, currently not supported in COMPSs. validate_url already adds contentSize and encodingFormat
+    if url_parts.scheme.startswith("http"):
+        # Remote file, currently not supported in COMPSs. validate_url=True already adds contentSize and encodingFormat
         # from the remote file
-        compss_crate.add_file(in_url, validate_url=True, properties=file_properties)
+        val_url = True
+        if os.getenv("BSC_MACHINE"):
+            # Cluster without outside connectivity (e.g. at BSC)
+            val_url = False
+        compss_crate.add_file(source=in_url, validate_url=val_url, fetch_remote=False, properties=file_properties)
 
     # print(f"Method vs add_file TIME: {time.time() - method_time} vs {add_file_time}")
 
@@ -1564,6 +1574,12 @@ def add_manual_datasets(yaml_term: str, compss_wf_info: dict, data_list: list) -
     else:
         data_entities_list.append(compss_wf_info[yaml_term])
     for item in data_entities_list:
+        # Check if remote file with URI scheme: http or https
+        url_parts = urlsplit(item)
+        if url_parts.scheme.startswith("http"):
+            data_list.append(item)
+            continue
+
         path_data_entity = Path(item).expanduser()
 
         if not path_data_entity.exists():
