@@ -99,9 +99,9 @@ try:
     from pyeddl.eddl import serialize_net_to_onnx_string
     from pyeddl.eddl import import_net_from_onnx_file
 
-    EDDL_AVAILABLE = True
+    PYEDDL_AVAILABLE = True
 except ImportError:
-    EDDL_AVAILABLE = False
+    PYEDDL_AVAILABLE = False
 
 # GLOBALS
 
@@ -114,7 +114,7 @@ if NUMPY_AVAILABLE:
 if PYARROW_AVAILABLE:
     LIB2IDX[pyarrow] = 3
 LIB2IDX[json] = 4
-if EDDL_AVAILABLE:
+if PYEDDL_AVAILABLE:
     LIB2IDX[eddlNet] = 5
 if CUPY_AVAILABLE:
     LIB2IDX[cupy] = 6
@@ -179,7 +179,7 @@ def get_serializer_priority(
         return [cupy] + serializers
     if object_belongs_to_module(obj, "pyarrow") and PYARROW_AVAILABLE:
         return [pyarrow] + serializers
-    if object_belongs_to_module(obj, "pyeddl") and PYARROW_AVAILABLE:
+    if object_belongs_to_module(obj, "pyeddl") and PYEDDL_AVAILABLE:
         return [eddlNet] + serializers
     if FORCED_SERIALIZER > -1:
         return [IDX2LIB[FORCED_SERIALIZER]]
@@ -283,7 +283,7 @@ def serialize_to_handler(
                     if __debug__:
                         logger.debug("Serializing using pyarrow success")
                 elif (
-                    EDDL_AVAILABLE
+                    PYEDDL_AVAILABLE
                     and serializer is eddlNet
                     and object_belongs_to_module(obj, "pyeddl")
                 ):
@@ -488,7 +488,7 @@ def deserialize_from_handler(
             ret = pyarrow.ipc.open_file(handler)
             if isinstance(ret, pyarrow.ipc.RecordBatchFileReader):
                 close_handler = False
-        elif EDDL_AVAILABLE and serializer is eddlNet:
+        elif PYEDDL_AVAILABLE and serializer is eddlNet:
             if __debug__:
                 logger.debug("Pyeddl available")
                 logger.debug("Deserializing using pyeddl")
