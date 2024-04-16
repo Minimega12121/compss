@@ -62,9 +62,9 @@ RUN apt-get update && \
     sudo firefox gnupg lsb-release libgraphviz-dev julia && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/* && \
-    pip3 --no-cache-dir install pycodestyle selenium redis==3.5.3 redis-py-cluster==2.1.3 enum34 tabulate black==24.3.0 memory-profiler && \
+    pip3 --no-cache-dir install pycodestyle selenium redis==3.5.3 redis-py-cluster==2.1.3 enum34 tabulate black==24.4.0 memory-profiler && \
     pip3 --no-cache-dir install pytest pytest-cov nbval nbconvert mistune==2.0.5 coverage pytest-html-profiling pytest-metadata pytest-profiling pytest-subprocess pytest-sugar pydocstyle && \
-    pip3 --no-cache-dir install black[jupyter] && \
+    pip3 --no-cache-dir install black[jupyter]==24.4.0 && \
     # for fixing a nbcovert jinja2 compatibility problem
     pip3 --no-cache-dir install jinja2==3.0.3 && \
     pip3 --no-cache-dir install mypy==0.990 mypy-extensions==0.4.3 py types-tabulate types-decorator && \
@@ -72,11 +72,9 @@ RUN apt-get update && \
     unzip -d /opt gradle-5.4.1-bin.zip && \
     rm gradle-5.4.1-bin.zip && \
     mv /opt/gradle-5.4.1 /opt/gradle && \
-
     # Docker-CLI
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
-    echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
    apt-get update && \
    apt-get install -y docker-ce-cli && \
    apt-get autoclean && \
@@ -98,3 +96,4 @@ RUN apt-get update && \
    groupadd docker && \
    usermod -aG docker jenkins && \
    newgrp docker
+
