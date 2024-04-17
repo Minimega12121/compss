@@ -140,18 +140,33 @@ def main() -> None:
         worker_path = os.path.dirname(os.path.realpath(__file__))
         if log_level in ("true", "debug"):
             # Debug
-            log_json = "".join(
-                (worker_path, "/../../../log/logging_gat_worker_debug.json")
+            log_json = os.path.join(
+                worker_path,
+                "..",
+                "util",
+                "logger",
+                "cfg",
+                "logging_gat_worker_debug.json",
             )
         elif log_level == "info":
             # Info
-            log_json = "".join(
-                (worker_path, "/../../../log/logging_gat_worker_info.json")
+            log_json = os.path.join(
+                worker_path,
+                "..",
+                "util",
+                "logger",
+                "cfg",
+                "logging_gat_worker_info.json",
             )
         else:
             # Default (off)
-            log_json = "".join(
-                (worker_path, "/../../../log/logging_gat_worker_off.json")
+            log_json = os.path.join(
+                worker_path,
+                "..",
+                "util",
+                "logger",
+                "cfg",
+                "logging_gat_worker_off.json",
             )
         init_logging_worker(log_json, tracing)
 

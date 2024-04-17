@@ -442,7 +442,10 @@ def start(  # pylint: disable=too-many-arguments, too-many-locals
         "Bindings",
         "python",
         str(all_vars["major_version"]),
-        "log",
+        "pycompss",
+        "util",
+        "logger",
+        "cfg",
     )
     logging_cfg_file = get_logging_cfg_file(log_level)
     init_logging(os.path.join(log_cfg_path, logging_cfg_file), log_path)

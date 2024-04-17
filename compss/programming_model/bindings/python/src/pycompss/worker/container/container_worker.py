@@ -64,16 +64,16 @@ def main() -> int:
     if log_level in ("true", "debug"):
         # Debug
         log_json = "".join(
-            (worker_path, "/log/logging_container_worker_debug.json")
+            (worker_path, "/cfg/logging_container_worker_debug.json")
         )
     elif log_level in ("info", "off"):
         # Info or no debug
         log_json = "".join(
-            (worker_path, "/log/logging_container_worker_off.json")
+            (worker_path, "/cfg/logging_container_worker_off.json")
         )
     else:
         # Default
-        log_json = "".join((worker_path, "/log/logging_container_worker.json"))
+        log_json = "".join((worker_path, "/cfg/logging_container_worker.json"))
     init_logging_worker(log_json, tracing)
     if __debug__:
         logger = logging.getLogger(

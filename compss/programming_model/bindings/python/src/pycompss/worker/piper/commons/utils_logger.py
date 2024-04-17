@@ -44,16 +44,31 @@ def load_loggers(
     """
     # Load log level configuration file
     worker_path = os.path.dirname(os.path.realpath(__file__))
-    log_cfg_path = "".join((worker_path, "/../../../../log"))
+    log_cfg_path = os.path.join(
+        worker_path,
+        "..",
+        "..",
+        "util",
+        "logger",
+        "cfg",
+    )
     if not os.path.isdir(log_cfg_path):
         # If not exists, then we are using the source for unit testing
-        log_cfg_path = "".join((worker_path, "/../../../../../log"))
+        log_cfg_path = os.path.join(
+            worker_path,
+            "..",
+            "..",
+            "..",
+            "util",
+            "logger",
+            "cfg",
+        )
     if debug:
         # Debug
-        log_json = "/".join((log_cfg_path, "logging_worker_debug.json"))
+        log_json = os.path.join(log_cfg_path, "logging_worker_debug.json")
     else:
         # Default
-        log_json = "/".join((log_cfg_path, "logging_worker_off.json"))
+        log_json = os.path.join(log_cfg_path, "logging_worker_off.json")
     # log_dir is of the form:
     #    With agents or worker in master:
     #        /path/to/working_directory/tmpFiles/pycompssID/../../log
@@ -68,7 +83,7 @@ def load_loggers(
         if __debug__:
             print(
                 "WARNING: Log dir not set, "
-                + "using temporrary directory as log dir."
+                + "using temporary directory as log dir."
             )
         log_dir = GLOBALS.get_temporary_directory()
 
