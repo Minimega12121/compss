@@ -17,8 +17,17 @@
 
 # -*- coding: utf-8 -*-
 
-"""This package contains the COMPSs Python Binding, known as PyCOMPSs."""
+"""This file contains the logger remittent functions."""
 
-import os
 
-PYCOMPSS_HOME = os.path.dirname(os.path.realpath(__file__))
+class _LogRemittent:  # pylint: disable=too-few-public-methods
+    """Supported PyCOMPSs modules."""
+
+    MASTER = "master"
+    WORKER = "worker"
+    GAT_WORKER = "gat_worker"
+    MPI_WORKER = "mpi_worker"
+    CONTAINER_WORKER = "container_worker"
+
+
+LOG_REMITTENT = _LogRemittent()
