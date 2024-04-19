@@ -23,7 +23,6 @@ inside containers.
 """
 
 import logging
-import os
 import sys
 
 from pycompss.util.context import CONTEXT
