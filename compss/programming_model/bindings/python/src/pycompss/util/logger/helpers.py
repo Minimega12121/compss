@@ -173,9 +173,12 @@ def __add_loggers(
         handlers = ["console", "error_console"]
     elif remittent == LOG_REMITTENT.MPI_WORKER:
         handlers = ["console", "error_console"]
+    elif remittent == LOG_REMITTENT.CONTAINER_WORKER:
+        handlers = ["console", "error_console"]
     else:
         raise PyCOMPSsException(
-            "Unexpected remittent received updating loggers in config."
+            f"Unexpected remittent received updating loggers in config: "
+            f"{remittent}"
         )
     for logger in loggers:
         conf["loggers"][logger] = {
