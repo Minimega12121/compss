@@ -14,6 +14,7 @@ export TARGET_OS
 #---------------------------------------------------
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BINDING_DIR="$( dirname "${SCRIPT_DIR}" )"
+# BINDING_DIR="${SCRIPT_DIR}/COMPSs/Bindings/"
 export BINDING_DIR
 
 # First, build building-commons
