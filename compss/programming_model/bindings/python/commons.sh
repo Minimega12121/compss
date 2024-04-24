@@ -84,8 +84,7 @@ create_symbolic_links (){
   ln -sfn "${origin}"/ear.* "${packages_folder}/"
   ev=$?
   if [ $ev -ne 0 ]; then
-    echo "Failed, to create symbolic link from ${origin}/ear.* to ${packages_folder}/ear.*"
-    exit $ev
+    echo "WARNING: Could not create symbolic link from ${origin}/ear.* to ${packages_folder}/ear.*"
   else
     echo "Created symbolic link from ${origin}/ear.* to ${packages_folder}/ear.*"
   fi
