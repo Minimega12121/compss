@@ -79,4 +79,14 @@ create_symbolic_links (){
   else
     echo "Created symbolic link from ${origin}/process_affinity.* to ${packages_folder}/process_affinity.*"
   fi
+
+  # Setup a symbolic link to ear module
+  ln -sfn "${origin}"/ear.* "${packages_folder}/"
+  ev=$?
+  if [ $ev -ne 0 ]; then
+    echo "Failed, to create symbolic link from ${origin}/ear.* to ${packages_folder}/ear.*"
+    exit $ev
+  else
+    echo "Created symbolic link from ${origin}/ear.* to ${packages_folder}/ear.*"
+  fi
 }
