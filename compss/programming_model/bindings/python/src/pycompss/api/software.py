@@ -329,7 +329,7 @@ class Software(
         software_f.__doc__ = user_function.__doc__
         return software_f
 
-    def pop_file_path(self, *args):
+    def pop_file_path(self, *args) -> typing.Tuple:
         """Pop JSON configuration file path from the args.
 
         :param args: args of the task function
