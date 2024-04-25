@@ -36,11 +36,31 @@ import org.apache.logging.log4j.Logger;
 public abstract class AccessParams<D extends DataParams> implements Serializable {
 
     public static enum AccessMode {
-        R, // Read
-        W, // Write
-        RW, // ReadWrite
-        C, // Concurrent
-        CV // Commutative
+
+        R(true, false), // Read
+        W(false, true), // Write
+        RW(true, true), // ReadWrite
+        C(true, false), // Concurrent
+        CV(true, true) // Commutative
+        ;
+
+
+        private final boolean read;
+        private final boolean write;
+
+
+        AccessMode(boolean read, boolean write) {
+            this.read = read;
+            this.write = write;
+        }
+
+        public final boolean isRead() {
+            return this.read;
+        }
+
+        public boolean isWrite() {
+            return write;
+        }
     }
 
 

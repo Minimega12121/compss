@@ -67,7 +67,7 @@ public class DataInfoProvider {
     // Set: Object values available for main code
     private TreeSet<String> valuesOnMain; // TODO: Remove obsolete from here
 
-    // Component logger - No need to configure, ProActive does
+    // Component logger
     private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
 
@@ -164,7 +164,8 @@ public class DataInfoProvider {
             }
         }
 
-        DataAccessId daId = willAccess(access, dInfo);
+        DataAccessId daId = dInfo.willAccess(access.getMode());
+        access.externalRegister();
         return daId;
     }
 
@@ -183,99 +184,12 @@ public class DataInfoProvider {
             LOGGER.warn(access.getDataDescription() + " has not been accessed before");
             return;
         }
-        DataAccessId daid = getAccess(access.getMode(), dInfo);
+        DataAccessId daid = dInfo.getLastAccess(access.getMode());
         if (daid == null) {
             LOGGER.warn(access.getDataDescription() + " has not been accessed before");
             return;
         }
         dataHasBeenAccessed(daid);
-    }
-
-    private DataAccessId willAccess(AccessParams access, DataInfo di) {
-        // Version management
-        DataAccessId daId = null;
-        switch (access.getMode()) {
-            case C:
-            case R:
-                di.willBeRead();
-                daId = new RAccessId(di.getCurrentDataVersion());
-                if (DEBUG) {
-                    StringBuilder sb = new StringBuilder("");
-                    sb.append("Access:").append("\n");
-                    sb.append("  * Type: R").append("\n");
-                    sb.append("  * Read Datum: d").append(daId.getDataId()).append("v")
-                        .append(((RAccessId) daId).getRVersionId()).append("\n");
-                    LOGGER.debug(sb.toString());
-                }
-                break;
-
-            case W:
-                di.willBeWritten();
-                daId = new WAccessId(di.getCurrentDataVersion());
-                if (DEBUG) {
-                    StringBuilder sb = new StringBuilder("");
-                    sb.append("Access:").append("\n");
-                    sb.append("  * Type: W").append("\n");
-                    sb.append("  * Write Datum: d").append(daId.getDataId()).append("v")
-                        .append(((WAccessId) daId).getWVersionId()).append("\n");
-                    LOGGER.debug(sb.toString());
-                }
-                break;
-
-            case CV:
-            case RW:
-                di.willBeRead();
-                DataVersion readInstance = di.getCurrentDataVersion();
-                di.willBeWritten();
-                DataVersion writtenInstance = di.getCurrentDataVersion();
-                if (readInstance != null) {
-                    daId = new RWAccessId(readInstance, writtenInstance);
-                    if (DEBUG) {
-                        StringBuilder sb = new StringBuilder("");
-                        sb.append("Access:").append("\n");
-                        sb.append("  * Type: RW").append("\n");
-                        sb.append("  * Read Datum: d").append(daId.getDataId()).append("v")
-                            .append(((RWAccessId) daId).getRVersionId()).append("\n");
-                        sb.append("  * Write Datum: d").append(daId.getDataId()).append("v")
-                            .append(((RWAccessId) daId).getWVersionId()).append("\n");
-                        LOGGER.debug(sb.toString());
-                    }
-                } else {
-                    ErrorManager.warn("Previous instance for data" + di.getDataId() + " is null.");
-                }
-                break;
-        }
-        access.externalRegister();
-        return daId;
-    }
-
-    private DataAccessId getAccess(AccessMode mode, DataInfo di) {
-        // Version management
-        DataAccessId daId = null;
-        DataVersion currentInstance = di.getCurrentDataVersion();
-        if (currentInstance != null) {
-            switch (mode) {
-                case C:
-                case R:
-                    daId = new RAccessId(currentInstance);
-                    break;
-                case W:
-                    daId = new WAccessId(di.getCurrentDataVersion());
-                    break;
-                case CV:
-                case RW:
-                    DataVersion readInstance = di.getPreviousDataVersion();
-                    if (readInstance != null) {
-                        daId = new RWAccessId(readInstance, currentInstance);
-                    } else {
-                        LOGGER.warn("Previous instance for data" + di.getDataId() + " is null.");
-                    }
-                    break;
-            }
-        } else {
-            LOGGER.warn("Current instance for data" + di.getDataId() + " is null.");
-        }
-        return daId;
     }
 
     /**

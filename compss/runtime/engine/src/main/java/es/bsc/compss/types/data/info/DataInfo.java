@@ -17,21 +17,35 @@
 package es.bsc.compss.types.data.info;
 
 import es.bsc.compss.comm.Comm;
+import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.Application;
+import es.bsc.compss.types.data.DataAccessId;
 import es.bsc.compss.types.data.DataVersion;
+import es.bsc.compss.types.data.accessid.RAccessId;
+import es.bsc.compss.types.data.accessid.RWAccessId;
+import es.bsc.compss.types.data.accessid.WAccessId;
+import es.bsc.compss.types.data.accessparams.AccessParams.AccessMode;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.NonExistingValueException;
+import es.bsc.compss.util.ErrorManager;
 
 import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 
 // Information about a datum and its versions
 public abstract class DataInfo<T extends DataParams> {
 
+    // CONSTANTS
     private static final int FIRST_FILE_ID = 1;
     private static final int FIRST_VERSION_ID = 1;
+
+    // Component logger
+    private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
+    private static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     protected static int nextDataId = FIRST_FILE_ID;
 
@@ -121,18 +135,104 @@ public abstract class DataInfo<T extends DataParams> {
     }
 
     /**
-     * Returns the previous data version.
-     *
-     * @return The previous data version.
+     * Reconstruct the last access to the data as if were of a given mode.
+     * 
+     * @param mode mode being access
      */
-    public final DataVersion getPreviousDataVersion() {
-        return this.versions.get(this.currentVersionId - 1);
+    public DataAccessId getLastAccess(AccessMode mode) {
+        // Version management
+        DataAccessId daId = null;
+        if (this.currentVersion != null) {
+            switch (mode) {
+                case C:
+                case R:
+                    daId = new RAccessId(this.currentVersion);
+                    break;
+                case W:
+                    daId = new WAccessId(this.currentVersion);
+                    break;
+                case CV:
+                case RW:
+                    DataVersion readInstance = this.versions.get(this.currentVersionId - 1);
+                    if (readInstance != null) {
+                        daId = new RWAccessId(readInstance, this.currentVersion);
+                    } else {
+                        LOGGER.warn("Previous instance for data" + this.dataId + " is null.");
+                    }
+                    break;
+            }
+        } else {
+            LOGGER.warn("Current instance for data" + this.dataId + " is null.");
+        }
+        return daId;
+    }
+
+    /**
+     * Registers a new access to the data.
+     * 
+     * @param mode access mode of the operation performed on the data
+     * @return description of the access performed
+     */
+    public DataAccessId willAccess(AccessMode mode) {
+        DataAccessId daId = null;
+        switch (mode) {
+            case C:
+            case R:
+                this.willBeRead();
+                daId = new RAccessId(this.currentVersion);
+                if (DEBUG) {
+                    StringBuilder sb = new StringBuilder("");
+                    sb.append("Access:").append("\n");
+                    sb.append("  * Type: R").append("\n");
+                    sb.append("  * Read Datum: d").append(daId.getDataId()).append("v")
+                        .append(((RAccessId) daId).getRVersionId()).append("\n");
+                    LOGGER.debug(sb.toString());
+                }
+                break;
+
+            case W:
+                this.willBeWritten();
+                daId = new WAccessId(this.currentVersion);
+                if (DEBUG) {
+                    StringBuilder sb = new StringBuilder("");
+                    sb.append("Access:").append("\n");
+                    sb.append("  * Type: W").append("\n");
+                    sb.append("  * Write Datum: d").append(daId.getDataId()).append("v")
+                        .append(((WAccessId) daId).getWVersionId()).append("\n");
+                    LOGGER.debug(sb.toString());
+                }
+                break;
+
+            case CV:
+            case RW:
+                this.willBeRead();
+                DataVersion readInstance = this.currentVersion;
+                this.willBeWritten();
+                DataVersion writtenInstance = this.currentVersion;
+                if (readInstance != null) {
+                    daId = new RWAccessId(readInstance, writtenInstance);
+                    if (DEBUG) {
+                        StringBuilder sb = new StringBuilder("");
+                        sb.append("Access:").append("\n");
+                        sb.append("  * Type: RW").append("\n");
+                        sb.append("  * Read Datum: d").append(daId.getDataId()).append("v")
+                            .append(((RWAccessId) daId).getRVersionId()).append("\n");
+                        sb.append("  * Write Datum: d").append(daId.getDataId()).append("v")
+                            .append(((RWAccessId) daId).getWVersionId()).append("\n");
+                        LOGGER.debug(sb.toString());
+                    }
+                } else {
+                    ErrorManager.warn("Previous instance for data" + this.dataId + " is null.");
+                }
+                break;
+        }
+        return daId;
     }
 
     /**
      * Marks the data to be read.
      */
-    public final void willBeRead() {
+    private final void willBeRead() {
         this.currentVersion.versionUsed();
         this.currentVersion.willBeRead();
     }
@@ -175,7 +275,7 @@ public abstract class DataInfo<T extends DataParams> {
     /**
      * Marks the data to be written.
      */
-    public void willBeWritten() {
+    protected void willBeWritten() {
         this.currentVersionId++;
         DataVersion validPred = currentVersion;
         if (validPred.hasBeenCancelled()) {
