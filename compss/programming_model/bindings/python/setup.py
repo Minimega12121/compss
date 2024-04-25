@@ -134,6 +134,7 @@ else:
 
 
 def main():
+    """Adds extensions to pyproject.toml definition."""
     # This uses pyproject.toml metadata
     setup(ext_modules=OS_MODULES)
 
