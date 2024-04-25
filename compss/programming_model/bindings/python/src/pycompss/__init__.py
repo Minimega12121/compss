@@ -19,6 +19,7 @@
 
 """This package contains the COMPSs Python Binding, known as PyCOMPSs."""
 
-import os
+from pycompss.util.location import get_binding_location
 
-PYCOMPSS_HOME = os.path.dirname(os.path.realpath(__file__))
+
+PYCOMPSS_HOME = get_binding_location()

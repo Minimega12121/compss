@@ -60,8 +60,8 @@ if __debug__:
     logger = logging.getLogger(__name__)
 
 
-class Task:  # pylint: disable=R0903, R0913
-    # disable=too-few-public-methods, too-many-instance-attributes
+class Task:  # pylint: disable=R0902, R0903
+    # disable=too-many-instance-attributes, too-few-public-methods,
     """This is the Task decorator implementation.
 
     It is implemented as a class and consequently this implementation can be
@@ -298,7 +298,7 @@ class Task:  # pylint: disable=R0903, R0913
         # self.param_kwargs and self.param_defaults
         # And gives non-None default values to them if necessary
         d_t = dummy_task(args, kwargs)
-        return d_t.__call__(self.decorated_function.function)(*args, **kwargs)
+        return d_t(self.decorated_function.function)(*args, **kwargs)
 
     def __check_core_element__(
         self, kwargs: dict, user_function: typing.Callable

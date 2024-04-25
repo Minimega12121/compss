@@ -87,13 +87,8 @@ class Software(
     """
 
     __slots__ = [
-        "decorator_name",
         "args",
         "kwargs",
-        "scope",
-        "core_element",
-        "core_element_configured",
-        "task_type",
         "config_args",
         "decor",
         "constraints",
@@ -103,8 +98,6 @@ class Software(
         "parameters",
         "file_path",
         "is_workflow",
-        "registered_signatures",
-        "constraint_args",
     ]
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:

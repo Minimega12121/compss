@@ -38,8 +38,7 @@ from pycompss.util.logger.remittent import LOG_REMITTENT
 from pycompss.util.typing_helper import typing
 
 
-CURRENT_PATH = os.path.dirname(os.path.realpath(__file__))
-LOG_CFG_PATH = os.path.join(CURRENT_PATH, "cfg")
+LOG_CFG_PATH = os.path.join(PYCOMPSS_HOME, "util", "logger", "cfg")
 CONFIG_FUNC = config.dictConfig
 # Keep configs to avoid read the cfg many times
 CONFIGS = {}  # type: typing.Dict[str, dict]

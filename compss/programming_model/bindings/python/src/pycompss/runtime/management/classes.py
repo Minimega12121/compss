@@ -24,7 +24,7 @@ This file contains the internal classes.
 """
 
 
-class SupportedFunctionTypes:
+class SupportedFunctionTypes:  # pylint: disable=too-few-public-methods
     """Used as enum to identify the function type."""
 
     FUNCTION = 1
@@ -32,11 +32,11 @@ class SupportedFunctionTypes:
     CLASS_METHOD = 3
 
 
-class Future:
+class Future:  # pylint: disable=too-few-public-methods
     """Future object class definition."""
 
 
-class EmptyReturn:
+class EmptyReturn:  # pylint: disable=too-few-public-methods
     """For functions with empty return."""
 
 
