@@ -79,13 +79,6 @@ public interface DataAccessId extends Serializable {
     public static interface ReadingDataAccessId extends DataAccessId {
 
         /**
-         * Returns the data version read by the access.
-         *
-         * @return data version read
-         */
-        public DataVersion getReadDataVersion();
-
-        /**
          * Returns the read data instance.
          *
          * @return The read data instance.
@@ -101,13 +94,6 @@ public interface DataAccessId extends Serializable {
     }
 
     public static interface WritingDataAccessId extends DataAccessId {
-
-        /**
-         * Returns the written data version.
-         *
-         * @return data version written
-         */
-        public DataVersion getWrittenDataVersion();
 
         /**
          * Returns the written data instance.

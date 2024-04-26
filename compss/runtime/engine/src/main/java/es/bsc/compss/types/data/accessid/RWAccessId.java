@@ -17,12 +17,13 @@
 package es.bsc.compss.types.data.accessid;
 
 import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataAccessId.ReadingDataAccessId;
 import es.bsc.compss.types.data.DataInstanceId;
 import es.bsc.compss.types.data.DataVersion;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
 
 
-public class RAccessId implements ReadingDataAccessId {
+public class RWAccessId implements ReadingDataAccessId, WritingDataAccessId {
 
     /**
      * Serializable objects Version UID are 1L in all Runtime.
@@ -30,24 +31,27 @@ public class RAccessId implements ReadingDataAccessId {
     private static final long serialVersionUID = 1L;
 
     // File version read
-    // private DataInstanceId readDataInstance;
     private DataVersion readDataVersion;
+    // File version written
+    private DataVersion writtenDataVersion;
 
 
     /**
-     * Creates a new Read Access Id for serialization.
+     * Creates a new ReadWrite Access Id for serialization.
      */
-    public RAccessId() {
+    public RWAccessId() {
         // For serialization
     }
 
     /**
-     * Sets a new data version.
+     * Creates a new ReadWrite Access Id with read version {@code rdv} and write version {@code wdv}.
      * 
-     * @param rdv New data version.
+     * @param rdv Read version.
+     * @param wdv Write version.
      */
-    public RAccessId(DataVersion rdv) {
+    public RWAccessId(DataVersion rdv, DataVersion wdv) {
         this.readDataVersion = rdv;
+        this.writtenDataVersion = wdv;
     }
 
     @Override
@@ -57,17 +61,22 @@ public class RAccessId implements ReadingDataAccessId {
 
     @Override
     public Direction getDirection() {
-        return Direction.R;
+        return Direction.RW;
     }
 
     @Override
     public boolean isPreserveSourceData() {
-        return this.readDataVersion.hasMoreReaders() || this.readDataVersion.getDataInstanceId().getVersionId() == 1;
+        return this.readDataVersion.hasMoreReaders();
     }
 
     @Override
     public boolean isRead() {
         return true;
+    }
+
+    @Override
+    public int getRVersionId() {
+        return this.readDataVersion.getDataInstanceId().getVersionId();
     }
 
     @Override
@@ -81,19 +90,29 @@ public class RAccessId implements ReadingDataAccessId {
     }
 
     @Override
-    public int getRVersionId() {
-        return this.readDataVersion.getDataInstanceId().getVersionId();
+    public boolean isWrite() {
+        return true;
     }
 
     @Override
-    public boolean isWrite() {
-        return false;
+    public DataVersion getWrittenDataVersion() {
+        return this.writtenDataVersion;
+    }
+
+    @Override
+    public DataInstanceId getWrittenDataInstance() {
+        return this.writtenDataVersion.getDataInstanceId();
+    }
+
+    @Override
+    public int getWVersionId() {
+        return this.writtenDataVersion.getDataInstanceId().getVersionId();
     }
 
     @Override
     public String toString() {
-        return "Read data: " + this.readDataVersion.getDataInstanceId()
-            + (isPreserveSourceData() ? ", Preserved" : ", Erased");
+        return "Read data: " + this.readDataVersion.getDataInstanceId() + ", Written data: "
+            + this.writtenDataVersion.getDataInstanceId() + (isPreserveSourceData() ? ", Preserved" : ", Erased");
     }
 
     @Override
@@ -101,7 +120,7 @@ public class RAccessId implements ReadingDataAccessId {
         if (!this.readDataVersion.isValid()) {
             DataVersion validR = this.readDataVersion.getPreviousValidPredecessor();
             if (validR != null) {
-                return new RAccessId(validR);
+                return new RWAccessId(validR, this.writtenDataVersion);
             } else {
                 return null;
             }
