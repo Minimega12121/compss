@@ -1375,11 +1375,17 @@ def wrroc_create_action(
         ):
             # Changed to 'environment' term in WRROC v0.4
             env_var = {}
-            env_var["@id"] = "#" + name.lower()
             env_var["@type"] = "PropertyValue"
             env_var["name"] = name
             env_var["value"] = value
-            environment_property.append(env_var)
+            compss_crate.add(
+                ContextEntity(
+                    compss_crate,
+                    "#" + name.lower(),
+                    properties=env_var,
+                )
+            )
+            environment_property.append({"@id": "#" + name.lower()})
 
     description_property = uname_out
 
