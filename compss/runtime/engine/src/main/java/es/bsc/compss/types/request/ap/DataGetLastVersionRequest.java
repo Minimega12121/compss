@@ -21,6 +21,7 @@ import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.data.LogicalData;
+import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.tracing.TraceEvent;
 
@@ -60,7 +61,11 @@ public class DataGetLastVersionRequest extends APRequest {
 
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td) {
-        this.response = dip.getDataLastVersion(data);
+        this.response = null;
+        DataInfo dInfo = data.getDataInfo();
+        if (dInfo != null) {
+            this.response = dInfo.getCurrentDataVersion().getDataInstanceId().getData();
+        }
         sem.release();
     }
 

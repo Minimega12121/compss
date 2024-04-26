@@ -118,20 +118,6 @@ public class DataInfoProvider {
     }
 
     /**
-     * Obtains the last value produced for a data.
-     *
-     * @param internalData local value
-     * @return last data produced for that value.
-     */
-    public LogicalData getDataLastVersion(DataParams internalData) {
-        DataInfo dInfo = internalData.getDataInfo();
-        if (dInfo != null) {
-            return dInfo.getCurrentDataVersion().getDataInstanceId().getData();
-        }
-        return null;
-    }
-
-    /**
      * DataAccess interface: registers a new data access.
      *
      * @param access Access Parameters.
