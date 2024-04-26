@@ -62,8 +62,6 @@ public class DataInfoProvider {
     // Constants definition
     private static final String RES_FILE_TRANSFER_ERR = "Error transferring result files";
 
-
-
     // Set: Object values available for main code
     private TreeSet<String> valuesOnMain; // TODO: Remove obsolete from here
 

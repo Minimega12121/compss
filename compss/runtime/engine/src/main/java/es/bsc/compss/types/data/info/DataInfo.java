@@ -47,7 +47,7 @@ public abstract class DataInfo<T extends DataParams> {
     // Component logger
     private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
-    
+
     // Map: file identifier -> file information
     private static final Map<Integer, DataInfo> ID_TO_DATA = new TreeMap<>();
 
