@@ -43,6 +43,7 @@ class LinkMessages:
         "open_task_group",
         "close_task_group",
         "cancel_task_group",
+        "snapshot",
         "get_logging_path",
         "get_master_working_path",
         "get_number_of_resources",
