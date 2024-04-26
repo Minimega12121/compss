@@ -18,8 +18,8 @@ package es.bsc.compss.types.data.accessid;
 
 import es.bsc.compss.types.data.DataAccessId;
 import es.bsc.compss.types.data.DataInstanceId;
-import es.bsc.compss.types.data.DataVersion;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
+import es.bsc.compss.types.data.info.DataVersion;
 
 
 public class WAccessId implements WritingDataAccessId {

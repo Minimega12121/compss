@@ -17,19 +17,17 @@
 package es.bsc.compss.components.impl;
 
 import es.bsc.compss.comm.Comm;
-import es.bsc.compss.exceptions.CommException;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.data.DataAccessId;
 import es.bsc.compss.types.data.DataInstanceId;
-import es.bsc.compss.types.data.DataVersion;
 import es.bsc.compss.types.data.LogicalData;
 import es.bsc.compss.types.data.ResultFile;
 import es.bsc.compss.types.data.accessid.RAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
 import es.bsc.compss.types.data.accessid.WAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
-import es.bsc.compss.types.data.accessparams.AccessParams.AccessMode;
 import es.bsc.compss.types.data.info.DataInfo;
+import es.bsc.compss.types.data.info.DataVersion;
 import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.data.location.DataLocation;
 import es.bsc.compss.types.data.location.PersistentLocation;
@@ -40,11 +38,9 @@ import es.bsc.compss.types.data.operation.ResultListener;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.types.tracing.TraceEvent;
-import es.bsc.compss.util.ErrorManager;
 import es.bsc.compss.util.Tracer;
 
 import java.io.File;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.logging.log4j.LogManager;
