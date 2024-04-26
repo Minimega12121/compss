@@ -79,31 +79,6 @@ public class DataInfoProvider {
     }
 
     /**
-     * Registers the remote data.
-     *
-     * @param internalData local value
-     * @param externalData Existing LogicalData to bind the value
-     */
-    public void registerRemoteDataSources(DataParams internalData, String externalData) {
-        DataInfo dInfo = internalData.getDataInfo();
-        if (dInfo == null) {
-            if (DEBUG) {
-                LOGGER.debug("Registering Remote data on DIP: " + internalData.getDescription());
-            }
-            dInfo = internalData.createDataInfo();
-        }
-        if (externalData != null && dInfo != null) {
-            String existingRename = dInfo.getCurrentDataVersion().getDataInstanceId().getRenaming();
-            try {
-                Comm.linkData(externalData, existingRename);
-            } catch (CommException ce) {
-                ErrorManager.error("Could not link the newly created data for " + internalData.getDescription()
-                    + " with data " + externalData, ce);
-            }
-        }
-    }
-
-    /**
      * DataAccess interface: registers a new data access.
      *
      * @param access Access Parameters.
