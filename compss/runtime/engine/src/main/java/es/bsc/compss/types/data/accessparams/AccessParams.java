@@ -142,10 +142,6 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
         return data.getDataInfo();
     }
 
-    public Integer getDataId() {
-        return data.getDataId();
-    }
-
     public String getDataDescription() {
         return data.getDescription();
     }

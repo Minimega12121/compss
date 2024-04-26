@@ -33,8 +33,6 @@ public abstract class DataParams {
 
     public abstract DataInfo removeDataInfo();
 
-    public abstract Integer getDataId();
-
     /**
      * Deletes the local instance of the data.
      * 
