@@ -62,8 +62,7 @@ public class BindingObjectAccessParams extends ObjectAccessParams<BindingObject,
     }
 
     @Override
-    public void registeredAsFirstVersionForData(DataInfo dInfo) {
-        DataVersion dv = dInfo.getCurrentDataVersion();
+    public void registerValueForVersion(DataVersion dv) {
         if (mode != AccessMode.W) {
             DataInstanceId lastDID = dv.getDataInstanceId();
             String renaming = lastDID.getRenaming();

@@ -20,6 +20,7 @@ import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
+import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.NonExistingValueException;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
@@ -50,7 +51,15 @@ public class WaitForDataReadyToDeleteRequest extends APRequest {
     public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td) {
         LOGGER.info("[WaitForDataReadyToDelete] Notifying waiting data " + this.data.getDescription() + "to DIP...");
         try {
-            dip.waitForDataReadyToDelete(this.data, this.sem);
+            LOGGER.debug("Waiting for data " + data.getDescription() + " to be ready for deletion");
+            DataInfo dataInfo = data.getDataInfo();
+            if (dataInfo == null) {
+                if (DEBUG) {
+                    LOGGER.debug("No data found for data associated to " + data.getDescription());
+                }
+                throw new ValueUnawareRuntimeException();
+            }
+            dataInfo.waitForDataReadyToDelete(sem);
         } catch (ValueUnawareRuntimeException vure) {
             this.vure = vure;
             this.sem.release();

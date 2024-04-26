@@ -49,9 +49,6 @@ public class ShutdownRequest extends APRequest {
         throws ShutdownException {
         // Close Graph
         ta.shutdown();
-        // Clear delete Intermediate Files
-        dip.shutdown();
-
     }
 
     @Override

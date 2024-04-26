@@ -38,7 +38,6 @@ import es.bsc.compss.types.data.operation.DirectoryTransferable;
 import es.bsc.compss.types.data.operation.FileTransferable;
 import es.bsc.compss.types.data.operation.ResultListener;
 import es.bsc.compss.types.data.params.DataParams;
-import es.bsc.compss.types.request.exceptions.NonExistingValueException;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.types.tracing.TraceEvent;
 import es.bsc.compss.util.ErrorManager;
@@ -47,7 +46,6 @@ import es.bsc.compss.util.Tracer;
 import java.io.File;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.Semaphore;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,7 +67,7 @@ public class DataInfoProvider {
     // Set: Object values available for main code
     private TreeSet<String> valuesOnMain; // TODO: Remove obsolete from here
 
-    // Component logger - No need to configure, ProActive does
+    // Component logger
     private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
 
@@ -80,7 +78,6 @@ public class DataInfoProvider {
     public DataInfoProvider() {
         this.idToData = new TreeMap<>();
         this.valuesOnMain = new TreeSet<>();
-
         LOGGER.info("Initialization finished");
     }
 
@@ -121,20 +118,6 @@ public class DataInfoProvider {
     }
 
     /**
-     * Obtains the last value produced for a data.
-     *
-     * @param internalData local value
-     * @return last data produced for that value.
-     */
-    public LogicalData getDataLastVersion(DataParams internalData) {
-        DataInfo dInfo = internalData.getDataInfo();
-        if (dInfo != null) {
-            return dInfo.getCurrentDataVersion().getDataInstanceId().getData();
-        }
-        return null;
-    }
-
-    /**
      * DataAccess interface: registers a new data access.
      *
      * @param access Access Parameters.
@@ -159,14 +142,16 @@ public class DataInfoProvider {
                 LOGGER.debug("FIRST access to " + access.getDataDescription());
             }
             dInfo = registerData(access.getData());
-            access.registeredAsFirstVersionForData(dInfo);
+            DataVersion dv = dInfo.getCurrentDataVersion();
+            access.registerValueForVersion(dv);
         } else {
             if (DEBUG) {
                 LOGGER.debug("Another access to " + access.getDataDescription());
             }
         }
 
-        DataAccessId daId = willAccess(access, dInfo);
+        DataAccessId daId = dInfo.willAccess(access.getMode());
+        access.externalRegister();
         return daId;
     }
 
@@ -185,99 +170,12 @@ public class DataInfoProvider {
             LOGGER.warn(access.getDataDescription() + " has not been accessed before");
             return;
         }
-        DataAccessId daid = getAccess(access.getMode(), dInfo);
+        DataAccessId daid = dInfo.getLastAccess(access.getMode());
         if (daid == null) {
             LOGGER.warn(access.getDataDescription() + " has not been accessed before");
             return;
         }
         dataHasBeenAccessed(daid);
-    }
-
-    private DataAccessId willAccess(AccessParams access, DataInfo di) {
-        // Version management
-        DataAccessId daId = null;
-        switch (access.getMode()) {
-            case C:
-            case R:
-                di.willBeRead();
-                daId = new RAccessId(di.getCurrentDataVersion());
-                if (DEBUG) {
-                    StringBuilder sb = new StringBuilder("");
-                    sb.append("Access:").append("\n");
-                    sb.append("  * Type: R").append("\n");
-                    sb.append("  * Read Datum: d").append(daId.getDataId()).append("v")
-                        .append(((RAccessId) daId).getRVersionId()).append("\n");
-                    LOGGER.debug(sb.toString());
-                }
-                break;
-
-            case W:
-                di.willBeWritten();
-                daId = new WAccessId(di.getCurrentDataVersion());
-                if (DEBUG) {
-                    StringBuilder sb = new StringBuilder("");
-                    sb.append("Access:").append("\n");
-                    sb.append("  * Type: W").append("\n");
-                    sb.append("  * Write Datum: d").append(daId.getDataId()).append("v")
-                        .append(((WAccessId) daId).getWVersionId()).append("\n");
-                    LOGGER.debug(sb.toString());
-                }
-                break;
-
-            case CV:
-            case RW:
-                di.willBeRead();
-                DataVersion readInstance = di.getCurrentDataVersion();
-                di.willBeWritten();
-                DataVersion writtenInstance = di.getCurrentDataVersion();
-                if (readInstance != null) {
-                    daId = new RWAccessId(readInstance, writtenInstance);
-                    if (DEBUG) {
-                        StringBuilder sb = new StringBuilder("");
-                        sb.append("Access:").append("\n");
-                        sb.append("  * Type: RW").append("\n");
-                        sb.append("  * Read Datum: d").append(daId.getDataId()).append("v")
-                            .append(((RWAccessId) daId).getRVersionId()).append("\n");
-                        sb.append("  * Write Datum: d").append(daId.getDataId()).append("v")
-                            .append(((RWAccessId) daId).getWVersionId()).append("\n");
-                        LOGGER.debug(sb.toString());
-                    }
-                } else {
-                    ErrorManager.warn("Previous instance for data" + di.getDataId() + " is null.");
-                }
-                break;
-        }
-        access.externalRegister();
-        return daId;
-    }
-
-    private DataAccessId getAccess(AccessMode mode, DataInfo di) {
-        // Version management
-        DataAccessId daId = null;
-        DataVersion currentInstance = di.getCurrentDataVersion();
-        if (currentInstance != null) {
-            switch (mode) {
-                case C:
-                case R:
-                    daId = new RAccessId(currentInstance);
-                    break;
-                case W:
-                    daId = new WAccessId(di.getCurrentDataVersion());
-                    break;
-                case CV:
-                case RW:
-                    DataVersion readInstance = di.getPreviousDataVersion();
-                    if (readInstance != null) {
-                        daId = new RWAccessId(readInstance, currentInstance);
-                    } else {
-                        LOGGER.warn("Previous instance for data" + di.getDataId() + " is null.");
-                    }
-                    break;
-            }
-        } else {
-            LOGGER.warn("Current instance for data" + di.getDataId() + " is null.");
-        }
-        return daId;
     }
 
     /**
@@ -364,18 +262,6 @@ public class DataInfoProvider {
     }
 
     /**
-     * Returns whether a given data has been accessed or not.
-     *
-     * @param data data whose last version is wanted to be obtained
-     * @return {@code true} if the data has been accessed, {@code false} otherwise.
-     */
-    public boolean alreadyAccessed(DataParams data) {
-        LOGGER.debug("Check already accessed: " + data.getDescription());
-        DataInfo dInfo = data.getDataInfo();
-        return dInfo != null;
-    }
-
-    /**
      * Returns whether the data is registered in the master or not.
      *
      * @param data Data Params.
@@ -385,27 +271,6 @@ public class DataInfoProvider {
         DataInfo oInfo = data.getDataInfo();
         DataInstanceId dId = oInfo.getCurrentDataVersion().getDataInstanceId();
         return this.valuesOnMain.contains(dId.getRenaming());
-    }
-
-    /**
-     * Waits until data is ready for its safe deletion.
-     *
-     * @param data data to wait to be ready to delete
-     * @param sem element to notify the operations completeness.
-     * @throws ValueUnawareRuntimeException the runtime is not aware of the data
-     * @throws NonExistingValueException the data to delete does not actually exist
-     */
-    public void waitForDataReadyToDelete(DataParams data, Semaphore sem)
-        throws ValueUnawareRuntimeException, NonExistingValueException {
-        LOGGER.debug("Waiting for data " + data.getDescription() + " to be ready for deletion");
-        DataInfo dataInfo = data.getDataInfo();
-        if (dataInfo == null) {
-            if (DEBUG) {
-                LOGGER.debug("No data found for data associated to " + data.getDescription());
-            }
-            throw new ValueUnawareRuntimeException();
-        }
-        dataInfo.waitForDataReadyToDelete(sem);
     }
 
     /**
@@ -536,12 +401,4 @@ public class DataInfoProvider {
 
         return null;
     }
-
-    /**
-     * Shuts down the component.
-     */
-    public void shutdown() {
-        // Nothing to do
-    }
-
 }
