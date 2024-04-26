@@ -30,6 +30,7 @@ import es.bsc.compss.types.request.exceptions.NonExistingValueException;
 import es.bsc.compss.util.ErrorManager;
 
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 import org.apache.logging.log4j.LogManager;
@@ -46,6 +47,9 @@ public abstract class DataInfo<T extends DataParams> {
     // Component logger
     private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
+
+    // Map: file identifier -> file information
+    private static final Map<Integer, DataInfo> ID_TO_DATA = new TreeMap<>();
 
     protected static int nextDataId = FIRST_FILE_ID;
 
@@ -73,7 +77,7 @@ public abstract class DataInfo<T extends DataParams> {
 
     /**
      * Creates a new DataInfo instance with and registers a new LogicalData.
-     * 
+     *
      * @param data description of the data related to the info
      */
     public DataInfo(T data) {
@@ -87,6 +91,7 @@ public abstract class DataInfo<T extends DataParams> {
         this.pendingDeletions = new LinkedList<>();
         this.canceledVersions = new LinkedList<>();
         this.deleted = false;
+        ID_TO_DATA.put(dataId, this);
     }
 
     /**
@@ -100,7 +105,7 @@ public abstract class DataInfo<T extends DataParams> {
 
     /**
      * Returns the description of the data related to the info.
-     * 
+     *
      * @return description of the data related to the info
      */
     public T getParams() {
@@ -109,7 +114,7 @@ public abstract class DataInfo<T extends DataParams> {
 
     /**
      * Returns the application generating the DataInfo.
-     * 
+     *
      * @return the application generating the DataInfo.
      */
     public Application getGeneratingAppId() {
@@ -136,7 +141,7 @@ public abstract class DataInfo<T extends DataParams> {
 
     /**
      * Reconstruct the last access to the data as if were of a given mode.
-     * 
+     *
      * @param mode mode being access
      */
     public DataAccessId getLastAccess(AccessMode mode) {
@@ -169,7 +174,7 @@ public abstract class DataInfo<T extends DataParams> {
 
     /**
      * Registers a new access to the data.
-     * 
+     *
      * @param mode access mode of the operation performed on the data
      * @return description of the access performed
      */
@@ -266,7 +271,6 @@ public abstract class DataInfo<T extends DataParams> {
         if (readVersion.hasBeenRead()) {
             Comm.removeData(readVersion.getDataInstanceId().getRenaming(), true);
             this.versions.remove(versionId);
-            // return (this.toDelete && versions.size() == 0);
             return this.versions.isEmpty();
         }
         return false;
@@ -455,5 +459,22 @@ public abstract class DataInfo<T extends DataParams> {
             }
         }
         return false;
+    }
+
+    /**
+     * Deregisters the data from the collection.
+     */
+    public void deregister() {
+        ID_TO_DATA.remove(this.dataId);
+    }
+
+    /**
+     * Obtains the DataInfo for a given dataId.
+     * 
+     * @param dataId Id of the data to retrieve
+     * @return DataInfo for the dataId passed in as parameter
+     */
+    public static DataInfo get(Integer dataId) {
+        return ID_TO_DATA.get(dataId);
     }
 }

@@ -62,8 +62,6 @@ public class DataInfoProvider {
     // Constants definition
     private static final String RES_FILE_TRANSFER_ERR = "Error transferring result files";
 
-    // Map: file identifier -> file information
-    private TreeMap<Integer, DataInfo> idToData;
     // Set: Object values available for main code
     private TreeSet<String> valuesOnMain; // TODO: Remove obsolete from here
 
@@ -76,20 +74,8 @@ public class DataInfoProvider {
      * New Data Info Provider instance.
      */
     public DataInfoProvider() {
-        this.idToData = new TreeMap<>();
         this.valuesOnMain = new TreeSet<>();
         LOGGER.info("Initialization finished");
-    }
-
-    private DataInfo registerData(DataParams data) {
-        DataInfo dInfo = data.createDataInfo();
-        this.idToData.put(dInfo.getDataId(), dInfo);
-        return dInfo;
-    }
-
-    private void deregisterData(DataInfo di) {
-        int dataId = di.getDataId();
-        idToData.remove(dataId);
     }
 
     /**
@@ -104,7 +90,7 @@ public class DataInfoProvider {
             if (DEBUG) {
                 LOGGER.debug("Registering Remote data on DIP: " + internalData.getDescription());
             }
-            dInfo = registerData(internalData);
+            dInfo = internalData.createDataInfo();
         }
         if (externalData != null && dInfo != null) {
             String existingRename = dInfo.getCurrentDataVersion().getDataInstanceId().getRenaming();
@@ -141,7 +127,7 @@ public class DataInfoProvider {
             if (DEBUG) {
                 LOGGER.debug("FIRST access to " + access.getDataDescription());
             }
-            dInfo = registerData(access.getData());
+            dInfo = access.getData().createDataInfo();
             DataVersion dv = dInfo.getCurrentDataVersion();
             access.registerValueForVersion(dv);
         } else {
@@ -185,7 +171,7 @@ public class DataInfoProvider {
      */
     public void dataAccessHasBeenCanceled(DataAccessId dAccId, boolean keepModified) {
         Integer dataId = dAccId.getDataId();
-        DataInfo di = this.idToData.get(dataId);
+        DataInfo di = DataInfo.get(dataId);
         if (di != null) {
             Integer rVersionId;
             Integer wVersionId;
@@ -217,7 +203,7 @@ public class DataInfoProvider {
             }
 
             if (deleted) {
-                deregisterData(di);
+                di.deregister();
             }
         } else {
             LOGGER.debug("Access of Data" + dAccId.getDataId() + " in Mode " + dAccId.getDirection().name()
@@ -232,7 +218,7 @@ public class DataInfoProvider {
      */
     public void dataHasBeenAccessed(DataAccessId dAccId) {
         Integer dataId = dAccId.getDataId();
-        DataInfo di = this.idToData.get(dataId);
+        DataInfo di = DataInfo.get(dataId);
         if (di != null) {
             Integer rVersionId = null;
             Integer wVersionId;
@@ -253,7 +239,7 @@ public class DataInfoProvider {
             }
 
             if (deleted) {
-                deregisterData(di);
+                di.deregister();
             }
         } else {
             LOGGER.warn("Access of Data" + dAccId.getDataId() + " in Mode " + dAccId.getDirection().name()
@@ -294,7 +280,7 @@ public class DataInfoProvider {
         }
         // We delete the data associated with all the versions of the same object
         if (dataInfo.delete()) {
-            deregisterData(dataInfo);
+            dataInfo.deregister();
         }
         return dataInfo;
     }
@@ -393,7 +379,7 @@ public class DataInfoProvider {
                         LOGGER.debug("Trying to delete file " + origName);
                     }
                     if (fInfo.delete()) {
-                        deregisterData(fInfo);
+                        fInfo.deregister();
                     }
                 }
             }
