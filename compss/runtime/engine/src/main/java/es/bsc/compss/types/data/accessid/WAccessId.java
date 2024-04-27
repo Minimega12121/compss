@@ -16,8 +16,7 @@
  */
 package es.bsc.compss.types.data.accessid;
 
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
 import es.bsc.compss.types.data.info.DataVersion;
 
@@ -80,7 +79,7 @@ public class WAccessId implements WritingDataAccessId {
     }
 
     @Override
-    public DataInstanceId getWrittenDataInstance() {
+    public EngineDataInstanceId getWrittenDataInstance() {
         return this.writtenDataVersion.getDataInstanceId();
     }
 
@@ -95,7 +94,7 @@ public class WAccessId implements WritingDataAccessId {
     }
 
     @Override
-    public DataAccessId consolidateValidVersions() {
+    public EngineDataAccessId consolidateValidVersions() {
         return this;
     }
 

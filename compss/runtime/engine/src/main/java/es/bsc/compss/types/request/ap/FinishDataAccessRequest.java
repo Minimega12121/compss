@@ -20,7 +20,7 @@ import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.request.exceptions.ShutdownException;
 import es.bsc.compss.types.tracing.TraceEvent;
@@ -29,7 +29,7 @@ import es.bsc.compss.types.tracing.TraceEvent;
 public class FinishDataAccessRequest extends APRequest {
 
     private final AccessParams access;
-    private final DataInstanceId generatedData;
+    private final EngineDataInstanceId generatedData;
 
 
     /**
@@ -38,7 +38,7 @@ public class FinishDataAccessRequest extends APRequest {
      * @param ap Associated AccessParams.
      * @param generatedData Associated AccessParams.
      */
-    public FinishDataAccessRequest(AccessParams ap, DataInstanceId generatedData) {
+    public FinishDataAccessRequest(AccessParams ap, EngineDataInstanceId generatedData) {
         this.access = ap;
         this.generatedData = generatedData;
     }

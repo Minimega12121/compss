@@ -35,6 +35,7 @@ import es.bsc.compss.types.data.DataAccessId;
 import es.bsc.compss.types.data.DataAccessId.ReadingDataAccessId;
 import es.bsc.compss.types.data.DataAccessId.WritingDataAccessId;
 import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
@@ -181,12 +182,12 @@ public class TaskAnalyser {
      * @return The registered access Id.
      * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
      */
-    public DataAccessId processMainAccess(RegisterDataAccessRequest rdar) throws ValueUnawareRuntimeException {
+    public EngineDataAccessId processMainAccess(RegisterDataAccessRequest rdar) throws ValueUnawareRuntimeException {
         AccessParams access = rdar.getAccessParams();
         if (DEBUG) {
             LOGGER.debug("Registering access " + access.toString() + " from main code");
         }
-        DataAccessId daId = dip.registerAccessToExistingData(access);
+        EngineDataAccessId daId = dip.registerAccessToExistingData(access);
         if (daId == null) {
             if (DEBUG) {
                 LOGGER.debug("Accessing a canceled data from main code. Returning null");

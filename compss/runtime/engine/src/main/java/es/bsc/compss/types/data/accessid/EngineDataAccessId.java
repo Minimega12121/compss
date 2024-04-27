@@ -17,29 +17,39 @@
 package es.bsc.compss.types.data.accessid;
 
 import es.bsc.compss.types.data.DataAccessId;
+import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.info.DataVersion;
 
 
 public interface EngineDataAccessId extends DataAccessId {
 
-    public static interface ReadingDataAccessId extends DataAccessId.ReadingDataAccessId {
+    EngineDataAccessId consolidateValidVersions();
+
+
+    interface ReadingDataAccessId extends EngineDataAccessId, DataAccessId.ReadingDataAccessId {
+
+        @Override
+        EngineDataInstanceId getReadDataInstance();
 
         /**
          * Returns the data version read by the access.
          *
          * @return data version read
          */
-        public DataVersion getReadDataVersion();
+        DataVersion getReadDataVersion();
     }
 
-    public static interface WritingDataAccessId extends DataAccessId.WritingDataAccessId {
+    interface WritingDataAccessId extends EngineDataAccessId, DataAccessId.WritingDataAccessId {
+
+        @Override
+        EngineDataInstanceId getWrittenDataInstance();
 
         /**
          * Returns the written data version.
          *
          * @return data version written
          */
-        public DataVersion getWrittenDataVersion();
-
+        DataVersion getWrittenDataVersion();
     }
 }

@@ -16,8 +16,7 @@
  */
 package es.bsc.compss.types.data.accessid;
 
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
 import es.bsc.compss.types.data.info.DataVersion;
 
@@ -76,7 +75,7 @@ public class RAccessId implements ReadingDataAccessId {
     }
 
     @Override
-    public DataInstanceId getReadDataInstance() {
+    public EngineDataInstanceId getReadDataInstance() {
         return this.readDataVersion.getDataInstanceId();
     }
 
@@ -97,7 +96,7 @@ public class RAccessId implements ReadingDataAccessId {
     }
 
     @Override
-    public DataAccessId consolidateValidVersions() {
+    public EngineDataAccessId consolidateValidVersions() {
         if (!this.readDataVersion.isValid()) {
             DataVersion validR = this.readDataVersion.getPreviousValidPredecessor();
             if (validR != null) {

@@ -51,7 +51,7 @@ public class CollectionAccessParams extends AccessParams<CollectionData> {
     }
 
     @Override
-    public void checkAccessValidity(DataInfoProvider dip) throws ValueUnawareRuntimeException {
+    public void checkAccessValidity() throws ValueUnawareRuntimeException {
         // Accesses to collections are always valids.
     }
 
