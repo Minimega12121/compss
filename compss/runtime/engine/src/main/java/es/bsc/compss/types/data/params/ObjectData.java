@@ -38,12 +38,6 @@ public class ObjectData extends DataParams {
     }
 
     @Override
-    public Integer getDataId() {
-        Application app = this.getApp();
-        return app.getObjectDataId(code);
-    }
-
-    @Override
     public String getDescription() {
         return "object with code " + code;
     }

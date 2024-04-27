@@ -14,7 +14,9 @@
  *  limitations under the License.
  *
  */
-package es.bsc.compss.types.data;
+package es.bsc.compss.types.data.info;
+
+import es.bsc.compss.types.data.DataInstanceId;
 
 import java.util.LinkedList;
 import java.util.List;

@@ -16,13 +16,17 @@
  */
 package es.bsc.compss.types.request.ap;
 
+import es.bsc.compss.comm.Comm;
 import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
+import es.bsc.compss.exceptions.CommException;
+import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ShutdownException;
 import es.bsc.compss.types.tracing.TraceEvent;
+import es.bsc.compss.util.ErrorManager;
 
 
 public class RegisterRemoteDataRequest extends APRequest {
@@ -50,7 +54,22 @@ public class RegisterRemoteDataRequest extends APRequest {
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td)
         throws ShutdownException {
-        dip.registerRemoteDataSources(accessedValue, data);
+        DataInfo dInfo = accessedValue.getDataInfo();
+        if (dInfo == null) {
+            if (DEBUG) {
+                LOGGER.debug("Registering Remote data on DIP: " + accessedValue.getDescription());
+            }
+            dInfo = accessedValue.createDataInfo();
+        }
+        if (data != null && dInfo != null) {
+            String existingRename = dInfo.getCurrentDataVersion().getDataInstanceId().getRenaming();
+            try {
+                Comm.linkData(data, existingRename);
+            } catch (CommException ce) {
+                ErrorManager.error("Could not link the newly created data for " + accessedValue.getDescription()
+                    + " with data " + data, ce);
+            }
+        }
     }
 
 }

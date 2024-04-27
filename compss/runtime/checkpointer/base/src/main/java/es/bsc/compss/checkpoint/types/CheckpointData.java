@@ -16,7 +16,7 @@
  */
 package es.bsc.compss.checkpoint.types;
 
-import es.bsc.compss.types.data.DataVersion;
+import es.bsc.compss.types.data.info.DataVersion;
 import es.bsc.compss.types.parameter.Parameter;
 
 

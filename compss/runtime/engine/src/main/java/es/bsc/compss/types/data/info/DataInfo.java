@@ -20,7 +20,6 @@ import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataVersion;
 import es.bsc.compss.types.data.accessid.RAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
 import es.bsc.compss.types.data.accessid.WAccessId;

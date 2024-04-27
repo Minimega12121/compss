@@ -43,12 +43,6 @@ public class CollectionData extends DataParams {
     }
 
     @Override
-    public Integer getDataId() {
-        Application app = this.getApp();
-        return app.getCollectionDataId(this.collectionId);
-    }
-
-    @Override
     public DataInfo createDataInfo() {
         DataInfo cInfo = new CollectionInfo(this);
         Application app = this.getApp();

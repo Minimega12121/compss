@@ -381,21 +381,6 @@ public class Application {
     }
 
     /**
-     * Returns the Data Id related to a file.
-     *
-     * @param locationKey file location
-     * @return data Id related to the file
-     */
-    public Integer getFileDataId(String locationKey) {
-        DataInfo di = getFileData(locationKey);
-        Integer id = null;
-        if (di != null) {
-            id = di.getDataId();
-        }
-        return id;
-    }
-
-    /**
      * Removes any data association related to file location.
      *
      * @param locationKey file location
@@ -426,21 +411,6 @@ public class Application {
     }
 
     /**
-     * Returns the Data Id related to an object.
-     *
-     * @param code hashcode of the object
-     * @return data Id related to the object
-     */
-    public Integer getObjectDataId(int code) {
-        DataInfo di = getObjectData(code);
-        Integer id = null;
-        if (di != null) {
-            id = di.getDataId();
-        }
-        return id;
-    }
-
-    /**
      * Removes any data association related to an object.
      *
      * @param code hashcode of the object
@@ -468,21 +438,6 @@ public class Application {
      */
     public DataInfo getCollectionData(String collectionId) {
         return this.collectionToData.get(collectionId);
-    }
-
-    /**
-     * Returns the Data Id related to a collection.
-     *
-     * @param collectionId Id of the collection
-     * @return data Id related to the file
-     */
-    public Integer getCollectionDataId(String collectionId) {
-        DataInfo di = this.getCollectionData(collectionId);
-        Integer id = null;
-        if (di != null) {
-            id = di.getDataId();
-        }
-        return id;
     }
 
     /**

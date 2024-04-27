@@ -18,7 +18,7 @@ package es.bsc.compss.checkpoint.types;
 
 import es.bsc.compss.checkpoint.CheckpointGroup;
 import es.bsc.compss.types.Task;
-import es.bsc.compss.types.data.DataVersion;
+import es.bsc.compss.types.data.info.DataVersion;
 
 import java.util.ArrayList;
 import java.util.HashMap;
