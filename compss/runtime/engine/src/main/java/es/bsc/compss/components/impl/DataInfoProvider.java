@@ -16,11 +16,8 @@
  */
 package es.bsc.compss.components.impl;
 
-import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.data.EngineDataInstanceId;
-import es.bsc.compss.types.data.LogicalData;
-import es.bsc.compss.types.data.ResultFile;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
@@ -30,34 +27,17 @@ import es.bsc.compss.types.data.accessid.WAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
-import es.bsc.compss.types.data.info.FileInfo;
-import es.bsc.compss.types.data.location.DataLocation;
-import es.bsc.compss.types.data.location.PersistentLocation;
-import es.bsc.compss.types.data.location.ProtocolType;
-import es.bsc.compss.types.data.operation.DirectoryTransferable;
-import es.bsc.compss.types.data.operation.FileTransferable;
-import es.bsc.compss.types.data.operation.ResultListener;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
-import es.bsc.compss.types.tracing.TraceEvent;
-import es.bsc.compss.util.Tracer;
-
-import java.io.File;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import storage.StorageException;
-import storage.StorageItf;
 
 
 /**
  * Component to handle the specific data structures such as file names, versions, renamings and values.
  */
 public class DataInfoProvider {
-
-    // Constants definition
-    private static final String RES_FILE_TRANSFER_ERR = "Error transferring result files";
 
     // Component logger
     private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
@@ -241,106 +221,4 @@ public class DataInfoProvider {
         return dataInfo;
     }
 
-    /**
-     * Blocks fInfo and retrieves its result file.
-     *
-     * @param fInfo Data Id.
-     * @param listener Result listener.
-     * @return The result file.
-     */
-    public ResultFile blockDataAndGetResultFile(FileInfo fInfo, ResultListener listener) {
-        int dataId = fInfo.getDataId();
-        EngineDataInstanceId lastVersion;
-        if (DEBUG) {
-            LOGGER.debug("Get Result file for data " + dataId);
-        }
-        if (fInfo.hasBeenCanceled()) {
-            if (!fInfo.isCurrentVersionToDelete()) { // If current version is to delete do not
-                // transfer
-                String[] splitPath = fInfo.getOriginalLocation().getPath().split(File.separator);
-                String origName = splitPath[splitPath.length - 1];
-                if (origName.startsWith("compss-serialized-obj_")) {
-                    // Do not transfer objects serialized by the bindings
-                    if (DEBUG) {
-                        LOGGER.debug("Discarding file " + origName + " as a result");
-                    }
-                    return null;
-                }
-                fInfo.blockDeletions();
-
-                lastVersion = fInfo.getCurrentDataVersion().getDataInstanceId();
-
-                ResultFile rf = new ResultFile(fInfo, lastVersion, fInfo.getOriginalLocation());
-
-                String renaming = lastVersion.getRenaming();
-
-                // Look for the last available version
-                while (renaming != null && !Comm.existsData(renaming)) {
-                    renaming = EngineDataInstanceId.previousVersionRenaming(renaming);
-                }
-                if (renaming == null) {
-                    LOGGER.error(RES_FILE_TRANSFER_ERR + ": Cannot transfer file " + lastVersion.getRenaming()
-                        + " nor any of its previous versions");
-                    return null;
-                }
-
-                LogicalData data = Comm.getData(renaming);
-                // Check if data is a PSCO and must be consolidated
-                for (DataLocation loc : data.getLocations()) {
-                    if (loc instanceof PersistentLocation) {
-                        String pscoId = ((PersistentLocation) loc).getId();
-                        if (Tracer.isActivated()) {
-                            Tracer.emitEvent(TraceEvent.STORAGE_CONSOLIDATE);
-                        }
-                        try {
-                            StorageItf.consolidateVersion(pscoId);
-                        } catch (StorageException e) {
-                            LOGGER.error("Cannot consolidate PSCO " + pscoId, e);
-                        } finally {
-                            if (Tracer.isActivated()) {
-                                Tracer.emitEventEnd(TraceEvent.STORAGE_CONSOLIDATE);
-                            }
-                        }
-                        LOGGER.debug("Returned because persistent object");
-                        return rf;
-                    }
-
-                }
-
-                // If no PSCO location is found, perform normal getData
-                if (rf.getOriginalLocation().getProtocol() == ProtocolType.BINDING_URI) {
-                    // Comm.getAppHost().getData(data, rf.getOriginalLocation(), new
-                    // BindingObjectTransferable(),
-                    // listener);
-                    if (DEBUG) {
-                        LOGGER.debug("Discarding data d" + dataId + " as a result beacuse it is a binding object");
-                    }
-                } else {
-                    if (rf.getOriginalLocation().getProtocol() == ProtocolType.DIR_URI) {
-                        listener.addOperation();
-                        Comm.getAppHost().getData(data, rf.getOriginalLocation(), new DirectoryTransferable(),
-                            listener);
-                    } else {
-                        listener.addOperation();
-                        Comm.getAppHost().getData(data, rf.getOriginalLocation(), new FileTransferable(), listener);
-                    }
-                }
-
-                return rf;
-            } else {
-                if (fInfo.isCurrentVersionToDelete()) {
-                    if (DEBUG) {
-                        String[] splitPath = fInfo.getOriginalLocation().getPath().split(File.separator);
-                        String origName = splitPath[splitPath.length - 1];
-                        LOGGER.debug("Trying to delete file " + origName);
-                    }
-                    if (fInfo.delete()) {
-                        fInfo.deregister();
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
 }
