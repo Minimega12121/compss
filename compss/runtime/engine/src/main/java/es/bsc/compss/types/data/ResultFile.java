@@ -22,60 +22,43 @@ import es.bsc.compss.types.data.location.DataLocation;
 import java.io.File;
 
 
-public class ResultFile implements Comparable<ResultFile> {
+public class ResultFile {
 
     private final FileInfo fi;
-    private DataInstanceId fId;
-    private DataLocation originalLocation;
+    private LogicalData data;
 
 
     /**
-     * Creates a new ResultFile instance for data {@code fId} at location {@code location}.
-     * 
-     * @param fId Associated DataInstanceId
-     * @param location Data location.
+     * Creates a new ResultFile instance for data {@code fId} from logicalData {@code data}.
+     *
+     * @param fi Associated FileInfo
+     * @param data LogicalData to be fetched.
      */
-    public ResultFile(FileInfo fi, DataInstanceId fId, DataLocation location) {
+    public ResultFile(FileInfo fi, LogicalData data) {
         this.fi = fi;
-        this.fId = fId;
-        this.originalLocation = location;
+        this.data = data;
     }
 
-    /**
-     * Returns the associated DataInstanceId.
-     * 
-     * @return The associated DataInstanceId.
-     */
-    public DataInstanceId getFileInstanceId() {
-        return this.fId;
-    }
-
-    /**
-     * Returns the original file location.
-     * 
-     * @return The original file location.
-     */
-    public DataLocation getOriginalLocation() {
-        return this.originalLocation;
-    }
-
-    // Comparable interface implementation
-    @Override
-    public int compareTo(ResultFile resFile) throws NullPointerException {
-        if (resFile == null) {
-            throw new NullPointerException();
-        }
-
-        // Compare file identifiers
-        return this.fId.compareTo(resFile.fId);
-    }
-
-    @Override
-    public String toString() {
-        return this.fId.getRenaming();
+    public LogicalData getData() {
+        return data;
     }
 
     public FileInfo getFileInfo() {
         return this.fi;
     }
+
+    /**
+     * Returns the original file location.
+     *
+     * @return The original file location.
+     */
+    public DataLocation getOriginalLocation() {
+        return this.fi.getOriginalLocation();
+    }
+
+    @Override
+    public String toString() {
+        return this.fi.getOriginalLocation().toString();
+    }
+
 }
