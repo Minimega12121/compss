@@ -20,7 +20,7 @@ import es.bsc.compss.comm.Comm;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.BindingObject;
 import es.bsc.compss.types.annotations.parameter.Direction;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.info.DataVersion;
 import es.bsc.compss.types.data.params.BindingObjectData;
 
@@ -63,7 +63,7 @@ public class BindingObjectAccessParams extends ObjectAccessParams<BindingObject,
     @Override
     public void registerValueForVersion(DataVersion dv) {
         if (mode != AccessMode.W) {
-            DataInstanceId lastDID = dv.getDataInstanceId();
+            EngineDataInstanceId lastDID = dv.getDataInstanceId();
             String renaming = lastDID.getRenaming();
             Comm.registerBindingObject(renaming, getBindingObject());
         } else {

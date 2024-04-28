@@ -20,11 +20,11 @@ import es.bsc.compss.comm.Comm;
 import es.bsc.compss.exceptions.CannotLoadException;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.annotations.parameter.Direction;
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataAccessId.ReadingDataAccessId;
-import es.bsc.compss.types.data.DataAccessId.WritingDataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.LogicalData;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
 import es.bsc.compss.types.data.accessparams.ObjectAccessParams;
 import es.bsc.compss.types.data.location.DataLocation;
 import es.bsc.compss.types.data.location.ProtocolType;
@@ -70,18 +70,18 @@ public class ObjectMainAccess<V extends Object, D extends ObjectData, P extends 
     }
 
     @Override
-    public V fetch(DataAccessId daId) {
+    public V fetch(EngineDataAccessId daId) {
         if (DEBUG) {
             LOGGER.debug("Request object transfer " + daId.getDataId());
         }
-        DataInstanceId diId = ((ReadingDataAccessId) daId).getReadDataInstance();
+        EngineDataInstanceId diId = ((ReadingDataAccessId) daId).getReadDataInstance();
         String sourceName = diId.getRenaming();
         if (DEBUG) {
             LOGGER.debug("Requesting getting object " + sourceName);
         }
 
         V newValue = null;
-        DataInstanceId wId = ((WritingDataAccessId) daId).getWrittenDataInstance();
+        EngineDataInstanceId wId = ((WritingDataAccessId) daId).getWrittenDataInstance();
         String wRename = wId.getRenaming();
 
         LogicalData ld = diId.getData();
@@ -103,7 +103,7 @@ public class ObjectMainAccess<V extends Object, D extends ObjectData, P extends 
         return newValue;
     }
 
-    private V fetchObject(LogicalData ld, DataAccessId daId, String sourceName) throws CannotLoadException {
+    private V fetchObject(LogicalData ld, EngineDataAccessId daId, String sourceName) throws CannotLoadException {
         if (ld.isInMemory()) {
             if (!daId.isPreserveSourceData() && ld.getKnownAlias().size() == 1) {
                 return (V) ld.removeValue();

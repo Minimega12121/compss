@@ -20,10 +20,10 @@ import es.bsc.compss.comm.Comm;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.BindingObject;
 import es.bsc.compss.types.annotations.parameter.Direction;
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataAccessId.ReadingDataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.LogicalData;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
 import es.bsc.compss.types.data.accessparams.BindingObjectAccessParams;
 import es.bsc.compss.types.data.location.BindingObjectLocation;
 import es.bsc.compss.types.data.location.DataLocation;
@@ -66,12 +66,12 @@ public class BindingObjectMainAccess
      * @return Location of the transferred open file.
      */
     @Override
-    public BindingObject fetch(DataAccessId daId) {
+    public BindingObject fetch(EngineDataAccessId daId) {
         LOGGER.debug("[AccessProcessor] Obtaining " + this.getParameters().getDataDescription());
 
         // Get target information
         ReadingDataAccessId raId = (ReadingDataAccessId) daId;
-        DataInstanceId diId = raId.getReadDataInstance();
+        EngineDataInstanceId diId = raId.getReadDataInstance();
         String targetName = diId.getRenaming();
 
         if (DEBUG) {

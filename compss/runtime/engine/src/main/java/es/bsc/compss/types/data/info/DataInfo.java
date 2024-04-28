@@ -19,7 +19,6 @@ package es.bsc.compss.types.data.info;
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.Application;
-import es.bsc.compss.types.data.DataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.RAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
@@ -144,9 +143,9 @@ public abstract class DataInfo<T extends DataParams> {
      *
      * @param mode mode being access
      */
-    public DataAccessId getLastAccess(AccessMode mode) {
+    public EngineDataAccessId getLastAccess(AccessMode mode) {
         // Version management
-        DataAccessId daId = null;
+        EngineDataAccessId daId = null;
         if (this.currentVersion != null) {
             switch (mode) {
                 case C:

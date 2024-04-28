@@ -21,7 +21,7 @@ import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.Direction;
 import es.bsc.compss.types.annotations.parameter.StdIOStream;
 
-import es.bsc.compss.types.data.DataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 
 
@@ -35,7 +35,7 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
 
     private final T access;
 
-    private DataAccessId daId;
+    private EngineDataAccessId daId;
     private Object dataSource;
     private String dataTarget; // URI (including PROTOCOL) where to find the data within the executing resource
 
@@ -70,12 +70,16 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
     }
 
     @Override
-    public DataAccessId getDataAccessId() {
+    public EngineDataAccessId getDataAccessId() {
         return this.daId;
     }
 
-    @Override
-    public void setDataAccessId(DataAccessId daId) {
+    /**
+     * Sets a new data access id.
+     *
+     * @param daId New data access id.
+     */
+    public void setDataAccessId(EngineDataAccessId daId) {
         this.daId = daId;
     }
 

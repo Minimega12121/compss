@@ -36,13 +36,6 @@ public interface DependencyParameter extends Parameter, Transferable {
     public DataAccessId getDataAccessId();
 
     /**
-     * Sets a new data access id.
-     *
-     * @param daId New data access id.
-     */
-    public void setDataAccessId(DataAccessId daId);
-
-    /**
      * Returns the parameter's original name.
      *
      * @return The parameter's original name.

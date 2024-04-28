@@ -21,7 +21,7 @@ import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.annotations.parameter.DataType;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
 import java.util.ArrayList;
@@ -106,7 +106,7 @@ public class StreamDataAccessesInfo extends DataAccessesInfo {
     }
 
     @Override
-    public void mainAccess(RegisterDataAccessRequest rdar, GraphHandler gh, DataInstanceId accesedData) {
+    public void mainAccess(RegisterDataAccessRequest rdar, GraphHandler gh, EngineDataInstanceId accesedData) {
         // Add graph description
         if (IS_DRAW_GRAPH) {
             for (AbstractTask lastWriter : this.streamWriters) {

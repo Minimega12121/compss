@@ -17,8 +17,8 @@
 package es.bsc.compss.types;
 
 import es.bsc.compss.scheduler.types.ActionGroup.MutexGroup;
-import es.bsc.compss.types.data.DataAccessId;
 import es.bsc.compss.types.data.EngineDataInstanceId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
 import es.bsc.compss.types.parameter.impl.Parameter;
 
@@ -30,7 +30,7 @@ public class CommutativeGroupTask extends AbstractTask {
 
     private static int commGroupTaskId = -1;
     private final CommutativeIdentifier comId;
-    private final DataAccessId accessPlaceholder = new CommutativeDataAccessId();
+    private final EngineDataAccessId accessPlaceholder = new CommutativeDataAccessId();
 
     // Tasks that access the data
     private final List<Task> commutativeTasks;
@@ -130,7 +130,7 @@ public class CommutativeGroupTask extends AbstractTask {
      * 
      * @return first access of the commutative group to the data
      */
-    public DataAccessId getGroupPredecessorAccess() {
+    public EngineDataAccessId getGroupPredecessorAccess() {
         return this.groupPredecessorAccess;
     }
 
@@ -156,7 +156,7 @@ public class CommutativeGroupTask extends AbstractTask {
         super.getPredecessors().remove(t);
     }
 
-    public DataAccessId getAccessPlaceHolder() {
+    public EngineDataAccessId getAccessPlaceHolder() {
         return accessPlaceholder;
     }
 
@@ -165,8 +165,8 @@ public class CommutativeGroupTask extends AbstractTask {
      *
      * @return the access before being updated
      */
-    public synchronized DataAccessId nextAccess() {
-        DataAccessId oldAccess = this.firstAccess;
+    public synchronized EngineDataAccessId nextAccess() {
+        EngineDataAccessId oldAccess = this.firstAccess;
         if (!this.accesses.isEmpty()) {
             this.firstAccess = this.accesses.remove();
         } else {

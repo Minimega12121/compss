@@ -20,8 +20,8 @@ import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.CommutativeGroupTask;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.request.ap.BarrierGroupRequest;
 
 import java.io.BufferedWriter;
@@ -65,7 +65,7 @@ public interface GraphHandler {
      * @param daId DataAccess causing the dependency
      * @param producer Producer task
      */
-    public void addStandandDependency(Task consumer, DataAccessId daId, AbstractTask producer);
+    public void addStandandDependency(Task consumer, EngineDataAccessId daId, AbstractTask producer);
 
     /**
      * Adds the stream node and edge to the graph.
@@ -86,7 +86,7 @@ public interface GraphHandler {
      * @param edgeType Type of edge for the DOT representation.
      * @param accessedData Data being accessed
      */
-    public void mainAccessToData(AbstractTask task, EdgeType edgeType, DataInstanceId accessedData);
+    public void mainAccessToData(AbstractTask task, EdgeType edgeType, EngineDataInstanceId accessedData);
 
     void groupBarrier(BarrierGroupRequest barrier);
 

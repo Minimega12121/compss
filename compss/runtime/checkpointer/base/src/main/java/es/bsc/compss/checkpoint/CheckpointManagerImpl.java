@@ -19,12 +19,12 @@ package es.bsc.compss.checkpoint;
 import es.bsc.compss.checkpoint.types.CheckpointGroupImpl;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.Task;
-import es.bsc.compss.types.data.DataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
 import es.bsc.compss.types.data.info.DataVersion;
-import es.bsc.compss.types.parameter.CollectiveParameter;
-import es.bsc.compss.types.parameter.DependencyParameter;
-import es.bsc.compss.types.parameter.Parameter;
+import es.bsc.compss.types.parameter.impl.CollectiveParameter;
+import es.bsc.compss.types.parameter.impl.DependencyParameter;
+import es.bsc.compss.types.parameter.impl.Parameter;
 import es.bsc.compss.types.tracing.TraceEvent;
 import es.bsc.compss.util.Tracer;
 
@@ -191,7 +191,7 @@ public abstract class CheckpointManagerImpl extends CheckpointRecord implements 
      */
     private void registerTaskParameterInGroup(Parameter param, CheckpointGroupImpl group) {
         if (param.isCollective()) {
-            CollectiveParameter<Parameter> cp = (CollectiveParameter<Parameter>) param;
+            CollectiveParameter cp = (CollectiveParameter) param;
             for (Parameter sp : cp.getElements()) {
                 registerTaskParameterInGroup(sp, group);
             }
@@ -206,7 +206,7 @@ public abstract class CheckpointManagerImpl extends CheckpointRecord implements 
     }
 
     private void registerTaskSimpleParameterInGroup(DependencyParameter dp, CheckpointGroupImpl group) {
-        DataAccessId paramId = dp.getDataAccessId();
+        EngineDataAccessId paramId = dp.getDataAccessId();
         DataVersion outDV = null;
         if (paramId.isWrite()) {
             outDV = ((WritingDataAccessId) paramId).getWrittenDataVersion();

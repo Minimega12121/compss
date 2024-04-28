@@ -18,11 +18,12 @@ package es.bsc.compss.components.impl;
 
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
-import es.bsc.compss.types.data.DataAccessId;
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.LogicalData;
 import es.bsc.compss.types.data.ResultFile;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
 import es.bsc.compss.types.data.accessid.RAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
 import es.bsc.compss.types.data.accessid.WAccessId;
@@ -123,7 +124,7 @@ public class DataInfoProvider {
             LOGGER.warn(access.getDataDescription() + " has not been accessed before");
             return;
         }
-        DataAccessId daid = dInfo.getLastAccess(access.getMode());
+        EngineDataAccessId daid = dInfo.getLastAccess(access.getMode());
         if (daid == null) {
             LOGGER.warn(access.getDataDescription() + " has not been accessed before");
             return;
@@ -136,7 +137,7 @@ public class DataInfoProvider {
      *
      * @param dAccId DataAccessId.
      */
-    public void dataAccessHasBeenCanceled(DataAccessId dAccId, boolean keepModified) {
+    public void dataAccessHasBeenCanceled(EngineDataAccessId dAccId, boolean keepModified) {
         Integer dataId = dAccId.getDataId();
         DataInfo di = DataInfo.get(dataId);
         if (di != null) {
@@ -183,7 +184,7 @@ public class DataInfoProvider {
      *
      * @param dAccId DataAccessId.
      */
-    public void dataHasBeenAccessed(DataAccessId dAccId) {
+    public void dataHasBeenAccessed(EngineDataAccessId dAccId) {
         Integer dataId = dAccId.getDataId();
         DataInfo di = DataInfo.get(dataId);
         if (di != null) {
@@ -192,12 +193,12 @@ public class DataInfoProvider {
             boolean deleted = false;
 
             if (dAccId.isRead()) {
-                rVersionId = ((DataAccessId.ReadingDataAccessId) dAccId).getReadDataInstance().getVersionId();
+                rVersionId = ((ReadingDataAccessId) dAccId).getReadDataInstance().getVersionId();
                 deleted = di.versionHasBeenRead(rVersionId);
             }
 
             if (dAccId.isWrite()) {
-                wVersionId = ((DataAccessId.WritingDataAccessId) dAccId).getWrittenDataInstance().getVersionId();
+                wVersionId = ((WritingDataAccessId) dAccId).getWrittenDataInstance().getVersionId();
                 if (rVersionId == null) {
                     rVersionId = wVersionId - 1;
                 }
