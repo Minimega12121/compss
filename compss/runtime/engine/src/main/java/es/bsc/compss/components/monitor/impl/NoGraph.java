@@ -20,8 +20,8 @@ import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.CommutativeGroupTask;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.request.ap.BarrierGroupRequest;
 
 import java.io.BufferedWriter;
@@ -72,7 +72,7 @@ public class NoGraph implements GraphHandler {
     }
 
     @Override
-    public final void addStandandDependency(Task consumer, DataAccessId daId, AbstractTask producer) {
+    public final void addStandandDependency(Task consumer, EngineDataAccessId daId, AbstractTask producer) {
         // Do nothing
     }
 
@@ -87,7 +87,7 @@ public class NoGraph implements GraphHandler {
     }
 
     @Override
-    public final void mainAccessToData(AbstractTask task, EdgeType edgeType, DataInstanceId accessedData) {
+    public final void mainAccessToData(AbstractTask task, EdgeType edgeType, EngineDataInstanceId accessedData) {
         // Do nothing
     }
 

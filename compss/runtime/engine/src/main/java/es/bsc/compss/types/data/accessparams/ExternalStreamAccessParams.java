@@ -22,7 +22,7 @@ import es.bsc.compss.comm.Comm;
 import es.bsc.compss.exceptions.ExternalPropertyException;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.annotations.parameter.Direction;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.info.DataVersion;
 import es.bsc.compss.types.data.location.DataLocation;
 import es.bsc.compss.types.data.params.ExternalStreamData;
@@ -58,7 +58,7 @@ public class ExternalStreamAccessParams extends StreamAccessParams<DataLocation,
 
     @Override
     public void registerValueForVersion(DataVersion dv) {
-        DataInstanceId lastDID = dv.getDataInstanceId();
+        EngineDataInstanceId lastDID = dv.getDataInstanceId();
         String renaming = lastDID.getRenaming();
         Comm.registerLocation(renaming, this.getValue());
     }

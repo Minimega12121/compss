@@ -25,8 +25,8 @@ import es.bsc.compss.types.CommutativeIdentifier;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.Direction;
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
@@ -156,7 +156,7 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
                     }
                 }
 
-                DataAccessId daId = dp.getDataAccessId();
+                EngineDataAccessId daId = dp.getDataAccessId();
                 if (group == null) {
                     Application app = t.getApplication();
                     group = new CommutativeGroupTask(app, comId);
@@ -196,7 +196,7 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
     }
 
     @Override
-    public void mainAccess(RegisterDataAccessRequest rdar, GraphHandler gh, DataInstanceId accessedData) {
+    public void mainAccess(RegisterDataAccessRequest rdar, GraphHandler gh, EngineDataInstanceId accessedData) {
         if (lastWriter != null) {
             gh.mainAccessToData(lastWriter, EdgeType.DATA_DEPENDENCY, accessedData);
             // Release task if possible. Otherwise add to waiting

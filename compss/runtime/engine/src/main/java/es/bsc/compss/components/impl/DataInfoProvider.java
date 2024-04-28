@@ -18,10 +18,12 @@ package es.bsc.compss.components.impl;
 
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.LogicalData;
 import es.bsc.compss.types.data.ResultFile;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
 import es.bsc.compss.types.data.accessid.RAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
 import es.bsc.compss.types.data.accessid.WAccessId;
@@ -41,7 +43,6 @@ import es.bsc.compss.types.tracing.TraceEvent;
 import es.bsc.compss.util.Tracer;
 
 import java.io.File;
-import java.util.TreeSet;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,9 +59,6 @@ public class DataInfoProvider {
     // Constants definition
     private static final String RES_FILE_TRANSFER_ERR = "Error transferring result files";
 
-    // Set: Object values available for main code
-    private TreeSet<String> valuesOnMain; // TODO: Remove obsolete from here
-
     // Component logger
     private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
@@ -70,7 +68,6 @@ public class DataInfoProvider {
      * New Data Info Provider instance.
      */
     public DataInfoProvider() {
-        this.valuesOnMain = new TreeSet<>();
         LOGGER.info("Initialization finished");
     }
 
@@ -81,8 +78,8 @@ public class DataInfoProvider {
      * @return The registered access Id.
      * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
      */
-    public DataAccessId registerAccessToExistingData(AccessParams access) throws ValueUnawareRuntimeException {
-        access.checkAccessValidity(this);
+    public EngineDataAccessId registerAccessToExistingData(AccessParams access) throws ValueUnawareRuntimeException {
+        access.checkAccessValidity();
         return registerDataAccess(access);
     }
 
@@ -92,7 +89,7 @@ public class DataInfoProvider {
      * @param access Access Parameters.
      * @return The registered access Id.
      */
-    public DataAccessId registerDataAccess(AccessParams access) {
+    public EngineDataAccessId registerDataAccess(AccessParams access) {
         DataInfo dInfo = access.getDataInfo();
         if (dInfo == null) {
             if (DEBUG) {
@@ -107,7 +104,7 @@ public class DataInfoProvider {
             }
         }
 
-        DataAccessId daId = dInfo.willAccess(access.getMode());
+        EngineDataAccessId daId = dInfo.willAccess(access.getMode());
         access.externalRegister();
         return daId;
     }
@@ -117,9 +114,9 @@ public class DataInfoProvider {
      * 
      * @param access access being completed
      */
-    public void finishDataAccess(AccessParams access, DataInstanceId generatedData) {
+    public void finishDataAccess(AccessParams access, EngineDataInstanceId generatedData) {
         if (generatedData != null && access.resultRemainOnMain()) {
-            this.valuesOnMain.add(generatedData.getRenaming());
+            generatedData.getVersion().valueOnMain();
         }
         DataInfo dInfo = access.getDataInfo();
         // First access to this file
@@ -127,7 +124,7 @@ public class DataInfoProvider {
             LOGGER.warn(access.getDataDescription() + " has not been accessed before");
             return;
         }
-        DataAccessId daid = dInfo.getLastAccess(access.getMode());
+        EngineDataAccessId daid = dInfo.getLastAccess(access.getMode());
         if (daid == null) {
             LOGGER.warn(access.getDataDescription() + " has not been accessed before");
             return;
@@ -140,7 +137,7 @@ public class DataInfoProvider {
      *
      * @param dAccId DataAccessId.
      */
-    public void dataAccessHasBeenCanceled(DataAccessId dAccId, boolean keepModified) {
+    public void dataAccessHasBeenCanceled(EngineDataAccessId dAccId, boolean keepModified) {
         Integer dataId = dAccId.getDataId();
         DataInfo di = DataInfo.get(dataId);
         if (di != null) {
@@ -187,7 +184,7 @@ public class DataInfoProvider {
      *
      * @param dAccId DataAccessId.
      */
-    public void dataHasBeenAccessed(DataAccessId dAccId) {
+    public void dataHasBeenAccessed(EngineDataAccessId dAccId) {
         Integer dataId = dAccId.getDataId();
         DataInfo di = DataInfo.get(dataId);
         if (di != null) {
@@ -196,12 +193,12 @@ public class DataInfoProvider {
             boolean deleted = false;
 
             if (dAccId.isRead()) {
-                rVersionId = ((DataAccessId.ReadingDataAccessId) dAccId).getReadDataInstance().getVersionId();
+                rVersionId = ((ReadingDataAccessId) dAccId).getReadDataInstance().getVersionId();
                 deleted = di.versionHasBeenRead(rVersionId);
             }
 
             if (dAccId.isWrite()) {
-                wVersionId = ((DataAccessId.WritingDataAccessId) dAccId).getWrittenDataInstance().getVersionId();
+                wVersionId = ((WritingDataAccessId) dAccId).getWrittenDataInstance().getVersionId();
                 if (rVersionId == null) {
                     rVersionId = wVersionId - 1;
                 }
@@ -216,18 +213,6 @@ public class DataInfoProvider {
             LOGGER.warn("Access of Data" + dAccId.getDataId() + " in Mode " + dAccId.getDirection().name()
                 + "can not be mark as accessed because do not exist in DIP.");
         }
-    }
-
-    /**
-     * Returns whether the data is registered in the master or not.
-     *
-     * @param data Data Params.
-     * @return {@code true} if the renaming is registered in the master, {@code false} otherwise.
-     */
-    public boolean isHere(DataParams data) {
-        DataInfo oInfo = data.getDataInfo();
-        DataInstanceId dId = oInfo.getCurrentDataVersion().getDataInstanceId();
-        return this.valuesOnMain.contains(dId.getRenaming());
     }
 
     /**
@@ -265,7 +250,7 @@ public class DataInfoProvider {
      */
     public ResultFile blockDataAndGetResultFile(FileInfo fInfo, ResultListener listener) {
         int dataId = fInfo.getDataId();
-        DataInstanceId lastVersion;
+        EngineDataInstanceId lastVersion;
         if (DEBUG) {
             LOGGER.debug("Get Result file for data " + dataId);
         }
@@ -291,7 +276,7 @@ public class DataInfoProvider {
 
                 // Look for the last available version
                 while (renaming != null && !Comm.existsData(renaming)) {
-                    renaming = DataInstanceId.previousVersionRenaming(renaming);
+                    renaming = EngineDataInstanceId.previousVersionRenaming(renaming);
                 }
                 if (renaming == null) {
                     LOGGER.error(RES_FILE_TRANSFER_ERR + ": Cannot transfer file " + lastVersion.getRenaming()

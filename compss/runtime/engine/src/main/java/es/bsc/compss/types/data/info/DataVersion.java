@@ -16,7 +16,7 @@
  */
 package es.bsc.compss.types.data.info;
 
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.concurrent.Semaphore;
 
 public class DataVersion {
 
-    private final DataInstanceId dataInstanceId;
+    private final EngineDataInstanceId dataInstanceId;
     private int readers;
     private int writers;
     private boolean toDelete;
@@ -37,6 +37,7 @@ public class DataVersion {
 
     private DataVersion prevValidVersion;
     private DataVersion nextValidVersion;
+    private boolean valueOnMain;
 
 
     /**
@@ -47,7 +48,8 @@ public class DataVersion {
      * @param predecessor Previous version of the same data
      */
     public DataVersion(int dataId, int versionId, DataVersion predecessor) {
-        this.dataInstanceId = new DataInstanceId(dataId, versionId);
+        this.dataInstanceId = new EngineDataInstanceId(dataId, versionId, this);
+        this.valueOnMain = false;
         this.writers = 0;
         this.toDelete = false;
         this.used = false;
@@ -75,7 +77,7 @@ public class DataVersion {
      *
      * @return The associated data instance.
      */
-    public DataInstanceId getDataInstanceId() {
+    public EngineDataInstanceId getDataInstanceId() {
         return this.dataInstanceId;
     }
 
@@ -283,4 +285,19 @@ public class DataVersion {
         return false;
     }
 
+    /**
+     * Returns whether the value of the data version has been sent to the main.
+     * 
+     * @return {@literal true} if it was sent; {@literal false}, otherwise
+     */
+    public boolean isValueOnMain() {
+        return this.valueOnMain;
+    }
+
+    /**
+     * Marks the version value as sent to the main.
+     */
+    public void valueOnMain() {
+        this.valueOnMain = true;
+    }
 }

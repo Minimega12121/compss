@@ -29,10 +29,10 @@ import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.TaskState;
 import es.bsc.compss.types.annotations.parameter.DataType;
-import es.bsc.compss.types.data.DataAccessId;
 import es.bsc.compss.types.data.DataAccessId.Direction;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.LogicalData;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
 import es.bsc.compss.types.data.info.DataInfo;
@@ -41,9 +41,9 @@ import es.bsc.compss.types.data.listener.EventListener;
 import es.bsc.compss.types.data.location.DataLocation;
 import es.bsc.compss.types.data.location.ProtocolType;
 import es.bsc.compss.types.data.operation.DataOperation;
-import es.bsc.compss.types.parameter.CollectiveParameter;
-import es.bsc.compss.types.parameter.DependencyParameter;
-import es.bsc.compss.types.parameter.Parameter;
+import es.bsc.compss.types.parameter.impl.CollectiveParameter;
+import es.bsc.compss.types.parameter.impl.DependencyParameter;
+import es.bsc.compss.types.parameter.impl.Parameter;
 import es.bsc.compss.types.tracing.TraceEvent;
 import es.bsc.compss.types.uri.SimpleURI;
 import es.bsc.compss.util.ErrorManager;
@@ -205,7 +205,7 @@ public class CheckpointRecord {
 
     private void recoverTaskParameter(Parameter param) {
         if (param.isCollective()) {
-            CollectiveParameter<Parameter> cp = (CollectiveParameter) param;
+            CollectiveParameter cp = (CollectiveParameter) param;
             for (Parameter sp : cp.getElements()) {
                 recoverTaskParameter(sp);
             }
@@ -220,13 +220,13 @@ public class CheckpointRecord {
     }
 
     private void recoverTaskSimpleTaskParameter(DependencyParameter dp) {
-        DataAccessId paramId = dp.getDataAccessId();
+        EngineDataAccessId paramId = dp.getDataAccessId();
         DataVersion outDV = null;
         if (paramId.isWrite()) {
             outDV = ((WritingDataAccessId) paramId).getWrittenDataVersion();
         }
         if (outDV != null) {
-            DataInstanceId outDaId = outDV.getDataInstanceId();
+            EngineDataInstanceId outDaId = outDV.getDataInstanceId();
             String outRename = outDaId.getRenaming();
             String shortRename = getShortName(outRename);
 
@@ -293,7 +293,7 @@ public class CheckpointRecord {
 
     private void registerTaskParameter(Parameter param, CheckpointTask ctl) {
         if (param.isCollective()) {
-            CollectiveParameter<Parameter> cp = (CollectiveParameter) param;
+            CollectiveParameter cp = (CollectiveParameter) param;
             for (Parameter sp : cp.getElements()) {
                 registerTaskParameter(sp, ctl);
             }
@@ -309,7 +309,7 @@ public class CheckpointRecord {
 
     private void registerTaskSimpleParameter(DependencyParameter dp, CheckpointTask ctl) {
 
-        DataAccessId paramId = dp.getDataAccessId();
+        EngineDataAccessId paramId = dp.getDataAccessId();
         DataVersion outDV = null;
         if (paramId.isWrite()) {
             outDV = ((WritingDataAccessId) paramId).getWrittenDataVersion();
@@ -321,7 +321,7 @@ public class CheckpointRecord {
             ctl.addOutputToCheckpoint();
             CheckpointDataVersion cdvi = new CheckpointDataVersion(outDV, ctl);
 
-            DataInstanceId outDaId = outDV.getDataInstanceId();
+            EngineDataInstanceId outDaId = outDV.getDataInstanceId();
             String outRename = outDaId.getRenaming();
             String shortRename = getShortName(outRename);
             dataVersion.put(shortRename, cdvi);
@@ -340,7 +340,7 @@ public class CheckpointRecord {
             cpi.setLastCheckpointedVersion(outDV);
         }
 
-        DataInstanceId inDaId = null;
+        EngineDataInstanceId inDaId = null;
         if (paramId.isRead()) {
             inDaId = ((ReadingDataAccessId) paramId).getReadDataInstance();
         }
@@ -378,7 +378,7 @@ public class CheckpointRecord {
 
     private void computedTaskParameter(Parameter param) {
         if (param.isCollective()) {
-            CollectiveParameter<Parameter> cp = (CollectiveParameter) param;
+            CollectiveParameter cp = (CollectiveParameter) param;
             for (Parameter sp : cp.getElements()) {
                 computedTaskParameter(sp);
             }
@@ -393,7 +393,7 @@ public class CheckpointRecord {
     }
 
     private void computedTaskSimpleParameter(DependencyParameter dp) {
-        DataAccessId paramId = dp.getDataAccessId();
+        EngineDataAccessId paramId = dp.getDataAccessId();
         if (paramId.isWrite()) {
             int dataId = paramId.getDataId();
             registerLastCompletedProducer(dataId, dp);
@@ -428,7 +428,7 @@ public class CheckpointRecord {
 
     private void requestTaskParameterCheckpoint(Parameter param) {
         if (param.isCollective()) {
-            CollectiveParameter<Parameter> cp = (CollectiveParameter) param;
+            CollectiveParameter cp = (CollectiveParameter) param;
             for (Parameter sp : cp.getElements()) {
                 requestTaskParameterCheckpoint(sp);
             }
@@ -444,7 +444,7 @@ public class CheckpointRecord {
 
     private void requestTaskParameterCheckpoint(Parameter param, List<DataVersion> allowed) {
         if (param.isCollective()) {
-            CollectiveParameter<Parameter> cp = (CollectiveParameter) param;
+            CollectiveParameter cp = (CollectiveParameter) param;
             for (Parameter sp : cp.getElements()) {
                 requestTaskParameterCheckpoint(sp, allowed);
             }
@@ -459,13 +459,13 @@ public class CheckpointRecord {
     }
 
     private void requestTaskSimpleParameterCheckpoint(DependencyParameter dp) {
-        DataAccessId paramId = dp.getDataAccessId();
+        EngineDataAccessId paramId = dp.getDataAccessId();
         DataVersion outDV = null;
         if (paramId.isWrite()) {
             outDV = ((WritingDataAccessId) paramId).getWrittenDataVersion();
         }
         if (outDV != null) {
-            DataInstanceId outDaId = outDV.getDataInstanceId();
+            EngineDataInstanceId outDaId = outDV.getDataInstanceId();
             String outRename = outDaId.getRenaming();
             String shortRename = getShortName(outRename);
             CheckpointDataVersion cdvi = dataVersion.get(shortRename);
@@ -478,13 +478,13 @@ public class CheckpointRecord {
     }
 
     private void requestTaskSimpleParameterCheckpoint(DependencyParameter dp, List<DataVersion> allowed) {
-        DataAccessId paramId = dp.getDataAccessId();
+        EngineDataAccessId paramId = dp.getDataAccessId();
         DataVersion outDV = null;
         if (paramId.isWrite()) {
             outDV = ((WritingDataAccessId) paramId).getWrittenDataVersion();
         }
         if (outDV != null && allowed.contains(outDV)) {
-            DataInstanceId outDaId = outDV.getDataInstanceId();
+            EngineDataInstanceId outDaId = outDV.getDataInstanceId();
             String outRename = outDaId.getRenaming();
             String shortRename = getShortName(outRename);
             CheckpointDataVersion cdvi = dataVersion.get(shortRename);
@@ -501,7 +501,7 @@ public class CheckpointRecord {
      *
      * @param cdvi CheckpointDataVersion belonging to the parameter.
      */
-    private void saveData(DataInstanceId daId, CheckpointDataVersion cdvi) {
+    private void saveData(EngineDataInstanceId daId, CheckpointDataVersion cdvi) {
         DataLocation targetLocation = null;
         try {
             SimpleURI targetURI = new SimpleURI(cdvi.getLocation());
@@ -568,8 +568,8 @@ public class CheckpointRecord {
         CheckpointData di = dataInfo.get(cdvi.getDataId());
         DataVersion prevCPVersion = di.getLastCheckpointedVersion();
         if (prevCPVersion != null) {
-            DataInstanceId daId = dv.getDataInstanceId();
-            DataInstanceId prevDaId = prevCPVersion.getDataInstanceId();
+            EngineDataInstanceId daId = dv.getDataInstanceId();
+            EngineDataInstanceId prevDaId = prevCPVersion.getDataInstanceId();
             if (prevDaId.getVersionId() < daId.getVersionId()) {
 
                 // Remove last version checkpointed additional reader
@@ -682,7 +682,7 @@ public class CheckpointRecord {
         if (cdvi != null) {
             DataVersion version = cdvi.getVersion();
             if (version != null) {
-                DataInstanceId daId = version.getDataInstanceId();
+                EngineDataInstanceId daId = version.getDataInstanceId();
                 int dataId = daId.getDataId();
                 CheckpointData cdi = dataInfo.get(dataId);
                 if (cdi.getNotDeletedFinishedCopies() > 1) {
@@ -719,7 +719,7 @@ public class CheckpointRecord {
      *
      * @param di DataInstance to be marked.
      */
-    public final void mainAccess(DataInstanceId di) {
+    public final void mainAccess(EngineDataInstanceId di) {
         if (Tracer.isActivated()) {
             Tracer.emitEvent(TraceEvent.CHECKPOINT_MAIN_ACCESS);
         }

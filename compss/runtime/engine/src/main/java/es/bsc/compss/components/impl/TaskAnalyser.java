@@ -31,10 +31,10 @@ import es.bsc.compss.types.TaskState;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.OnFailure;
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataAccessId.ReadingDataAccessId;
-import es.bsc.compss.types.data.DataAccessId.WritingDataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
@@ -181,12 +181,12 @@ public class TaskAnalyser {
      * @return The registered access Id.
      * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
      */
-    public DataAccessId processMainAccess(RegisterDataAccessRequest rdar) throws ValueUnawareRuntimeException {
+    public EngineDataAccessId processMainAccess(RegisterDataAccessRequest rdar) throws ValueUnawareRuntimeException {
         AccessParams access = rdar.getAccessParams();
         if (DEBUG) {
             LOGGER.debug("Registering access " + access.toString() + " from main code");
         }
-        DataAccessId daId = dip.registerAccessToExistingData(access);
+        EngineDataAccessId daId = dip.registerAccessToExistingData(access);
         if (daId == null) {
             if (DEBUG) {
                 LOGGER.debug("Accessing a canceled data from main code. Returning null");
@@ -199,14 +199,14 @@ public class TaskAnalyser {
 
         if (daId.isRead()) {
             ReadingDataAccessId rdaId = (ReadingDataAccessId) daId;
-            DataInstanceId di = rdaId.getReadDataInstance();
+            EngineDataInstanceId di = rdaId.getReadDataInstance();
             cp.mainAccess(di);
 
             int dataId = daId.getDataId();
             // Retrieve writers information
             DataAccessesInfo dai = this.accessesInfo.get(dataId);
             if (dai != null) {
-                DataInstanceId depInstance;
+                EngineDataInstanceId depInstance;
                 if (daId.isWrite()) {
                     depInstance = ((WritingDataAccessId) daId).getWrittenDataInstance();
                 } else {
@@ -496,7 +496,7 @@ public class TaskAnalyser {
         }
 
         // Inform the Data Manager about the new accesses
-        DataAccessId daId;
+        EngineDataAccessId daId;
         AccessParams access = p.getAccess();
         if (access != null) {
             daId = dip.registerDataAccess(access);
@@ -528,7 +528,7 @@ public class TaskAnalyser {
     private boolean addDependencies(Task currentTask, boolean isConstraining, DependencyParameter dp) {
         // Add dependencies to the graph and register output values for future dependencies
         boolean hasParamEdge = false;
-        DataAccessId daId = dp.getDataAccessId();
+        EngineDataAccessId daId = dp.getDataAccessId();
         int dataId = daId.getDataId();
         DataAccessesInfo dai = this.accessesInfo.get(dataId);
         switch (dp.getAccess().getMode()) {
@@ -628,7 +628,7 @@ public class TaskAnalyser {
         }
         if (p.isPotentialDependency()) {
             DependencyParameter dp = (DependencyParameter) p;
-            DataAccessId dAccId = dp.getDataAccessId();
+            EngineDataAccessId dAccId = dp.getDataAccessId();
             int dataId = dAccId.getDataId();
 
             DataType type = p.getType();

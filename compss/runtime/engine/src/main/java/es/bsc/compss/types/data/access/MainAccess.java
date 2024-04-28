@@ -18,7 +18,7 @@ package es.bsc.compss.types.data.access;
 
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
-import es.bsc.compss.types.data.DataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.location.DataLocation;
 import es.bsc.compss.types.data.params.DataParams;
@@ -67,7 +67,7 @@ public abstract class MainAccess<V extends Object, D extends DataParams, P exten
      * @param daId Data Access Id.
      * @return last version of the accessed data.
      */
-    public abstract V fetch(DataAccessId daId);
+    public abstract V fetch(EngineDataAccessId daId);
 
     /**
      * Returns whether the registration of the access leads to its immediate finalization.

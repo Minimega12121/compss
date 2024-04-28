@@ -17,7 +17,7 @@
 package es.bsc.compss.checkpoint;
 
 import es.bsc.compss.types.Task;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.request.ap.APRequest;
 
@@ -47,7 +47,7 @@ public interface CheckpointManager {
      *
      * @param di DataInstance to be marked.
      */
-    public void mainAccess(DataInstanceId di);
+    public void mainAccess(EngineDataInstanceId di);
 
     /**
      * Notifies the Checkpoint Manager that a data has been deleted.

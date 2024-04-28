@@ -36,7 +36,7 @@ import es.bsc.compss.types.TaskGroup;
 import es.bsc.compss.types.TaskState;
 import es.bsc.compss.types.annotations.parameter.Direction;
 import es.bsc.compss.types.annotations.parameter.OnFailure;
-import es.bsc.compss.types.data.DataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.implementations.Implementation;
 import es.bsc.compss.types.job.Job;
 import es.bsc.compss.types.job.JobEndStatus;
@@ -406,9 +406,9 @@ public class ExecutionAction extends AllocatableAction implements JobListener<Pa
         if (p.isPotentialDependency()) {
             DependencyParameter dp = (DependencyParameter) p;
             if (dp.getDirection() == Direction.COMMUTATIVE) {
-                DataAccessId placeHolder = dp.getDataAccessId();
+                EngineDataAccessId placeHolder = dp.getDataAccessId();
                 CommutativeGroupTask cgt = this.getTask().getCommutativeGroup(placeHolder.getDataId());
-                DataAccessId performedAccess = cgt.nextAccess();
+                EngineDataAccessId performedAccess = cgt.nextAccess();
                 dp.setDataAccessId(performedAccess);
             }
 

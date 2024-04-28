@@ -24,7 +24,7 @@ import es.bsc.compss.types.annotations.parameter.Direction;
 import es.bsc.compss.types.annotations.parameter.OnFailure;
 import es.bsc.compss.types.colors.ColorConfiguration;
 import es.bsc.compss.types.colors.ColorNode;
-import es.bsc.compss.types.data.DataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.implementations.TaskType;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.parameter.impl.Parameter;
@@ -213,7 +213,7 @@ public class Task extends AbstractTask {
      * @param daId DataId of the group.
      * @param com Commutative group task to be set.
      */
-    public void setCommutativeGroup(CommutativeGroupTask com, DataAccessId daId) {
+    public void setCommutativeGroup(CommutativeGroupTask com, EngineDataAccessId daId) {
         this.commutativeGroup.put(daId.getDataId(), com);
     }
 
@@ -357,7 +357,7 @@ public class Task extends AbstractTask {
      *
      * @param daId New data version.
      */
-    public void setVersion(DataAccessId daId) {
+    public void setVersion(EngineDataAccessId daId) {
         for (Parameter p : this.getTaskDescription().getParameters()) {
             if (p.isPotentialDependency()
                 && ((DependencyParameter) p).getDataAccessId().getDataId() == daId.getDataId()) {

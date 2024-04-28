@@ -25,10 +25,10 @@ import es.bsc.compss.scheduler.types.SchedulingInformation;
 import es.bsc.compss.types.ReduceTask;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.TaskDescription;
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataAccessId.ReadingDataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.LogicalData;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
 import es.bsc.compss.types.parameter.impl.CollectiveParameter;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.parameter.impl.FileParameter;
@@ -157,8 +157,8 @@ public class ReduceExecutionAction extends ExecutionAction {
     }
 
     private Resource getParameterLocation(DependencyParameter dp) {
-        DataInstanceId dId = null;
-        DataAccessId access = dp.getDataAccessId();
+        EngineDataInstanceId dId = null;
+        EngineDataAccessId access = dp.getDataAccessId();
         if (access.isRead()) {
             ReadingDataAccessId raId = (ReadingDataAccessId) dp.getDataAccessId();
             dId = raId.getReadDataInstance();

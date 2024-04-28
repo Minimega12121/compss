@@ -19,11 +19,11 @@ package es.bsc.compss.types.data.access;
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.annotations.parameter.Direction;
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataAccessId.ReadingDataAccessId;
-import es.bsc.compss.types.data.DataAccessId.WritingDataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.LogicalData;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
 import es.bsc.compss.types.data.accessparams.FileAccessParams;
 import es.bsc.compss.types.data.location.DataLocation;
 import es.bsc.compss.types.data.location.ProtocolType;
@@ -64,9 +64,9 @@ public class FileMainAccess<D extends FileData, P extends FileAccessParams<D>> e
     }
 
     @Override
-    public final DataLocation fetch(DataAccessId daId) {
+    public final DataLocation fetch(EngineDataAccessId daId) {
         // Get target information
-        DataInstanceId tgtDiId;
+        EngineDataInstanceId tgtDiId;
         if (daId.isWrite()) {
             WritingDataAccessId wdaId = (WritingDataAccessId) daId;
             tgtDiId = wdaId.getWrittenDataInstance();
@@ -119,7 +119,7 @@ public class FileMainAccess<D extends FileData, P extends FileAccessParams<D>> e
         return createLocalLocation(targetURI);
     }
 
-    protected DataLocation fetchData(DataAccessId daId, String targetName) {
+    protected DataLocation fetchData(EngineDataAccessId daId, String targetName) {
         LOGGER.debug("Asking for transfer");
         ReadingDataAccessId rdaId = (ReadingDataAccessId) daId;
         LogicalData srcData = rdaId.getReadDataInstance().getData();

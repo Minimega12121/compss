@@ -16,7 +16,6 @@
  */
 package es.bsc.compss.types.data.accessparams;
 
-import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.annotations.parameter.Direction;
@@ -149,10 +148,9 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
     /**
      * Verifies that the runtime is aware of the value and the access should be registered.
      *
-     * @param dip DataInfoProvider
      * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
      */
-    public abstract void checkAccessValidity(DataInfoProvider dip) throws ValueUnawareRuntimeException;
+    public abstract void checkAccessValidity() throws ValueUnawareRuntimeException;
 
     public abstract void registerValueForVersion(DataVersion dv);
 

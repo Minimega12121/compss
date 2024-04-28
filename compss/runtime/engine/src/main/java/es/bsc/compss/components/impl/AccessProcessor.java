@@ -21,7 +21,6 @@ import es.bsc.compss.COMPSsConstants.Lang;
 import es.bsc.compss.COMPSsDefaults;
 import es.bsc.compss.api.TaskMonitor;
 import es.bsc.compss.checkpoint.CheckpointManager;
-import es.bsc.compss.components.monitor.impl.GraphGenerator;
 import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
@@ -29,12 +28,12 @@ import es.bsc.compss.types.Application;
 import es.bsc.compss.types.ReduceTask;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.annotations.parameter.OnFailure;
-import es.bsc.compss.types.data.DataAccessId;
-import es.bsc.compss.types.data.DataAccessId.WritingDataAccessId;
-import es.bsc.compss.types.data.DataInstanceId;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.LogicalData;
 import es.bsc.compss.types.data.ResultFile;
 import es.bsc.compss.types.data.access.MainAccess;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.parameter.impl.Parameter;
@@ -295,7 +294,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
         }
 
         // Tell the DIP that the application wants to access an object
-        DataAccessId daId = registerDataAccess(ap);
+        EngineDataAccessId daId = registerDataAccess(ap);
         if (daId == null) {
             ErrorManager.warn("No version available. Returning null");
             return ma.getUnavailableValueResponse();
@@ -304,7 +303,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
             T oUpdated;
             oUpdated = ma.fetch(daId);
             if (ma.isAccessFinishedOnRegistration()) {
-                DataInstanceId wId = null;
+                EngineDataInstanceId wId = null;
                 if (daId.isWrite()) {
                     wId = ((WritingDataAccessId) daId).getWrittenDataInstance();
                 }
@@ -320,7 +319,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
      *
      * @param ap Access parameters.
      */
-    public void finishDataAccess(AccessParams ap, DataInstanceId generatedDaId) {
+    public void finishDataAccess(AccessParams ap, EngineDataInstanceId generatedDaId) {
         if (!this.requestQueue.offer(new FinishDataAccessRequest(ap, generatedDaId))) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "finishing data access");
         }
@@ -464,7 +463,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
      * @return The registered access Id.
      * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
      */
-    private DataAccessId registerDataAccess(AccessParams access) throws ValueUnawareRuntimeException {
+    private EngineDataAccessId registerDataAccess(AccessParams access) throws ValueUnawareRuntimeException {
         RegisterDataAccessRequest request = new RegisterDataAccessRequest(access);
         if (!this.requestQueue.offer(request)) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "register data access");
@@ -472,7 +471,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
 
         // Wait for response
         request.waitForCompletion();
-        DataAccessId daId = request.getAccessId();
+        EngineDataAccessId daId = request.getAccessId();
 
         return daId;
     }
