@@ -19,6 +19,7 @@ package es.bsc.compss.types.data.params;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.ObjectInfo;
+import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
 
 public class ObjectData extends DataParams {
@@ -57,7 +58,7 @@ public class ObjectData extends DataParams {
     }
 
     @Override
-    public DataInfo removeDataInfo() {
+    protected DataInfo removeDataInfo() throws ValueUnawareRuntimeException {
         Application app = this.getApp();
         return app.removeObjectData(code);
     }

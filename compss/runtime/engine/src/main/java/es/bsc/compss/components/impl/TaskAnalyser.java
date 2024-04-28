@@ -153,7 +153,7 @@ public class TaskAnalyser {
             if (p.isPotentialDependency()) {
                 DependencyParameter dp = (DependencyParameter) p;
                 try {
-                    dip.deleteData(dp.getAccess().getData());
+                    dp.getAccess().getData().delete();
                 } catch (ValueUnawareRuntimeException e) {
                     // If not existing, the parameter was already removed. No need to do anything
                 }
@@ -382,7 +382,7 @@ public class TaskAnalyser {
      * @throws ValueUnawareRuntimeException the runtime is not aware of the data
      */
     public void deleteData(DataParams data, boolean applicationDelete) throws ValueUnawareRuntimeException {
-        DataInfo dataInfo = dip.deleteData(data);
+        DataInfo dataInfo = data.delete();
         int dataId = dataInfo.getDataId();
         LOGGER.info("Deleting data " + dataId);
 

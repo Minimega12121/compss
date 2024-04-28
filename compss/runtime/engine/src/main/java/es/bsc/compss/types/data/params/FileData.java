@@ -21,6 +21,7 @@ import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.data.location.DataLocation;
+import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.util.FileOpsManager;
 
 import java.io.File;
@@ -65,7 +66,7 @@ public class FileData extends DataParams {
     }
 
     @Override
-    public DataInfo removeDataInfo() {
+    protected DataInfo removeDataInfo() throws ValueUnawareRuntimeException {
         Application app = this.getApp();
         String locationKey = loc.getLocationKey();
         return app.removeFileData(locationKey);

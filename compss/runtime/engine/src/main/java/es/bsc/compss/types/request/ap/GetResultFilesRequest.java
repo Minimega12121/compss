@@ -167,9 +167,7 @@ public class GetResultFilesRequest extends APRequest {
                         String origName = splitPath[splitPath.length - 1];
                         LOGGER.debug("Trying to delete file " + origName);
                     }
-                    if (fInfo.delete()) {
-                        fInfo.deregister();
-                    }
+                    fInfo.delete();
                 }
             }
         }

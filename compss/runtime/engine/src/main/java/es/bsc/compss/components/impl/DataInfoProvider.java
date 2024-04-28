@@ -27,7 +27,6 @@ import es.bsc.compss.types.data.accessid.WAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
-import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
 import org.apache.logging.log4j.LogManager;
@@ -193,32 +192,6 @@ public class DataInfoProvider {
             LOGGER.warn("Access of Data" + dAccId.getDataId() + " in Mode " + dAccId.getDirection().name()
                 + "can not be mark as accessed because do not exist in DIP.");
         }
-    }
-
-    /**
-     * Marks a data for deletion.
-     *
-     * @param data data to be deleted
-     * @return DataInfo associated with the data to remove
-     * @throws ValueUnawareRuntimeException the runtime is not aware of the data
-     */
-    public DataInfo deleteData(DataParams data) throws ValueUnawareRuntimeException {
-        if (DEBUG) {
-            LOGGER.debug("Deleting Data associated to " + data.getDescription());
-        }
-
-        DataInfo dataInfo = data.removeDataInfo();
-        if (dataInfo == null) {
-            if (DEBUG) {
-                LOGGER.debug("No data found for data associated to " + data.getDescription());
-            }
-            throw new ValueUnawareRuntimeException();
-        }
-        // We delete the data associated with all the versions of the same object
-        if (dataInfo.delete()) {
-            dataInfo.deregister();
-        }
-        return dataInfo;
     }
 
 }

@@ -20,6 +20,7 @@ import es.bsc.compss.api.ApplicationRunner;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
+import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
 import java.security.SecureRandom;
 import java.util.HashSet;
@@ -385,9 +386,11 @@ public class Application {
      *
      * @param locationKey file location
      * @return data Id related to the file
+     * @throws ValueUnawareRuntimeException the application is not aware of the data
      */
-    public DataInfo removeFileData(String locationKey) {
-        return this.nameToData.remove(locationKey);
+    public DataInfo removeFileData(String locationKey) throws ValueUnawareRuntimeException {
+        DataInfo di = this.nameToData.remove(locationKey);
+        return removeData(di);
     }
 
     /**
@@ -415,9 +418,11 @@ public class Application {
      *
      * @param code hashcode of the object
      * @return data Id related to the object
+     * @throws ValueUnawareRuntimeException the application is not aware of the data
      */
-    public DataInfo removeObjectData(int code) {
-        return this.codeToData.remove(code);
+    public DataInfo removeObjectData(int code) throws ValueUnawareRuntimeException {
+        DataInfo di = this.codeToData.remove(code);
+        return removeData(di);
     }
 
     /**
@@ -445,9 +450,20 @@ public class Application {
      *
      * @param collectionId Id of the collection
      * @return data Id related to the file
+     * @throws ValueUnawareRuntimeException the application is not aware of the data
      */
-    public DataInfo removeCollectionData(String collectionId) {
-        return this.collectionToData.remove(collectionId);
+    public DataInfo removeCollectionData(String collectionId) throws ValueUnawareRuntimeException {
+        DataInfo di = this.collectionToData.remove(collectionId);
+        return removeData(di);
+    }
+
+    private DataInfo removeData(DataInfo dataInfo) throws ValueUnawareRuntimeException {
+        if (dataInfo == null) {
+            throw new ValueUnawareRuntimeException();
+        }
+        // We delete the data associated with all the versions of the same object
+        dataInfo.delete();
+        return dataInfo;
     }
 
     /**
