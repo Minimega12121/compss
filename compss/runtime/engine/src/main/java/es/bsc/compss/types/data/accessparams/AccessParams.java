@@ -19,6 +19,7 @@ package es.bsc.compss.types.data.accessparams;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.annotations.parameter.Direction;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
@@ -142,17 +143,24 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
         return data.getRegisteredData();
     }
 
-    public String getDataDescription() {
+    public final String getDataDescription() {
         return data.getDescription();
     }
+
+    /**
+     * Verifies that the runtime is aware of the value and the access should be registered.
+     *
+     * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
+     */
+    public abstract void checkAccessValidity() throws ValueUnawareRuntimeException;
 
     /**
      * Registers a new data access.
      *
      * @return The registered access Id.
      */
-    public EngineDataAccessId register() {
-        DataInfo dInfo = this.getDataInfo();
+    public final EngineDataAccessId register() {
+        DataInfo dInfo = this.data.getRegisteredData();
         if (dInfo == null) {
             if (DEBUG) {
                 LOGGER.debug("FIRST access to " + this.getDataDescription());
@@ -172,14 +180,35 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
         return daId;
     }
 
-    /**
-     * Verifies that the runtime is aware of the value and the access should be registered.
-     *
-     * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
-     */
-    public abstract void checkAccessValidity() throws ValueUnawareRuntimeException;
+    protected abstract void registerValueForVersion(DataVersion dv);
 
-    public abstract void registerValueForVersion(DataVersion dv);
+    /**
+     * Registers the access into an external service.
+     */
+    protected abstract void externalRegister();
+
+    /**
+     * Marks the access from the main as finished.
+     *
+     * @param generatedData data resulting from the access
+     */
+    public void finish(EngineDataInstanceId generatedData) {
+        if (generatedData != null && this.resultRemainOnMain()) {
+            generatedData.getVersion().valueOnMain();
+        }
+        DataInfo dInfo = this.data.getRegisteredData();
+        // First access to this file
+        if (dInfo == null) {
+            LOGGER.warn(this.getDataDescription() + " has not been accessed before");
+            return;
+        }
+        EngineDataAccessId daid = dInfo.getLastAccess(this.mode);
+        if (daid == null) {
+            LOGGER.warn(this.getDataDescription() + " has not been accessed before");
+            return;
+        }
+        DataInfo.commitAccess(daid);
+    }
 
     /**
      * Returns whether the result of the access should be marked as remaining on the Main process memory.
@@ -188,8 +217,4 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
      */
     public abstract boolean resultRemainOnMain();
 
-    /**
-     * Registers the access into an external service.
-     */
-    public abstract void externalRegister();
 }

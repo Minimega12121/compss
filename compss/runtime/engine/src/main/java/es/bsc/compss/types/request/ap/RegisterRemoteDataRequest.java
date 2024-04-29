@@ -18,7 +18,6 @@ package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.exceptions.CommException;
@@ -52,8 +51,7 @@ public class RegisterRemoteDataRequest extends APRequest {
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td)
-        throws ShutdownException {
+    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) throws ShutdownException {
         DataInfo dInfo = accessedValue.getRegisteredData();
         if (dInfo == null) {
             if (DEBUG) {

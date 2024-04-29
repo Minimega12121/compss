@@ -54,14 +54,14 @@ public class StreamAccessParams<T extends Object, D extends StreamData> extends 
     }
 
     @Override
-    public void registerValueForVersion(DataVersion dv) {
+    protected void registerValueForVersion(DataVersion dv) {
         EngineDataInstanceId lastDID = dv.getDataInstanceId();
         String renaming = lastDID.getRenaming();
         Comm.registerValue(renaming, this.getValue());
     }
 
     @Override
-    public void externalRegister() {
+    protected void externalRegister() {
         // Inform the StreamClient
         if (mode != AccessMode.R) {
             DistroStream<?> ds = (DistroStream<?>) this.getValue();

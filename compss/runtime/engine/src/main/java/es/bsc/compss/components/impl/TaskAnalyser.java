@@ -72,7 +72,6 @@ public class TaskAnalyser {
     private static final String TASK_CANCELED = "Task canceled: ";
 
     // Components
-    private DataInfoProvider dip;
     private CheckpointManager cp;
     private GraphHandler gh;
 
@@ -92,11 +91,9 @@ public class TaskAnalyser {
     /**
      * Sets the TaskAnalyser co-workers.
      *
-     * @param dip DataInfoProvider co-worker.
      * @param cp checkpoint manager co-worker.
      */
-    public void setCoWorkers(DataInfoProvider dip, CheckpointManager cp) {
-        this.dip = dip;
+    public void setCoWorkers(CheckpointManager cp) {
         this.cp = cp;
     }
 
@@ -657,9 +654,9 @@ public class TaskAnalyser {
 
             if ((task.getOnFailure() == OnFailure.CANCEL_SUCCESSORS && (task.getStatus() == TaskState.FAILED))
                 || task.getStatus() == TaskState.CANCELED) {
-                this.dip.dataAccessHasBeenCanceled(dAccId, task.wasSubmited());
+                DataInfo.cancelAccess(dAccId, task.wasSubmited());
             } else {
-                this.dip.dataHasBeenAccessed(dAccId);
+                DataInfo.commitAccess(dAccId);
             }
         }
     }
