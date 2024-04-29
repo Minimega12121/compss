@@ -34,7 +34,7 @@ public class StreamData extends ObjectData {
     }
 
     @Override
-    public DataInfo createDataInfo() {
+    protected DataInfo registerData() {
         DataInfo sInfo = new StreamInfo(this);
         Application app = this.getApp();
         app.registerObjectData(code, sInfo);

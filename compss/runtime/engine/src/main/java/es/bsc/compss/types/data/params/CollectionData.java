@@ -19,6 +19,7 @@ package es.bsc.compss.types.data.params;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.CollectionInfo;
 import es.bsc.compss.types.data.info.DataInfo;
+import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
 
 public class CollectionData extends DataParams {
@@ -43,7 +44,7 @@ public class CollectionData extends DataParams {
     }
 
     @Override
-    public DataInfo createDataInfo() {
+    protected DataInfo registerData() {
         DataInfo cInfo = new CollectionInfo(this);
         Application app = this.getApp();
         app.registerCollectionData(this.collectionId, cInfo);
@@ -51,13 +52,13 @@ public class CollectionData extends DataParams {
     }
 
     @Override
-    public DataInfo getDataInfo() {
+    public DataInfo getRegisteredData() {
         Application app = this.getApp();
         return app.getCollectionData(this.collectionId);
     }
 
     @Override
-    public DataInfo removeDataInfo() {
+    protected DataInfo unregisterData() throws ValueUnawareRuntimeException {
         Application app = this.getApp();
         return app.removeCollectionData(this.collectionId);
     }

@@ -26,8 +26,6 @@ import es.bsc.compss.types.data.accessid.RWAccessId;
 import es.bsc.compss.types.data.accessid.WAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.info.DataInfo;
-import es.bsc.compss.types.data.info.DataVersion;
-import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
 import org.apache.logging.log4j.LogManager;
@@ -49,44 +47,6 @@ public class DataInfoProvider {
      */
     public DataInfoProvider() {
         LOGGER.info("Initialization finished");
-    }
-
-    /**
-     * DataAccess interface: registers a new data access.
-     *
-     * @param access Access Parameters.
-     * @return The registered access Id.
-     * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
-     */
-    public EngineDataAccessId registerAccessToExistingData(AccessParams access) throws ValueUnawareRuntimeException {
-        access.checkAccessValidity();
-        return registerDataAccess(access);
-    }
-
-    /**
-     * DataAccess interface: registers a new data access.
-     *
-     * @param access Access Parameters.
-     * @return The registered access Id.
-     */
-    public EngineDataAccessId registerDataAccess(AccessParams access) {
-        DataInfo dInfo = access.getDataInfo();
-        if (dInfo == null) {
-            if (DEBUG) {
-                LOGGER.debug("FIRST access to " + access.getDataDescription());
-            }
-            dInfo = access.getData().createDataInfo();
-            DataVersion dv = dInfo.getCurrentDataVersion();
-            access.registerValueForVersion(dv);
-        } else {
-            if (DEBUG) {
-                LOGGER.debug("Another access to " + access.getDataDescription());
-            }
-        }
-
-        EngineDataAccessId daId = dInfo.willAccess(access.getMode());
-        access.externalRegister();
-        return daId;
     }
 
     /**
@@ -193,32 +153,6 @@ public class DataInfoProvider {
             LOGGER.warn("Access of Data" + dAccId.getDataId() + " in Mode " + dAccId.getDirection().name()
                 + "can not be mark as accessed because do not exist in DIP.");
         }
-    }
-
-    /**
-     * Marks a data for deletion.
-     *
-     * @param data data to be deleted
-     * @return DataInfo associated with the data to remove
-     * @throws ValueUnawareRuntimeException the runtime is not aware of the data
-     */
-    public DataInfo deleteData(DataParams data) throws ValueUnawareRuntimeException {
-        if (DEBUG) {
-            LOGGER.debug("Deleting Data associated to " + data.getDescription());
-        }
-
-        DataInfo dataInfo = data.removeDataInfo();
-        if (dataInfo == null) {
-            if (DEBUG) {
-                LOGGER.debug("No data found for data associated to " + data.getDescription());
-            }
-            throw new ValueUnawareRuntimeException();
-        }
-        // We delete the data associated with all the versions of the same object
-        if (dataInfo.delete()) {
-            dataInfo.deregister();
-        }
-        return dataInfo;
     }
 
 }

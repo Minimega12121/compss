@@ -19,6 +19,7 @@ package es.bsc.compss.types.data.params;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.ObjectInfo;
+import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
 
 public class ObjectData extends DataParams {
@@ -43,7 +44,7 @@ public class ObjectData extends DataParams {
     }
 
     @Override
-    public DataInfo createDataInfo() {
+    protected DataInfo registerData() {
         DataInfo oInfo = new ObjectInfo(this);
         Application app = this.getApp();
         app.registerObjectData(code, oInfo);
@@ -51,13 +52,13 @@ public class ObjectData extends DataParams {
     }
 
     @Override
-    public DataInfo getDataInfo() {
+    public DataInfo getRegisteredData() {
         Application app = this.getApp();
         return app.getObjectData(code);
     }
 
     @Override
-    public DataInfo removeDataInfo() {
+    protected DataInfo unregisterData() throws ValueUnawareRuntimeException {
         Application app = this.getApp();
         return app.removeObjectData(code);
     }

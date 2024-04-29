@@ -54,12 +54,12 @@ public class RegisterRemoteDataRequest extends APRequest {
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td)
         throws ShutdownException {
-        DataInfo dInfo = accessedValue.getDataInfo();
+        DataInfo dInfo = accessedValue.getRegisteredData();
         if (dInfo == null) {
             if (DEBUG) {
                 LOGGER.debug("Registering Remote data on DIP: " + accessedValue.getDescription());
             }
-            dInfo = accessedValue.createDataInfo();
+            dInfo = accessedValue.register();
         }
         if (data != null && dInfo != null) {
             String existingRename = dInfo.getCurrentDataVersion().getDataInstanceId().getRenaming();

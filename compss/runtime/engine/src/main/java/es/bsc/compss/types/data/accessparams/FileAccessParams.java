@@ -65,7 +65,7 @@ public class FileAccessParams<D extends FileData> extends AccessParams<D> {
     @Override
     public void checkAccessValidity() throws ValueUnawareRuntimeException {
         LOGGER.debug("Check already accessed: " + data.getDescription());
-        DataInfo dInfo = data.getDataInfo();
+        DataInfo dInfo = data.getRegisteredData();
         boolean alreadyAccessed = dInfo != null;
         if (!alreadyAccessed) {
             LOGGER.debug(this.getDataDescription() + " accessed before, returning the same location");

@@ -339,7 +339,7 @@ public abstract class DataInfo<T extends DataParams> {
     /**
      * Delete DataInfo (can be overwritten by implementations).
      */
-    public boolean delete() {
+    public void delete() {
         this.deleted = true;
         if (this.deletionBlocks > 0) {
             this.pendingDeletions.addAll(this.versions.values());
@@ -356,10 +356,9 @@ public abstract class DataInfo<T extends DataParams> {
                 this.versions.remove(versionId);
             }
             if (this.versions.isEmpty()) {
-                return true;
+                deregister();
             }
         }
-        return false;
     }
 
     /**

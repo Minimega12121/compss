@@ -75,7 +75,7 @@ public class ObjectAccessParams<T extends Object, D extends ObjectData> extends 
 
     @Override
     public void checkAccessValidity() throws ValueUnawareRuntimeException {
-        DataInfo oInfo = data.getDataInfo();
+        DataInfo oInfo = data.getRegisteredData();
         boolean validValue = oInfo.getCurrentDataVersion().isValueOnMain();
         if (validValue) {
             // Main code is still performing the same modification.
