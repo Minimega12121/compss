@@ -85,7 +85,7 @@ public class ObjectAccessParams<T extends Object, D extends ObjectData> extends 
     }
 
     @Override
-    public void registerValueForVersion(DataVersion dv) {
+    protected void registerValueForVersion(DataVersion dv) {
         if (mode != AccessMode.W) {
             EngineDataInstanceId lastDID = dv.getDataInstanceId();
             String renaming = lastDID.getRenaming();
@@ -101,7 +101,7 @@ public class ObjectAccessParams<T extends Object, D extends ObjectData> extends 
     }
 
     @Override
-    public void externalRegister() {
+    protected void externalRegister() {
         // Do nothing. No need to register the access anywhere.
     }
 

@@ -19,7 +19,6 @@ package es.bsc.compss.checkpoint.types.request.ap;
 import es.bsc.compss.checkpoint.CheckpointRecord;
 import es.bsc.compss.checkpoint.types.CheckpointDataVersion;
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.request.exceptions.ShutdownException;
@@ -49,8 +48,8 @@ public class CheckpointerDataCopyFailedRequest extends CheckpointerRequest {
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td,
-        CheckpointRecord cp) throws ShutdownException, COMPSsException {
+    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td, CheckpointRecord cp)
+        throws ShutdownException, COMPSsException {
         cp.dataCheckpointFailed(dataVersion);
     }
 }

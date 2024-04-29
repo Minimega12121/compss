@@ -104,7 +104,6 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
 
     // Subcomponents
     private final TaskAnalyser taskAnalyser;
-    private final DataInfoProvider dataInfoProvider;
     private final CheckpointManager checkpointManager;
 
     // Processor thread
@@ -126,7 +125,6 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
 
         // Start Subcomponents
         this.taskAnalyser = new TaskAnalyser();
-        this.dataInfoProvider = new DataInfoProvider();
 
         loadCheckpointingPoliciesJars();
         this.checkpointManager = constructCheckpointManager();
@@ -134,7 +132,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
             ErrorManager.fatal(ERR_LOAD_CHECKPOINTER);
         }
 
-        this.taskAnalyser.setCoWorkers(dataInfoProvider, checkpointManager);
+        this.taskAnalyser.setCoWorkers(checkpointManager);
         this.requestQueue = new LinkedBlockingQueue<>();
 
         keepGoing = true;
@@ -168,7 +166,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
                 if (Tracer.isActivated()) {
                     Tracer.emitEvent(request.getEvent());
                 }
-                request.process(this, this.taskAnalyser, this.dataInfoProvider, this.taskDispatcher);
+                request.process(this, this.taskAnalyser, this.taskDispatcher);
             } catch (ShutdownException se) {
                 se.getSemaphore().release();
                 break;

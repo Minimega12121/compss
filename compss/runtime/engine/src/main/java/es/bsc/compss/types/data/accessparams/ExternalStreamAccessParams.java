@@ -57,14 +57,14 @@ public class ExternalStreamAccessParams extends StreamAccessParams<DataLocation,
     }
 
     @Override
-    public void registerValueForVersion(DataVersion dv) {
+    protected void registerValueForVersion(DataVersion dv) {
         EngineDataInstanceId lastDID = dv.getDataInstanceId();
         String renaming = lastDID.getRenaming();
         Comm.registerLocation(renaming, this.getValue());
     }
 
     @Override
-    public void externalRegister() {
+    protected void externalRegister() {
         DataLocation location = this.getValue();
         // Inform the StreamClient
         if (mode != AccessMode.R) {

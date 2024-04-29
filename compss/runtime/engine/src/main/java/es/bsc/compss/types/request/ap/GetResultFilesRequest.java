@@ -18,7 +18,6 @@ package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.Application;
@@ -95,7 +94,7 @@ public class GetResultFilesRequest extends APRequest {
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td) {
+    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) {
         ResultListener listener = new ResultListener(sem);
         Set<FileInfo> writtenData = this.app.getWrittenFiles();
         if (writtenData != null) {

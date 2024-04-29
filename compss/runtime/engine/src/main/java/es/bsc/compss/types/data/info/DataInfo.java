@@ -475,4 +475,87 @@ public abstract class DataInfo<T extends DataParams> {
     public static DataInfo get(Integer dataId) {
         return ID_TO_DATA.get(dataId);
     }
+
+    /**
+     * Removes the versions associated with the given DataAccessId {@code dAccId} to if the task was canceled or not.
+     *
+     * @param dAccId DataAccessId.
+     */
+    public static void cancelAccess(EngineDataAccessId dAccId, boolean keepModified) {
+        Integer dataId = dAccId.getDataId();
+        DataInfo di = DataInfo.get(dataId);
+        if (di != null) {
+            Integer rVersionId;
+            Integer wVersionId;
+            boolean deleted = false;
+            switch (dAccId.getDirection()) {
+                case C:
+                case R:
+                    rVersionId = ((RAccessId) dAccId).getReadDataInstance().getVersionId();
+                    deleted = di.canceledReadVersion(rVersionId);
+                    break;
+                case CV:
+                case RW:
+                    rVersionId = ((RWAccessId) dAccId).getReadDataInstance().getVersionId();
+                    wVersionId = ((RWAccessId) dAccId).getWrittenDataInstance().getVersionId();
+                    if (keepModified) {
+                        di.versionHasBeenRead(rVersionId);
+                        // read data version can be removed
+                        di.tryRemoveVersion(rVersionId);
+                        deleted = di.versionHasBeenWritten(wVersionId);
+                    } else {
+                        di.canceledReadVersion(rVersionId);
+                        deleted = di.canceledWriteVersion(wVersionId);
+                    }
+                    break;
+                default:// case W:
+                    wVersionId = ((WAccessId) dAccId).getWrittenDataInstance().getVersionId();
+                    deleted = di.canceledWriteVersion(wVersionId);
+                    break;
+            }
+
+            if (deleted) {
+                di.deregister();
+            }
+        } else {
+            LOGGER.debug("Access of Data" + dAccId.getDataId() + " in Mode " + dAccId.getDirection().name()
+                + " can not be cancelled because do not exist in DIP.");
+        }
+    }
+
+    /**
+     * Marks that a given data {@code dAccId} has been accessed.
+     *
+     * @param dAccId DataAccessId.
+     */
+    public static void commitAccess(EngineDataAccessId dAccId) {
+        Integer dataId = dAccId.getDataId();
+        DataInfo di = DataInfo.get(dataId);
+        if (di != null) {
+            Integer rVersionId = null;
+            Integer wVersionId;
+            boolean deleted = false;
+
+            if (dAccId.isRead()) {
+                rVersionId = ((EngineDataAccessId.ReadingDataAccessId) dAccId).getReadDataInstance().getVersionId();
+                deleted = di.versionHasBeenRead(rVersionId);
+            }
+
+            if (dAccId.isWrite()) {
+                wVersionId = ((EngineDataAccessId.WritingDataAccessId) dAccId).getWrittenDataInstance().getVersionId();
+                if (rVersionId == null) {
+                    rVersionId = wVersionId - 1;
+                }
+                di.tryRemoveVersion(rVersionId);
+                deleted = di.versionHasBeenWritten(wVersionId);
+            }
+
+            if (deleted) {
+                di.deregister();
+            }
+        } else {
+            LOGGER.warn("Access of Data" + dAccId.getDataId() + " in Mode " + dAccId.getDirection().name()
+                + "can not be mark as accessed because do not exist in DIP.");
+        }
+    }
 }

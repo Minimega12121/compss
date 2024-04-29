@@ -17,7 +17,6 @@
 package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.data.ResultFile;
@@ -42,7 +41,7 @@ public class UnblockResultFilesRequest extends APRequest {
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td) {
+    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) {
         for (ResultFile resFile : this.resultFiles) {
             FileInfo fi = resFile.getFileInfo();
             fi.unblockDeletions();

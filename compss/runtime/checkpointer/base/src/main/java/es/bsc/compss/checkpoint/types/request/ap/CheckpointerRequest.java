@@ -18,7 +18,6 @@ package es.bsc.compss.checkpoint.types.request.ap;
 
 import es.bsc.compss.checkpoint.CheckpointRecord;
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.DataInfoProvider;
 import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.request.ap.APRequest;
@@ -51,13 +50,13 @@ public abstract class CheckpointerRequest extends APRequest {
     public abstract TraceEvent getCheckpointEvent();
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td)
+    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td)
         throws ShutdownException, COMPSsException {
         if (Tracer.isActivated()) {
             Tracer.emitEvent(getCheckpointEvent());
         }
         try {
-            process(ap, ta, dip, td, this.cp);
+            process(ap, ta, td, this.cp);
         } finally {
             if (Tracer.isActivated()) {
                 Tracer.emitEventEnd(TraceEventType.CHECKPOINT_EVENTS_TYPE);
@@ -65,6 +64,6 @@ public abstract class CheckpointerRequest extends APRequest {
         }
     }
 
-    public abstract void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td,
-        CheckpointRecord cp) throws ShutdownException, COMPSsException;
+    public abstract void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td, CheckpointRecord cp)
+        throws ShutdownException, COMPSsException;
 }
