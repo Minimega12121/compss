@@ -27,11 +27,11 @@
     }
   },
   "loggers": {
-    "dataclay":                     { "level": "DEBUG", "handlers": ["console", "error_console"], "propagate": "no" },
-    "hecuba":                       { "level": "DEBUG", "handlers": ["console", "error_console"], "propagate": "no" },
-    "redis":                        { "level": "DEBUG", "handlers": ["console", "error_console"], "propagate": "no" },
-    "storage":                      { "level": "DEBUG", "handlers": ["console", "error_console"], "propagate": "no" },
-    "user":                         { "level": "DEBUG", "handlers": ["console", "error_console"], "propagate": "no" }
+    "dataclay": { "level": "DEBUG", "handlers": ["console", "error_console"], "propagate": "no" },
+    "hecuba":   { "level": "DEBUG", "handlers": ["console", "error_console"], "propagate": "no" },
+    "redis":    { "level": "DEBUG", "handlers": ["console", "error_console"], "propagate": "no" },
+    "storage":  { "level": "DEBUG", "handlers": ["console", "error_console"], "propagate": "no" },
+    "user":     { "level": "DEBUG", "handlers": ["console", "error_console"], "propagate": "no" }
   },
   "root": {
     "level": "DEBUG"
