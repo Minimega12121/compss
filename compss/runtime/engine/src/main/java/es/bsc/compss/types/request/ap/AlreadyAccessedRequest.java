@@ -65,7 +65,7 @@ public class AlreadyAccessedRequest extends APRequest {
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td) {
         LOGGER.debug("Check already accessed: " + data.getDescription());
-        DataInfo dInfo = data.getDataInfo();
+        DataInfo dInfo = data.getRegisteredData();
         this.response = dInfo != null;
         this.sem.release();
     }

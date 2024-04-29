@@ -52,7 +52,7 @@ public class WaitForDataReadyToDeleteRequest extends APRequest {
         LOGGER.info("[WaitForDataReadyToDelete] Notifying waiting data " + this.data.getDescription() + "to DIP...");
         try {
             LOGGER.debug("Waiting for data " + data.getDescription() + " to be ready for deletion");
-            DataInfo dataInfo = data.getDataInfo();
+            DataInfo dataInfo = data.getRegisteredData();
             if (dataInfo == null) {
                 if (DEBUG) {
                     LOGGER.debug("No data found for data associated to " + data.getDescription());

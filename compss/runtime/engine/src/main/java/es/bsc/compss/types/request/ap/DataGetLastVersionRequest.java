@@ -62,7 +62,7 @@ public class DataGetLastVersionRequest extends APRequest {
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, DataInfoProvider dip, TaskDispatcher td) {
         this.response = null;
-        DataInfo dInfo = data.getDataInfo();
+        DataInfo dInfo = data.getRegisteredData();
         if (dInfo != null) {
             this.response = dInfo.getCurrentDataVersion().getDataInstanceId().getData();
         }

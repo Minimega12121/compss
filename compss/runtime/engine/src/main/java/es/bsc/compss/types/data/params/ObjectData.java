@@ -44,7 +44,7 @@ public class ObjectData extends DataParams {
     }
 
     @Override
-    public DataInfo createDataInfo() {
+    protected DataInfo registerData() {
         DataInfo oInfo = new ObjectInfo(this);
         Application app = this.getApp();
         app.registerObjectData(code, oInfo);
@@ -52,13 +52,13 @@ public class ObjectData extends DataParams {
     }
 
     @Override
-    public DataInfo getDataInfo() {
+    public DataInfo getRegisteredData() {
         Application app = this.getApp();
         return app.getObjectData(code);
     }
 
     @Override
-    protected DataInfo removeDataInfo() throws ValueUnawareRuntimeException {
+    protected DataInfo unregisterData() throws ValueUnawareRuntimeException {
         Application app = this.getApp();
         return app.removeObjectData(code);
     }

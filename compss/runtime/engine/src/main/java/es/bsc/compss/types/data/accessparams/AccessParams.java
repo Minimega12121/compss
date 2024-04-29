@@ -19,6 +19,7 @@ package es.bsc.compss.types.data.accessparams;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.annotations.parameter.Direction;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
 import es.bsc.compss.types.data.params.DataParams;
@@ -138,11 +139,37 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
     }
 
     public DataInfo getDataInfo() {
-        return data.getDataInfo();
+        return data.getRegisteredData();
     }
 
     public String getDataDescription() {
         return data.getDescription();
+    }
+
+    /**
+     * Registers a new data access.
+     *
+     * @return The registered access Id.
+     */
+    public EngineDataAccessId register() {
+        DataInfo dInfo = this.getDataInfo();
+        if (dInfo == null) {
+            if (DEBUG) {
+                LOGGER.debug("FIRST access to " + this.getDataDescription());
+            }
+
+            dInfo = this.data.register();
+            DataVersion dv = dInfo.getCurrentDataVersion();
+            this.registerValueForVersion(dv);
+        } else {
+            if (DEBUG) {
+                LOGGER.debug("Another access to " + this.getDataDescription());
+            }
+        }
+
+        EngineDataAccessId daId = dInfo.willAccess(this.mode);
+        this.externalRegister();
+        return daId;
     }
 
     /**

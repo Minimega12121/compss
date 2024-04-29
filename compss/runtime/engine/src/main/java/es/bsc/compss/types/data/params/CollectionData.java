@@ -44,7 +44,7 @@ public class CollectionData extends DataParams {
     }
 
     @Override
-    public DataInfo createDataInfo() {
+    protected DataInfo registerData() {
         DataInfo cInfo = new CollectionInfo(this);
         Application app = this.getApp();
         app.registerCollectionData(this.collectionId, cInfo);
@@ -52,13 +52,13 @@ public class CollectionData extends DataParams {
     }
 
     @Override
-    public DataInfo getDataInfo() {
+    public DataInfo getRegisteredData() {
         Application app = this.getApp();
         return app.getCollectionData(this.collectionId);
     }
 
     @Override
-    protected DataInfo removeDataInfo() throws ValueUnawareRuntimeException {
+    protected DataInfo unregisterData() throws ValueUnawareRuntimeException {
         Application app = this.getApp();
         return app.removeCollectionData(this.collectionId);
     }

@@ -54,17 +54,29 @@ public abstract class DataParams {
     public abstract String getDescription();
 
     /**
+     * Registers the data in the access dependency system.
+     * 
+     * @return DataInfo associated with the data to remove
+     */
+    public final DataInfo register() {
+        if (DEBUG) {
+            LOGGER.debug("Registering Data associated to " + this.getDescription());
+        }
+        return registerData();
+    }
+
+    /**
      * Marks a data for deletion.
      *
      * @return DataInfo associated with the data to remove
      * @throws ValueUnawareRuntimeException the runtime is not aware of the data
      */
-    public DataInfo delete() throws ValueUnawareRuntimeException {
+    public final DataInfo delete() throws ValueUnawareRuntimeException {
         if (DEBUG) {
             LOGGER.debug("Deleting Data associated to " + this.getDescription());
         }
         try {
-            return this.removeDataInfo();
+            return this.unregisterData();
         } catch (ValueUnawareRuntimeException vure) {
             if (DEBUG) {
                 LOGGER.debug("No data found for data associated to " + this.getDescription());
@@ -73,11 +85,11 @@ public abstract class DataParams {
         }
     }
 
-    public abstract DataInfo createDataInfo();
+    protected abstract DataInfo registerData();
 
-    public abstract DataInfo getDataInfo();
+    public abstract DataInfo getRegisteredData();
 
-    protected abstract DataInfo removeDataInfo() throws ValueUnawareRuntimeException;
+    protected abstract DataInfo unregisterData() throws ValueUnawareRuntimeException;
 
     /**
      * Deletes the local instance of the data.

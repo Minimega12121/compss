@@ -186,7 +186,8 @@ public class TaskAnalyser {
         if (DEBUG) {
             LOGGER.debug("Registering access " + access.toString() + " from main code");
         }
-        EngineDataAccessId daId = dip.registerAccessToExistingData(access);
+        access.checkAccessValidity();
+        EngineDataAccessId daId = access.register();
         if (daId == null) {
             if (DEBUG) {
                 LOGGER.debug("Accessing a canceled data from main code. Returning null");
@@ -401,7 +402,7 @@ public class TaskAnalyser {
                 case FILE_T:
                     // Remove file data form the list of written files
                     Application app = data.getApp();
-                    FileInfo fInfo = (FileInfo) data.getDataInfo();
+                    FileInfo fInfo = (FileInfo) data.getRegisteredData();
                     app.removeWrittenFile(fInfo);
                     break;
                 default:
@@ -499,7 +500,7 @@ public class TaskAnalyser {
         EngineDataAccessId daId;
         AccessParams access = p.getAccess();
         if (access != null) {
-            daId = dip.registerDataAccess(access);
+            daId = access.register();
         } else {
             daId = null;
         }
