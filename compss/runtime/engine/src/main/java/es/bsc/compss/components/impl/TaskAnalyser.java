@@ -507,6 +507,11 @@ public class TaskAnalyser {
         if (p.isPotentialDependency()) {
             DependencyParameter dp = (DependencyParameter) p;
             EngineDataAccessId dAccId = dp.getDataAccessId();
+            if (dAccId == null) {
+                LOGGER.warn("Parameter for task " + task.getId()
+                    + " has no access ID. It could be from a cancelled type. Ignoring ... ");
+                return;
+            }
             int dataId = dAccId.getDataId();
 
             DataType type = p.getType();
@@ -533,7 +538,7 @@ public class TaskAnalyser {
             }
 
             if ((task.getOnFailure() == OnFailure.CANCEL_SUCCESSORS && (task.getStatus() == TaskState.FAILED))
-                || task.getStatus() == TaskState.CANCELED) {
+                || (task.getStatus() == TaskState.CANCELED && task.getOnFailure() != OnFailure.IGNORE)) {
                 DataInfo.cancelAccess(dAccId, task.wasSubmited());
             } else {
                 DataInfo.commitAccess(dAccId);
