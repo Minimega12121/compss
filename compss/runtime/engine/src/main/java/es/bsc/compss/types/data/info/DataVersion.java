@@ -147,24 +147,6 @@ public class DataVersion {
     }
 
     /**
-     * Returns the number of readers.
-     *
-     * @return The number of readers
-     */
-    public Integer getNumberOfReaders() {
-        return readers;
-    }
-
-    /**
-     * Returns the number of writers.
-     *
-     * @return The number of writers
-     */
-    public Integer getNumberOfWriters() {
-        return writers;
-    }
-
-    /**
      * Returns whether the data can be deleted or not.
      *
      * @return {@code true} if the data can be deleted, {@code false} otherwise.

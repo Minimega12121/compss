@@ -131,7 +131,7 @@ public class GetResultFilesRequest extends APRequest {
             int dataId = fInfo.getDataId();
             LOGGER.debug("Get Result file for data " + dataId);
         }
-        if (fInfo.hasBeenCanceled()) {
+        if (fInfo.isCurrentVersionBeenUsed()) {
             if (!fInfo.isCurrentVersionToDelete()) { // If current version is to delete do not
                 // transfer
                 String[] splitPath = fInfo.getOriginalLocation().getPath().split(File.separator);

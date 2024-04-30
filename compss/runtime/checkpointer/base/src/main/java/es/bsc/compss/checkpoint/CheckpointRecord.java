@@ -579,7 +579,7 @@ public class CheckpointRecord {
                     if (DEBUG) {
                         LOGGER.debug("Removing previous checkpoint data" + prevRenaming);
                     }
-                    Comm.removeData(prevRenaming, true);
+                    prevDaId.delete();
                 }
             }
         }
@@ -687,7 +687,7 @@ public class CheckpointRecord {
                 CheckpointData cdi = dataInfo.get(dataId);
                 if (cdi.getNotDeletedFinishedCopies() > 1) {
 
-                    if (cdvi.isCheckpointed() && cdvi.areReadersEmpty() && version.getNumberOfReaders() > 0
+                    if (cdvi.isCheckpointed() && cdvi.areReadersEmpty() && version.hasPendingLectures()
                         && daId.getVersionId() > 1) {
                         if (first) {
                             first = false;
@@ -698,7 +698,7 @@ public class CheckpointRecord {
                                 if (DEBUG) {
                                     LOGGER.debug("Removing data " + renaming + " because it became obsolete");
                                 }
-                                Comm.removeData(daId.getRenaming(), true);
+                                daId.delete();
                                 cdi.removeNotDeletedFinishedCopies();
                             }
                         }
@@ -749,7 +749,7 @@ public class CheckpointRecord {
                     if (DEBUG) {
                         LOGGER.debug("Checkpointer deleting obsolete data " + dv.getDataInstanceId().getRenaming());
                     }
-                    Comm.removeData(dv.getDataInstanceId().getRenaming(), true);
+                    dv.getDataInstanceId().delete();
                 }
             }
 
