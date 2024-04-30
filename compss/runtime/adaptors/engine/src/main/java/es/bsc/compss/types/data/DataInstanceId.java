@@ -118,6 +118,13 @@ public class DataInstanceId implements Serializable, Comparable<DataInstanceId> 
         return "d" + dataId + "v" + previousVersion + "_" + timeStamp + ".IT";
     }
 
+    /**
+     * Deletes the DataInstance.
+     */
+    public void delete() {
+        Comm.removeData(this.getRenaming(), true);
+    }
+
     // Comparable interface implementation
     @Override
     public int compareTo(DataInstanceId dId) {

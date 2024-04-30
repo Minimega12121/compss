@@ -16,7 +16,6 @@
  */
 package es.bsc.compss.types.data.info;
 
-import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
@@ -72,6 +71,7 @@ public abstract class DataInfo<T extends DataParams> {
     protected final LinkedList<Integer> canceledVersions;
 
     protected boolean deleted;
+
 
     /**
      * Marks that a given data {@code dAccId} has been accessed.
@@ -287,7 +287,7 @@ public abstract class DataInfo<T extends DataParams> {
     private void tryRemoveVersion(Integer versionId) {
         DataVersion version = this.versions.get(versionId);
         if (version != null && version.markToDelete()) {
-            Comm.removeData(version.getDataInstanceId().getRenaming(), true);
+            version.getDataInstanceId().delete();
             this.versions.remove(versionId);
         }
     }
@@ -325,7 +325,7 @@ public abstract class DataInfo<T extends DataParams> {
     private boolean versionHasBeenRead(int versionId) {
         DataVersion readVersion = this.versions.get(versionId);
         if (readVersion.hasBeenRead()) {
-            Comm.removeData(readVersion.getDataInstanceId().getRenaming(), true);
+            readVersion.getDataInstanceId().delete();
             this.versions.remove(versionId);
             return this.versions.isEmpty();
         }
@@ -341,7 +341,7 @@ public abstract class DataInfo<T extends DataParams> {
     private boolean versionHasBeenWritten(int versionId) {
         DataVersion writtenVersion = versions.get(versionId);
         if (writtenVersion.hasBeenWritten()) {
-            Comm.removeData(writtenVersion.getDataInstanceId().getRenaming(), true);
+            writtenVersion.getDataInstanceId().delete();
             this.versions.remove(versionId);
             return this.versions.isEmpty();
         }
@@ -356,6 +356,7 @@ public abstract class DataInfo<T extends DataParams> {
     public final boolean isCurrentVersionBeenUsed() {
         return this.currentVersion.hasBeenUsed();
     }
+
     private void cancelledAccess(EngineDataAccessId dAccId, boolean keepModified) {
         Integer rVersionId;
         Integer wVersionId;
@@ -403,7 +404,7 @@ public abstract class DataInfo<T extends DataParams> {
             readVersion.unmarkToDelete();
         }
         if (readVersion.hasBeenRead()) {
-            Comm.removeData(readVersion.getDataInstanceId().getRenaming(), true);
+            readVersion.getDataInstanceId().delete();
             this.versions.remove(versionId);
             return this.versions.isEmpty();
         }
@@ -481,7 +482,7 @@ public abstract class DataInfo<T extends DataParams> {
         if (this.deletionBlocks == 0) {
             for (DataVersion version : this.pendingDeletions) {
                 if (version.markToDelete()) {
-                    Comm.removeData(version.getDataInstanceId().getRenaming(), true);
+                    version.getDataInstanceId().delete();
                     this.versions.remove(version.getDataInstanceId().getVersionId());
                 }
             }
@@ -502,9 +503,8 @@ public abstract class DataInfo<T extends DataParams> {
         } else {
             LinkedList<Integer> removedVersions = new LinkedList<>();
             for (DataVersion version : this.versions.values()) {
-                String sourceName = version.getDataInstanceId().getRenaming();
                 if (version.markToDelete()) {
-                    Comm.removeData(sourceName, true);
+                    version.getDataInstanceId().delete();
                     removedVersions.add(version.getDataInstanceId().getVersionId());
                 }
             }
