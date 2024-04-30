@@ -131,8 +131,8 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
         if (this.checkpointManager == null) {
             ErrorManager.fatal(ERR_LOAD_CHECKPOINTER);
         }
+        Application.setCP(this.checkpointManager);
 
-        this.taskAnalyser.setCoWorkers(checkpointManager);
         this.requestQueue = new LinkedBlockingQueue<>();
 
         keepGoing = true;
@@ -142,15 +142,6 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
             Tracer.enablePThreads(1);
         }
         processor.start();
-    }
-
-    /**
-     * Sets the GraphHandler.
-     *
-     * @param gh graphandler.
-     */
-    public void setGM(GraphHandler gh) {
-        this.taskAnalyser.setGM(gh);
     }
 
     @Override
@@ -182,7 +173,6 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
         if (Tracer.isActivated()) {
             Tracer.emitEventEnd(TraceEvent.AP_THREAD_ID);
         }
-
         LOGGER.info("AccessProcessor shutdown");
     }
 
@@ -522,7 +512,6 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
 
         // Wait for response
         shutdownSemaphore.acquireUninterruptibly();
-
     }
 
     /**
@@ -744,5 +733,9 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
             ErrorManager.fatal(ERR_LOAD_CHECKPOINTER, e);
         }
         return checkpointer;
+    }
+
+    public void shutdownCP() {
+        this.checkpointManager.shutdown();
     }
 }

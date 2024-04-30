@@ -17,6 +17,8 @@
 package es.bsc.compss.types;
 
 import es.bsc.compss.api.ApplicationRunner;
+import es.bsc.compss.checkpoint.CheckpointManager;
+import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
@@ -45,6 +47,9 @@ public class Application {
 
     private static final TreeMap<Long, Application> APPLICATIONS = new TreeMap<>();
     private static final Application NO_APPLICATION = new Application(null, null, null);
+
+    private static GraphHandler GH;
+    private static CheckpointManager CP;
 
     /*
      * Application definition
@@ -88,6 +93,14 @@ public class Application {
     // Set of written data ids (for result files)
     private Set<FileInfo> writtenFileData;
 
+
+    public static void setCP(CheckpointManager cp) {
+        Application.CP = cp;
+    }
+
+    public static void setGH(GraphHandler gh) {
+        Application.GH = gh;
+    }
 
     /**
      * Returns the tasks state.
@@ -199,6 +212,14 @@ public class Application {
 
     public String getParallelismSource() {
         return parallelismSource;
+    }
+
+    public static GraphHandler getGH() {
+        return GH;
+    }
+
+    public static CheckpointManager getCP() {
+        return CP;
     }
 
     /*

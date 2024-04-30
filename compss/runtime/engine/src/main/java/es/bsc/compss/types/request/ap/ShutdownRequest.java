@@ -46,7 +46,7 @@ public class ShutdownRequest extends APRequest {
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) throws ShutdownException {
         // Close Graph
-        ta.shutdown();
+        ap.shutdownCP();
     }
 
     @Override
