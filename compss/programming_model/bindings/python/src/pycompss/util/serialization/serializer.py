@@ -142,9 +142,14 @@ def get_available_libraries() -> (
     """
     active_serializers = []
     for library, priority in LIB2IDX.items():
-        active_serializers.append(
-            (priority, library.__name__, library.__file__)
-        )
+        try:
+            active_serializers.append(
+                (priority, library.__name__, library.__file__)
+            )
+        except AttributeError:
+            active_serializers.append(
+                (priority, library.__name__, str(library))
+            )
     return active_serializers
 
 
@@ -164,7 +169,8 @@ def get_serializer_priority(
         logger.debug(
             "Get serializer priority for object of type: %s" % str(type(obj))
         )
-
+    if FORCED_SERIALIZER > -1:
+        return [IDX2LIB[FORCED_SERIALIZER]]
     primitives = (int, str, bool, float)
     # primitives should be (de)serialized with for the compatibility with the
     # Runtime- only JSON objects can be deserialized in Java.
@@ -181,8 +187,6 @@ def get_serializer_priority(
         return [pyarrow] + serializers
     if object_belongs_to_module(obj, "pyeddl") and PYEDDL_AVAILABLE:
         return [eddlNet] + serializers
-    if FORCED_SERIALIZER > -1:
-        return [IDX2LIB[FORCED_SERIALIZER]]
     return serializers
 
 
