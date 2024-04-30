@@ -19,6 +19,8 @@ package es.bsc.compss.types.data.info;
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
 import es.bsc.compss.types.data.accessid.RAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
 import es.bsc.compss.types.data.accessid.WAccessId;
@@ -296,12 +298,12 @@ public abstract class DataInfo<T extends DataParams> {
         boolean deleted = false;
 
         if (dAccId.isRead()) {
-            rVersionId = ((EngineDataAccessId.ReadingDataAccessId) dAccId).getReadDataInstance().getVersionId();
+            rVersionId = ((ReadingDataAccessId) dAccId).getReadDataInstance().getVersionId();
             deleted = this.versionHasBeenRead(rVersionId);
         }
 
         if (dAccId.isWrite()) {
-            wVersionId = ((EngineDataAccessId.WritingDataAccessId) dAccId).getWrittenDataInstance().getVersionId();
+            wVersionId = ((WritingDataAccessId) dAccId).getWrittenDataInstance().getVersionId();
             if (rVersionId == null) {
                 rVersionId = wVersionId - 1;
             }

@@ -156,7 +156,7 @@ public class FileInfo extends DataInfo<FileData> {
             EngineDataInstanceId daId = version.getDataInstanceId();
             LogicalData ld = daId.getData();
             // The number of readers can only be higher than 0 in local disks. The overhead of moving should be low.
-            if (version.getNumberOfReaders() > 0) {
+            if (version.hasPendingLectures()) {
                 String rename = daId.getRenaming();
                 moveToWorkingDir(loc, uri, rename);
             } else {

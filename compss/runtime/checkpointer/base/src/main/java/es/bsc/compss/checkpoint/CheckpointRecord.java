@@ -687,7 +687,7 @@ public class CheckpointRecord {
                 CheckpointData cdi = dataInfo.get(dataId);
                 if (cdi.getNotDeletedFinishedCopies() > 1) {
 
-                    if (cdvi.isCheckpointed() && cdvi.areReadersEmpty() && version.getNumberOfReaders() > 0
+                    if (cdvi.isCheckpointed() && cdvi.areReadersEmpty() && version.hasPendingLectures()
                         && daId.getVersionId() > 1) {
                         if (first) {
                             first = false;
