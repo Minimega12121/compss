@@ -40,9 +40,7 @@ import es.bsc.compss.types.parameter.impl.CollectiveParameter;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.parameter.impl.ObjectParameter;
 import es.bsc.compss.types.parameter.impl.Parameter;
-import es.bsc.compss.types.request.ap.BarrierGroupRequest;
 import es.bsc.compss.types.request.ap.BarrierRequest;
-import es.bsc.compss.types.request.ap.EndOfAppRequest;
 import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.util.ErrorManager;
@@ -178,7 +176,7 @@ public class TaskAnalyser {
                 } else {
                     depInstance = di;
                 }
-                dai.mainAccess(rdar, app.getGH(), depInstance);
+                dai.mainAccess(rdar, depInstance);
             }
         }
         return daId;
@@ -304,19 +302,6 @@ public class TaskAnalyser {
     }
 
     /**
-     * Barrier for group.
-     *
-     * @param request Barrier group request
-     */
-    public void barrierGroup(BarrierGroupRequest request) {
-        Application app = request.getApp();
-        String groupName = request.getGroupName();
-
-        app.reachesGroupBarrier(groupName, request);
-        app.getGH().groupBarrier(request);
-    }
-
-    /**
      * Barrier.
      *
      * @param request Barrier request.
@@ -326,17 +311,6 @@ public class TaskAnalyser {
 
         app.reachesBarrier(request);
         app.getGH().barrier(this.accessesInfo);
-    }
-
-    /**
-     * End of execution barrier.
-     *
-     * @param request End of execution request.
-     */
-    public void noMoreTasks(EndOfAppRequest request) {
-        Application app = request.getApp();
-        app.endReached(request);
-        app.getGH().endApp();
     }
 
     /**
@@ -380,30 +354,10 @@ public class TaskAnalyser {
         }
     }
 
-    /**
-     * /* *************************************************************************************************************
+    /*
+     * *************************************************************************************************************
      * TASK GROUPS PUBLIC METHODS
      ***************************************************************************************************************/
-    /**
-     * Sets the current task group to assign to tasks.
-     *
-     * @param app application to which the group belongs.
-     * @param groupName Name of the group to set
-     */
-    public void setCurrentTaskGroup(Application app, String groupName) {
-        app.stackTaskGroup(groupName);
-        app.getGH().openTaskGroup(groupName);
-    }
-
-    /**
-     * Closes the last task group of an application.
-     *
-     * @param app Application to which the group belongs to
-     */
-    public void closeCurrentTaskGroup(Application app) {
-        app.popGroup();
-        app.getGH().closeTaskGroup();
-    }
 
     private void releaseCommutativeGroups(Task task) {
         if (!task.getCommutativeGroupList().isEmpty()) {
@@ -522,7 +476,7 @@ public class TaskAnalyser {
         }
         boolean hasEdge = false;
         if (dai != null) {
-            hasEdge = dai.readValue(currentTask, dp, isConcurrent, currentTask.getApplication().getGH());
+            hasEdge = dai.readValue(currentTask, dp, isConcurrent);
             if (isConstraining) {
                 AbstractTask lastWriter = dai.getConstrainingProducer();
                 currentTask.setEnforcingTask((Task) lastWriter);
@@ -559,7 +513,7 @@ public class TaskAnalyser {
             dai = DataAccessesInfo.createAccessInfo(dp.getType());
             this.accessesInfo.put(dataId, dai);
         }
-        dai.writeValue(currentTask, dp, isConcurrent, currentTask.getApplication().getGH());
+        dai.writeValue(currentTask, dp, isConcurrent);
 
         // Update file and PSCO lists
         switch (dp.getType()) {
@@ -602,7 +556,7 @@ public class TaskAnalyser {
                     switch (dp.getDirection()) {
                         case OUT:
                         case INOUT:
-                            dai.completedProducer(task, task.getApplication().getGH());
+                            dai.completedProducer(task);
                             break;
                         default:
                             break;

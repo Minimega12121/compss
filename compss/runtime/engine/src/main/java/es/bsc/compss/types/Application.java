@@ -22,6 +22,7 @@ import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
+import es.bsc.compss.types.request.ap.BarrierGroupRequest;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
 import java.security.SecureRandom;
@@ -230,7 +231,12 @@ public class Application {
      *
      * @param groupName name of the group to register
      */
-    public final void stackTaskGroup(String groupName) {
+    public final void openTaskGroup(String groupName) {
+        stackTaskGroup(groupName);
+        this.GH.openTaskGroup(groupName);
+    }
+
+    private void stackTaskGroup(String groupName) {
         LOGGER.debug("Adding group " + groupName + " to the current groups stack.");
         TaskGroup tg = new TaskGroup(groupName, this);
         this.currentTaskGroups.push(tg);
@@ -240,7 +246,12 @@ public class Application {
     /**
      * Removes and returns the peek of the TaskGroups stack.
      */
-    public final void popGroup() {
+    public final void closeCurrentTaskGroup() {
+        popGroup();
+        this.GH.closeTaskGroup();
+    }
+
+    private void popGroup() {
         TaskGroup tg = this.currentTaskGroups.pop();
         tg.setClosed();
     }
@@ -354,9 +365,10 @@ public class Application {
      * @param groupName name of group holding the barrier
      * @param request request that waits for the barrier
      */
-    public final void reachesGroupBarrier(String groupName, Barrier request) {
+    public final void reachesGroupBarrier(String groupName, BarrierGroupRequest request) {
         TaskGroup tg = this.getGroup(groupName);
         reachesGroupBarrier(tg, request);
+        this.GH.groupBarrier(request);
     }
 
     /**
@@ -377,6 +389,7 @@ public class Application {
      */
     public final void endReached(Barrier barrier) {
         reachesBarrier(barrier);
+        this.GH.endApp();
     }
 
     /*

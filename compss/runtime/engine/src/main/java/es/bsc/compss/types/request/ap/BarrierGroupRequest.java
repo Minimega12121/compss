@@ -48,7 +48,8 @@ public class BarrierGroupRequest extends BarrierRequest {
 
     @Override
     public void handleBarrier(TaskAnalyser ta) {
-        ta.barrierGroup(this);
+        Application app = this.getApp();
+        app.reachesGroupBarrier(this.groupName, this);
     }
 
 }

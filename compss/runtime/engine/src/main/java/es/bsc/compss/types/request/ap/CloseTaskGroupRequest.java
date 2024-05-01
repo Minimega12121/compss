@@ -34,7 +34,7 @@ public class CloseTaskGroupRequest extends APRequest {
 
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) {
-        ta.closeCurrentTaskGroup(app);
+        app.closeCurrentTaskGroup();
     }
 
     @Override

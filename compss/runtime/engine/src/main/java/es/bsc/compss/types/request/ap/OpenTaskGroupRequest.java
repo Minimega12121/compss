@@ -42,7 +42,7 @@ public class OpenTaskGroupRequest extends APRequest {
 
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) {
-        ta.setCurrentTaskGroup(app, this.groupName);
+        app.openTaskGroup(groupName);
     }
 
     @Override

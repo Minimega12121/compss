@@ -40,7 +40,8 @@ public class EndOfAppRequest extends BarrierRequest {
     @Override
     public void handleBarrier(TaskAnalyser ta) {
         LOGGER.info("TA Processes no More tasks for app " + this.getApp().getId());
-        ta.noMoreTasks(this);
+        Application app = this.getApp();
+        app.endReached(this);
         LOGGER.info("TA Processed no More tasks for app " + this.getApp().getId());
 
     }
