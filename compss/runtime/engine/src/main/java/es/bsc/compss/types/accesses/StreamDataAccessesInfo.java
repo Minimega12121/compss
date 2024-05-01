@@ -17,7 +17,6 @@
 package es.bsc.compss.types.accesses;
 
 import es.bsc.compss.components.monitor.impl.EdgeType;
-import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
@@ -115,11 +114,6 @@ public class StreamDataAccessesInfo extends DataAccessesInfo {
         for (AbstractTask lastWriter : this.streamWriters) {
             app.getGH().mainAccessToData(lastWriter, EdgeType.STREAM_DEPENDENCY, accesedData);
         }
-    }
-
-    @Override
-    public boolean isFinalProducer(Task t) {
-        return (this.streamWriters.isEmpty());
     }
 
     @Override

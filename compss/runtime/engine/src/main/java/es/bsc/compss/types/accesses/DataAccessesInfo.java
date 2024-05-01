@@ -104,14 +104,6 @@ public abstract class DataAccessesInfo {
      */
     public abstract void mainAccess(RegisterDataAccessRequest rdar, EngineDataInstanceId depInstance);
 
-    /**
-     * Checks whether t is responsible for the generation of the last version of the value.
-     * 
-     * @param t task to check if it was the last producer of the value
-     * @return {@literal true} if t was the last task generating the value; {@literal false} otherwise.
-     */
-    public abstract boolean isFinalProducer(Task t);
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

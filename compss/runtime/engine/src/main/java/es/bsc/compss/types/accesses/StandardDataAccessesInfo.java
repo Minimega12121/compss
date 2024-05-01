@@ -221,11 +221,6 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
     }
 
     @Override
-    public boolean isFinalProducer(Task t) {
-        return (this.concurrentReaders.isEmpty() && this.lastWriter == t);
-    }
-
-    @Override
     public String toStringDetails() {
         StringBuilder sb = new StringBuilder();
         sb.append("concurrentReaders = [");
