@@ -16,8 +16,6 @@
  */
 package es.bsc.compss.types.accesses;
 
-import es.bsc.compss.components.monitor.impl.GraphGenerator;
-import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Task;
@@ -38,8 +36,6 @@ public abstract class DataAccessesInfo {
     // Logger
     protected static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
     protected static final boolean DEBUG = LOGGER.isDebugEnabled();
-
-    protected static final boolean IS_DRAW_GRAPH = GraphGenerator.isEnabled();
 
     private final DataType dataType;
 
@@ -76,9 +72,8 @@ public abstract class DataAccessesInfo {
      * Registers a data producer as completed.
      * 
      * @param task Data Producer
-     * @param gh class handling the requests to add edges to the monitoring graph
      */
-    public abstract void completedProducer(AbstractTask task, GraphHandler gh);
+    public abstract void completedProducer(AbstractTask task);
 
     public abstract AbstractTask getConstrainingProducer();
 
@@ -88,10 +83,9 @@ public abstract class DataAccessesInfo {
      * @param t task reading the value
      * @param dp parameter corresponding to the data value
      * @param isConcurrent {@literal true} if the reading was due to a concuerrent access; {@literal false} otherwise.
-     * @param gh class handling the requests to add edges to the monitoring graph
      * @return {@literal true}, if an edge has been printed; {@literal false}, otherwise.
      */
-    public abstract boolean readValue(Task t, DependencyParameter dp, boolean isConcurrent, GraphHandler gh);
+    public abstract boolean readValue(Task t, DependencyParameter dp, boolean isConcurrent);
 
     /**
      * Registers a task writting on the data value.
@@ -99,26 +93,16 @@ public abstract class DataAccessesInfo {
      * @param t task writting the value
      * @param dp parameter corresponding to the data value
      * @param isConcurrent {@literal true} if the writting was due to a concuerrent access; {@literal false} otherwise.
-     * @param gh class handling the requests to add edges to the monitoring graph
      */
-    public abstract void writeValue(Task t, DependencyParameter dp, boolean isConcurrent, GraphHandler gh);
+    public abstract void writeValue(Task t, DependencyParameter dp, boolean isConcurrent);
 
     /**
      * Registers an access from the application main code to the value.
      *
      * @param rdar Request to access the data value
-     * @param gh class handling the requests to add edges to the monitoring graph
      * @param depInstance data instance being accessed
      */
-    public abstract void mainAccess(RegisterDataAccessRequest rdar, GraphHandler gh, EngineDataInstanceId depInstance);
-
-    /**
-     * Checks whether t is responsible for the generation of the last version of the value.
-     * 
-     * @param t task to check if it was the last producer of the value
-     * @return {@literal true} if t was the last task generating the value; {@literal false} otherwise.
-     */
-    public abstract boolean isFinalProducer(Task t);
+    public abstract void mainAccess(RegisterDataAccessRequest rdar, EngineDataInstanceId depInstance);
 
     @Override
     public String toString() {

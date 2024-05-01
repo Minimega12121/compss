@@ -45,7 +45,6 @@ public class ShutdownNotificationRequest extends APRequest {
 
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) throws ShutdownException {
-
         throw new ShutdownException(this.sem);
     }
 

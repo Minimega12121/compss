@@ -17,16 +17,11 @@
 package es.bsc.compss.components.impl;
 
 import es.bsc.compss.api.TaskMonitor;
-import es.bsc.compss.checkpoint.CheckpointManager;
-import es.bsc.compss.components.monitor.impl.GraphHandler;
-import es.bsc.compss.components.monitor.impl.NoGraph;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Application;
-import es.bsc.compss.types.CommutativeGroupTask;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.TaskDescription;
-import es.bsc.compss.types.TaskListener;
 import es.bsc.compss.types.TaskState;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.annotations.parameter.DataType;
@@ -43,9 +38,7 @@ import es.bsc.compss.types.parameter.impl.CollectiveParameter;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.parameter.impl.ObjectParameter;
 import es.bsc.compss.types.parameter.impl.Parameter;
-import es.bsc.compss.types.request.ap.BarrierGroupRequest;
 import es.bsc.compss.types.request.ap.BarrierRequest;
-import es.bsc.compss.types.request.ap.EndOfAppRequest;
 import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.util.ErrorManager;
@@ -71,10 +64,6 @@ public class TaskAnalyser {
     private static final String TASK_FAILED = "Task failed: ";
     private static final String TASK_CANCELED = "Task canceled: ";
 
-    // Components
-    private CheckpointManager cp;
-    private GraphHandler gh;
-
     // Map: data Id -> WritersInfo
     private final Map<Integer, DataAccessesInfo> accessesInfo;
 
@@ -85,25 +74,6 @@ public class TaskAnalyser {
     public TaskAnalyser() {
         this.accessesInfo = new TreeMap<>();
         LOGGER.info("Initialization finished");
-        this.gh = new NoGraph();
-    }
-
-    /**
-     * Sets the TaskAnalyser co-workers.
-     *
-     * @param cp checkpoint manager co-worker.
-     */
-    public void setCoWorkers(CheckpointManager cp) {
-        this.cp = cp;
-    }
-
-    /**
-     * Sets the graph handler for the detected task and dependencies.
-     *
-     * @param gh Graph Handler.
-     */
-    public void setGM(GraphHandler gh) {
-        this.gh = gh;
     }
 
     /**
@@ -115,10 +85,10 @@ public class TaskAnalyser {
         TaskDescription description = currentTask.getTaskDescription();
         LOGGER.info("New " + description.getType().toString().toLowerCase() + " task: Name:" + description.getName()
             + "), ID = " + currentTask.getId() + " APP = " + currentTask.getApplication().getId());
-        this.gh.startTaskAnalysis(currentTask);
 
         Application app = currentTask.getApplication();
         app.newTask(currentTask);
+        app.getGH().startTaskAnalysis(currentTask);
 
         // Check scheduling enforcing data
         int constrainingParam = -1;
@@ -127,10 +97,10 @@ public class TaskAnalyser {
         boolean taskHasEdge = processTaskParameters(currentTask, constrainingParam);
         registerIntermediateParameter(currentTask);
         markIntermediateParametersToDelete(currentTask);
-        this.gh.endTaskAnalysis(currentTask, taskHasEdge);
+        app.getGH().endTaskAnalysis(currentTask, taskHasEdge);
 
         // Prepare checkpointer for task
-        cp.newTask(currentTask);
+        app.getCP().newTask(currentTask);
     }
 
     private boolean processTaskParameters(Task currentTask, int constrainingParam) {
@@ -165,13 +135,6 @@ public class TaskAnalyser {
     }
 
     /**
-     * Performs an snapshot of the data.
-     */
-    public void snapshot() {
-        cp.snapshot();
-    }
-
-    /**
      * Registers a data access from the main code and notifies when the data is available.
      *
      * @param rdar request indicating the data being accessed
@@ -198,7 +161,8 @@ public class TaskAnalyser {
         if (daId.isRead()) {
             ReadingDataAccessId rdaId = (ReadingDataAccessId) daId;
             EngineDataInstanceId di = rdaId.getReadDataInstance();
-            cp.mainAccess(di);
+            Application app = access.getApp();
+            app.getCP().mainAccess(di);
 
             int dataId = daId.getDataId();
             // Retrieve writers information
@@ -210,7 +174,7 @@ public class TaskAnalyser {
                 } else {
                     depInstance = di;
                 }
-                dai.mainAccess(rdar, this.gh, depInstance);
+                dai.mainAccess(rdar, depInstance);
             }
         }
         return daId;
@@ -282,12 +246,7 @@ public class TaskAnalyser {
             if (DEBUG) {
                 LOGGER.debug("Releasing waiting tasks for task " + taskId);
             }
-            List<TaskListener> listeners = task.getListeners();
-            if (listeners != null) {
-                for (TaskListener listener : listeners) {
-                    listener.taskFinished();
-                }
-            }
+            task.notifyListeners();
 
             // Check if the finished task was the last writer of a file, but only if task generation has finished
             // Task generation is finished if we are on noMoreTasks but we are not on a barrier
@@ -312,14 +271,14 @@ public class TaskAnalyser {
             }
 
             // Releases commutative groups dependent and releases all the waiting tasks
-            releaseCommutativeGroups(task);
+            task.releaseCommutativeGroups();
 
             // If we are not retrieving the checkpoint
             if (!checkpointing) {
                 if (DEBUG) {
                     LOGGER.debug("Checkpoint saving task " + taskId);
                 }
-                cp.endTask(task);
+                app.getCP().endTask(task);
             }
         }
 
@@ -336,19 +295,6 @@ public class TaskAnalyser {
     }
 
     /**
-     * Barrier for group.
-     *
-     * @param request Barrier group request
-     */
-    public void barrierGroup(BarrierGroupRequest request) {
-        Application app = request.getApp();
-        String groupName = request.getGroupName();
-
-        app.reachesGroupBarrier(groupName, request);
-        this.gh.groupBarrier(request);
-    }
-
-    /**
      * Barrier.
      *
      * @param request Barrier request.
@@ -357,18 +303,7 @@ public class TaskAnalyser {
         Application app = request.getApp();
 
         app.reachesBarrier(request);
-        this.gh.barrier(this.accessesInfo);
-    }
-
-    /**
-     * End of execution barrier.
-     *
-     * @param request End of execution request.
-     */
-    public void noMoreTasks(EndOfAppRequest request) {
-        Application app = request.getApp();
-        app.endReached(request);
-        this.gh.endApp();
+        app.getGH().barrier(this.accessesInfo);
     }
 
     /**
@@ -386,7 +321,8 @@ public class TaskAnalyser {
 
         // Deleting checkpointed data that is obsolete, INOUT that has a newest version
         if (applicationDelete) {
-            cp.deletedData(dataInfo);
+            Application app = data.getApp();
+            app.getCP().deletedData(dataInfo);
         }
 
         DataAccessesInfo dai = this.accessesInfo.remove(dataId);
@@ -411,63 +347,6 @@ public class TaskAnalyser {
         }
     }
 
-    /**
-     * Shutdown the component.
-     */
-    public void shutdown() {
-        this.gh.removeCurrentGraph();
-        this.cp.shutdown();
-    }
-
-    /*
-     * *************************************************************************************************************
-     * TASK GROUPS PUBLIC METHODS
-     ***************************************************************************************************************/
-    /**
-     * Sets the current task group to assign to tasks.
-     *
-     * @param app application to which the group belongs.
-     * @param groupName Name of the group to set
-     */
-    public void setCurrentTaskGroup(Application app, String groupName) {
-        app.stackTaskGroup(groupName);
-        this.gh.openTaskGroup(groupName);
-    }
-
-    /**
-     * Closes the last task group of an application.
-     *
-     * @param app Application to which the group belongs to
-     */
-    public void closeCurrentTaskGroup(Application app) {
-        app.popGroup();
-        this.gh.closeTaskGroup();
-    }
-
-    private void releaseCommutativeGroups(Task task) {
-        if (!task.getCommutativeGroupList().isEmpty()) {
-            for (CommutativeGroupTask group : task.getCommutativeGroupList()) {
-                group.getCommutativeTasks().remove(task);
-                group.setStatus(TaskState.FINISHED);
-                group.removePredecessor(task);
-                if (group.getPredecessors().isEmpty()) {
-                    group.releaseDataDependents();
-                    // Check if task is being waited
-                    List<TaskListener> listeners = group.getListeners();
-                    if (listeners != null) {
-                        for (TaskListener listener : listeners) {
-                            listener.taskFinished();
-                        }
-                    }
-                    if (DEBUG) {
-                        LOGGER.debug("Group " + group.getId() + " ended execution");
-                        LOGGER.debug("Data dependents of group " + group.getCommutativeIdentifier() + " released ");
-                    }
-                }
-            }
-        }
-    }
-
     /*
      * *************************************************************************************************************
      * DATA DEPENDENCY MANAGEMENT PRIVATE METHODS
@@ -476,13 +355,14 @@ public class TaskAnalyser {
         boolean hasParamEdge = false;
         if (p.isCollective()) {
             CollectiveParameter cp = (CollectiveParameter) p;
-            this.gh.startGroupingEdges();
+            Application app = currentTask.getApplication();
+            app.getGH().startGroupingEdges();
             for (Parameter content : cp.getElements()) {
                 boolean hasCollectionParamEdge =
                     registerParameterAccessAndAddDependencies(currentTask, content, isConstraining);
                 hasParamEdge = hasParamEdge || hasCollectionParamEdge;
             }
-            this.gh.stopGroupingEdges();
+            app.getGH().stopGroupingEdges();
         } else {
             if (p.getType() == DataType.OBJECT_T) {
                 ObjectParameter op = (ObjectParameter) p;
@@ -560,7 +440,7 @@ public class TaskAnalyser {
         }
         boolean hasEdge = false;
         if (dai != null) {
-            hasEdge = dai.readValue(currentTask, dp, isConcurrent, this.gh);
+            hasEdge = dai.readValue(currentTask, dp, isConcurrent);
             if (isConstraining) {
                 AbstractTask lastWriter = dai.getConstrainingProducer();
                 currentTask.setEnforcingTask((Task) lastWriter);
@@ -597,7 +477,7 @@ public class TaskAnalyser {
             dai = DataAccessesInfo.createAccessInfo(dp.getType());
             this.accessesInfo.put(dataId, dai);
         }
-        dai.writeValue(currentTask, dp, isConcurrent, this.gh);
+        dai.writeValue(currentTask, dp, isConcurrent);
 
         // Update file and PSCO lists
         switch (dp.getType()) {
@@ -640,7 +520,7 @@ public class TaskAnalyser {
                     switch (dp.getDirection()) {
                         case OUT:
                         case INOUT:
-                            dai.completedProducer(task, this.gh);
+                            dai.completedProducer(task);
                             break;
                         default:
                             break;

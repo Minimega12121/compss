@@ -48,7 +48,7 @@ public class SnapshotRequest extends APRequest {
 
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) {
-        ta.snapshot();
+        app.getCP().snapshot();
     }
 
     @Override

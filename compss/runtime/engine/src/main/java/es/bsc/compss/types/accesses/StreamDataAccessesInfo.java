@@ -17,8 +17,8 @@
 package es.bsc.compss.types.accesses;
 
 import es.bsc.compss.components.monitor.impl.EdgeType;
-import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.types.AbstractTask;
+import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.data.EngineDataInstanceId;
@@ -49,12 +49,12 @@ public class StreamDataAccessesInfo extends DataAccessesInfo {
     }
 
     @Override
-    public void completedProducer(AbstractTask task, GraphHandler gh) {
+    public void completedProducer(AbstractTask task) {
         this.streamWriters.remove(task);
     }
 
     @Override
-    public boolean readValue(Task task, DependencyParameter dp, boolean isConcurrent, GraphHandler gh) {
+    public boolean readValue(Task task, DependencyParameter dp, boolean isConcurrent) {
         int dataId = dp.getDataAccessId().getDataId();
         if (!streamWriters.isEmpty()) {
             if (DEBUG) {
@@ -94,30 +94,26 @@ public class StreamDataAccessesInfo extends DataAccessesInfo {
         }
 
         // Add edge to graph
-        gh.addStreamDependency(task, dataId, false);
+        Application app = task.getApplication();
+        app.getGH().addStreamDependency(task, dataId, false);
         return true;
     }
 
     @Override
-    public void writeValue(Task t, DependencyParameter dp, boolean isConcurrent, GraphHandler gh) {
+    public void writeValue(Task t, DependencyParameter dp, boolean isConcurrent) {
         this.streamWriters.add(t);
         Integer dataId = dp.getDataAccessId().getDataId();
-        gh.addStreamDependency(t, dataId, true);
+        Application app = t.getApplication();
+        app.getGH().addStreamDependency(t, dataId, true);
     }
 
     @Override
-    public void mainAccess(RegisterDataAccessRequest rdar, GraphHandler gh, EngineDataInstanceId accesedData) {
+    public void mainAccess(RegisterDataAccessRequest rdar, EngineDataInstanceId accesedData) {
         // Add graph description
-        if (IS_DRAW_GRAPH) {
-            for (AbstractTask lastWriter : this.streamWriters) {
-                gh.mainAccessToData(lastWriter, EdgeType.STREAM_DEPENDENCY, accesedData);
-            }
+        Application app = rdar.getAccessParams().getApp();
+        for (AbstractTask lastWriter : this.streamWriters) {
+            app.getGH().mainAccessToData(lastWriter, EdgeType.STREAM_DEPENDENCY, accesedData);
         }
-    }
-
-    @Override
-    public boolean isFinalProducer(Task t) {
-        return (this.streamWriters.isEmpty());
     }
 
     @Override

@@ -242,6 +242,15 @@ public class Task extends AbstractTask {
     }
 
     /**
+     * Releases all the commutative groups.
+     */
+    public void releaseCommutativeGroups() {
+        for (CommutativeGroupTask group : this.commutativeGroup.values()) {
+            group.finishedCommutativeTask(this);
+        }
+    }
+
+    /**
      * Adds a new TaskGroup to the task.
      *
      * @param taskGroup Group of tasks.

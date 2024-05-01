@@ -457,7 +457,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
                     // Keep default value
                 }
                 runtimeMonitor = new RuntimeMonitor(ap, td, monitoringPeriod);
-                ap.setGM(runtimeMonitor.getGraphHandler());
+                Application.setGH(runtimeMonitor.getGraphHandler());
 
                 // Log initialization
                 initialized = true;
@@ -519,7 +519,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
                 } else {
                     LOGGER.debug("AP was not initialized...");
                 }
-                // FileOpsManager.waitForOperationsToEnd();
+                runtimeMonitor.getGraphHandler().removeCurrentGraph();
 
                 LOGGER.debug("Stopping TD...");
                 if (td != null) {

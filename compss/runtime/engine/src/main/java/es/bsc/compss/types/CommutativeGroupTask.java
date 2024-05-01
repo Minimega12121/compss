@@ -16,6 +16,7 @@
  */
 package es.bsc.compss.types;
 
+import es.bsc.compss.log.Loggers;
 import es.bsc.compss.scheduler.types.ActionGroup.MutexGroup;
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
@@ -25,8 +26,15 @@ import es.bsc.compss.types.parameter.impl.Parameter;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 public class CommutativeGroupTask extends AbstractTask {
+
+    // Logger
+    private static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
+    private static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     private static int commGroupTaskId = -1;
     private final CommutativeIdentifier comId;
@@ -106,6 +114,26 @@ public class CommutativeGroupTask extends AbstractTask {
     }
 
     /**
+     * Notifies the group that a Commutative task has finished.
+     * 
+     * @param task finished task
+     */
+    public void finishedCommutativeTask(Task task) {
+        this.commutativeTasks.remove(task);
+        this.setStatus(TaskState.FINISHED);
+        this.removePredecessor(task);
+        super.getPredecessors().remove(task);
+        if (this.getPredecessors().isEmpty()) {
+            this.releaseDataDependents();
+            this.notifyListeners();
+            if (DEBUG) {
+                LOGGER.debug("Group " + this.getId() + " ended execution");
+                LOGGER.debug("Data dependents of group " + this.getCommutativeIdentifier() + " released ");
+            }
+        }
+    }
+
+    /**
      * Sets the parent task causing a data dependency.
      *
      * @param predecessor last Task producing the group value
@@ -145,15 +173,6 @@ public class CommutativeGroupTask extends AbstractTask {
         } else {
             this.accesses.add(access);
         }
-    }
-
-    /**
-     * Removes predecessor from group.
-     *
-     * @param t Predecessor to remove.
-     */
-    public void removePredecessor(Task t) {
-        super.getPredecessors().remove(t);
     }
 
     public EngineDataAccessId getAccessPlaceHolder() {

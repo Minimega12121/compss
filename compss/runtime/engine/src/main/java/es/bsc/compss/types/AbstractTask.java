@@ -270,12 +270,12 @@ public abstract class AbstractTask implements Comparable<AbstractTask> {
     }
 
     /**
-     * Adds a listener to notify when the Abstract task ends.
-     *
-     * @return list with all listener to notify on task end
+     * Notifies all listeners that the abstract task has ended.
      */
-    public List<TaskListener> getListeners() {
-        return this.listeners;
+    public void notifyListeners() {
+        for (TaskListener listener : this.listeners) {
+            listener.taskFinished();
+        }
     }
 
     /**
