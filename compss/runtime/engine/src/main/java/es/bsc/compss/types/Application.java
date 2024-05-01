@@ -215,11 +215,11 @@ public class Application {
         return parallelismSource;
     }
 
-    public static GraphHandler getGH() {
+    public GraphHandler getGH() {
         return GH;
     }
 
-    public static CheckpointManager getCP() {
+    public CheckpointManager getCP() {
         return CP;
     }
 

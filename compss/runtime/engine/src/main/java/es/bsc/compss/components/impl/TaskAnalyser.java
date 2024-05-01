@@ -20,10 +20,8 @@ import es.bsc.compss.api.TaskMonitor;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Application;
-import es.bsc.compss.types.CommutativeGroupTask;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.TaskDescription;
-import es.bsc.compss.types.TaskListener;
 import es.bsc.compss.types.TaskState;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.annotations.parameter.DataType;
@@ -248,12 +246,7 @@ public class TaskAnalyser {
             if (DEBUG) {
                 LOGGER.debug("Releasing waiting tasks for task " + taskId);
             }
-            List<TaskListener> listeners = task.getListeners();
-            if (listeners != null) {
-                for (TaskListener listener : listeners) {
-                    listener.taskFinished();
-                }
-            }
+            task.notifyListeners();
 
             // Check if the finished task was the last writer of a file, but only if task generation has finished
             // Task generation is finished if we are on noMoreTasks but we are not on a barrier
@@ -278,7 +271,7 @@ public class TaskAnalyser {
             }
 
             // Releases commutative groups dependent and releases all the waiting tasks
-            releaseCommutativeGroups(task);
+            task.releaseCommutativeGroups();
 
             // If we are not retrieving the checkpoint
             if (!checkpointing) {
@@ -351,35 +344,6 @@ public class TaskAnalyser {
             }
         } else {
             LOGGER.warn("Writters info for data " + dataId + " not found.");
-        }
-    }
-
-    /*
-     * *************************************************************************************************************
-     * TASK GROUPS PUBLIC METHODS
-     ***************************************************************************************************************/
-
-    private void releaseCommutativeGroups(Task task) {
-        if (!task.getCommutativeGroupList().isEmpty()) {
-            for (CommutativeGroupTask group : task.getCommutativeGroupList()) {
-                group.getCommutativeTasks().remove(task);
-                group.setStatus(TaskState.FINISHED);
-                group.removePredecessor(task);
-                if (group.getPredecessors().isEmpty()) {
-                    group.releaseDataDependents();
-                    // Check if task is being waited
-                    List<TaskListener> listeners = group.getListeners();
-                    if (listeners != null) {
-                        for (TaskListener listener : listeners) {
-                            listener.taskFinished();
-                        }
-                    }
-                    if (DEBUG) {
-                        LOGGER.debug("Group " + group.getId() + " ended execution");
-                        LOGGER.debug("Data dependents of group " + group.getCommutativeIdentifier() + " released ");
-                    }
-                }
-            }
         }
     }
 
