@@ -24,6 +24,9 @@ import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -37,28 +40,10 @@ public abstract class DataAccessesInfo {
     protected static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
     protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
+    private static final Map<Integer, DataAccessesInfo> ACCESSES_INFO = new TreeMap<>();
+
     private final DataType dataType;
 
-
-    /**
-     * Constructs a new AccessInfo according to the type of data being accessed.
-     *
-     * @param type type of data being accessed
-     * @return AccessInfo to handle accesses to the data
-     */
-    public static DataAccessesInfo createAccessInfo(DataType type) {
-        DataAccessesInfo ai;
-        switch (type) {
-            case STREAM_T:
-            case EXTERNAL_STREAM_T:
-                ai = new StreamDataAccessesInfo(type);
-                break;
-            default:
-                ai = new StandardDataAccessesInfo(type);
-                break;
-        }
-        return ai;
-    }
 
     protected DataAccessesInfo(DataType type) {
         this.dataType = type;
@@ -124,4 +109,53 @@ public abstract class DataAccessesInfo {
      */
     public abstract List<AbstractTask> getDataWriters();
 
+    /**
+     * Constructs a new AccessInfo according to the type of data being accessed and registers it.
+     *
+     * @param type type of data being accessed
+     * @return AccessInfo to handle accesses to the data
+     */
+    public static DataAccessesInfo createAccessInfo(int dataId, DataType type) {
+        DataAccessesInfo ai;
+        switch (type) {
+            case STREAM_T:
+            case EXTERNAL_STREAM_T:
+                ai = new StreamDataAccessesInfo(type);
+                break;
+            default:
+                ai = new StandardDataAccessesInfo(type);
+                break;
+        }
+        ACCESSES_INFO.put(dataId, ai);
+        return ai;
+    }
+
+    /**
+     * Gets info of the accesses for data {@code dataId}.
+     * 
+     * @param dataId id of the data whose access have to be collected.
+     * @return Info of the accesses
+     */
+    public static DataAccessesInfo get(int dataId) {
+        return ACCESSES_INFO.get(dataId);
+    }
+
+    /**
+     * Gets all the information from all the data.
+     * 
+     * @return all information related to data accesses.
+     */
+    public static Map<Integer, DataAccessesInfo> getAll() {
+        return ACCESSES_INFO;
+    }
+
+    /**
+     * Deregisters the accesses for a given data.
+     * 
+     * @param dataId Id of the data to be removed
+     * @return info related to the removed data
+     */
+    public static DataAccessesInfo remove(int dataId) {
+        return ACCESSES_INFO.remove(dataId);
+    }
 }

@@ -44,8 +44,6 @@ import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.util.ErrorManager;
 
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,15 +62,11 @@ public class TaskAnalyser {
     private static final String TASK_FAILED = "Task failed: ";
     private static final String TASK_CANCELED = "Task canceled: ";
 
-    // Map: data Id -> WritersInfo
-    private final Map<Integer, DataAccessesInfo> accessesInfo;
-
 
     /**
      * Creates a new Task Analyzer instance.
      */
     public TaskAnalyser() {
-        this.accessesInfo = new TreeMap<>();
         LOGGER.info("Initialization finished");
     }
 
@@ -166,7 +160,7 @@ public class TaskAnalyser {
 
             int dataId = daId.getDataId();
             // Retrieve writers information
-            DataAccessesInfo dai = this.accessesInfo.get(dataId);
+            DataAccessesInfo dai = DataAccessesInfo.get(dataId);
             if (dai != null) {
                 EngineDataInstanceId depInstance;
                 if (daId.isWrite()) {
@@ -303,7 +297,7 @@ public class TaskAnalyser {
         Application app = request.getApp();
 
         app.reachesBarrier(request);
-        app.getGH().barrier(this.accessesInfo);
+        app.getGH().barrier(DataAccessesInfo.getAll());
     }
 
     /**
@@ -325,7 +319,7 @@ public class TaskAnalyser {
             app.getCP().deletedData(dataInfo);
         }
 
-        DataAccessesInfo dai = this.accessesInfo.remove(dataId);
+        DataAccessesInfo dai = DataAccessesInfo.remove(dataId);
         if (dai != null) {
             switch (dai.getDataType()) {
                 case STREAM_T:
@@ -408,7 +402,7 @@ public class TaskAnalyser {
         boolean hasParamEdge = false;
         EngineDataAccessId daId = dp.getDataAccessId();
         int dataId = daId.getDataId();
-        DataAccessesInfo dai = this.accessesInfo.get(dataId);
+        DataAccessesInfo dai = DataAccessesInfo.get(dataId);
         switch (dp.getAccess().getMode()) {
             case R:
                 hasParamEdge = checkInputDependency(currentTask, dp, false, dataId, dai, isConstraining);
@@ -474,8 +468,7 @@ public class TaskAnalyser {
         }
 
         if (dai == null) {
-            dai = DataAccessesInfo.createAccessInfo(dp.getType());
-            this.accessesInfo.put(dataId, dai);
+            dai = DataAccessesInfo.createAccessInfo(dataId, dp.getType());
         }
         dai.writeValue(currentTask, dp, isConcurrent);
 
@@ -520,7 +513,7 @@ public class TaskAnalyser {
                     int currentTaskId = task.getId();
                     LOGGER.debug("Removing writters info for datum " + dataId + " and task " + currentTaskId);
                 }
-                DataAccessesInfo dai = this.accessesInfo.get(dataId);
+                DataAccessesInfo dai = DataAccessesInfo.get(dataId);
                 if (dai != null) {
                     switch (dp.getDirection()) {
                         case OUT:
