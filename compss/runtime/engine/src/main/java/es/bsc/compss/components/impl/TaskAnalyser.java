@@ -59,52 +59,6 @@ public class TaskAnalyser {
     }
 
     /**
-     * Registers a data access from the main code and notifies when the data is available.
-     *
-     * @param rdar request indicating the data being accessed
-     * @return The registered access Id.
-     * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
-     */
-    public EngineDataAccessId processMainAccess(RegisterDataAccessRequest rdar) throws ValueUnawareRuntimeException {
-        AccessParams access = rdar.getAccessParams();
-        if (DEBUG) {
-            LOGGER.debug("Registering access " + access.toString() + " from main code");
-        }
-        access.checkAccessValidity();
-        EngineDataAccessId daId = access.register();
-        if (daId == null) {
-            if (DEBUG) {
-                LOGGER.debug("Accessing a canceled data from main code. Returning null");
-            }
-            return null;
-        }
-        if (DEBUG) {
-            LOGGER.debug("Registered access to data " + daId.getDataId() + " from main code");
-        }
-
-        if (daId.isRead()) {
-            ReadingDataAccessId rdaId = (ReadingDataAccessId) daId;
-            EngineDataInstanceId di = rdaId.getReadDataInstance();
-            Application app = access.getApp();
-            app.getCP().mainAccess(di);
-
-            int dataId = daId.getDataId();
-            // Retrieve writers information
-            DataAccessesInfo dai = DataAccessesInfo.get(dataId);
-            if (dai != null) {
-                EngineDataInstanceId depInstance;
-                if (daId.isWrite()) {
-                    depInstance = ((WritingDataAccessId) daId).getWrittenDataInstance();
-                } else {
-                    depInstance = di;
-                }
-                dai.mainAccess(rdar, depInstance);
-            }
-        }
-        return daId;
-    }
-
-    /**
      * Deletes the specified data and its renamings.
      *
      * @param data data to be deleted
