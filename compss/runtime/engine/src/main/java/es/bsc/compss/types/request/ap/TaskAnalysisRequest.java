@@ -84,7 +84,7 @@ public class TaskAnalysisRequest extends APRequest {
             if (DEBUG) {
                 LOGGER.debug("Task " + this.task.getId() + " was checkpointed in a previous run. Skipping execution.");
             }
-            ta.endTask(this.task, true);
+            this.task.end(true);
         } else {
             // Send request to schedule task
             td.executeTask(ap, this.task);

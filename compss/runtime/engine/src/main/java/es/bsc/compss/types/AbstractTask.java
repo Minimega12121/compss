@@ -16,6 +16,7 @@
  */
 package es.bsc.compss.types;
 
+import es.bsc.compss.log.Loggers;
 import es.bsc.compss.scheduler.types.AllocatableAction;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.parameter.impl.Parameter;
@@ -26,11 +27,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 /**
  * Representation of a Task.
  */
 public abstract class AbstractTask implements Comparable<AbstractTask> {
+
+    // Logger
+    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
+    protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     // Task fields
     private final Application app;
@@ -367,4 +375,16 @@ public abstract class AbstractTask implements Comparable<AbstractTask> {
         return buffer.toString();
     }
 
+    /**
+     * Registers the end of execution of the task.
+     *
+     * @param checkpointing {@literal true} if task has been recovered by the checkpoint management
+     */
+    public void end(boolean checkpointing) {
+        // Release data dependent tasks
+        if (DEBUG) {
+            LOGGER.debug("Releasing data dependant tasks for task " + taskId);
+        }
+        this.releaseDataDependents();
+    }
 }

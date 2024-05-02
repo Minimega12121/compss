@@ -49,8 +49,6 @@ public class TaskAnalyser {
     // Logger
     private static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
-    private static final String TASK_FAILED = "Task failed: ";
-    private static final String TASK_CANCELED = "Task canceled: ";
 
 
     /**
@@ -104,125 +102,6 @@ public class TaskAnalyser {
             }
         }
         return daId;
-    }
-
-    /**
-     * Registers the end of execution of task @{code task}.
-     *
-     * @param aTask Ended task.
-     * @param checkpointing {@literal true} if task has been recovered by the checkpoint management
-     */
-    public void endTask(AbstractTask aTask, boolean checkpointing) {
-        int taskId = aTask.getId();
-
-        if (aTask instanceof Task) {
-            Task task = (Task) aTask;
-            boolean isFree = task.isFree();
-            TaskState taskState = task.getStatus();
-            LOGGER.info("Notification received for task " + taskId + " with end status " + taskState);
-            // Check status
-            if (!isFree) {
-                LOGGER.debug("Task " + taskId + " is not registered as free. Waiting for other executions to end");
-                return;
-            }
-
-            switch (taskState) {
-                case FAILED:
-                    OnFailure onFailure = task.getOnFailure();
-                    if (onFailure == OnFailure.RETRY || onFailure == OnFailure.FAIL) {
-                        // Raise error
-                        ErrorManager.error(TASK_FAILED + task);
-                        return;
-                    }
-                    if (onFailure == OnFailure.IGNORE || onFailure == OnFailure.CANCEL_SUCCESSORS) {
-                        // Show warning
-                        ErrorManager.warn(TASK_FAILED + task);
-                    }
-                    break;
-                case CANCELED:
-                    // Show warning
-                    ErrorManager.warn(TASK_CANCELED + task);
-                    break;
-                default:
-                    // Do nothing
-            }
-
-            // Mark parameter accesses
-            if (DEBUG) {
-                LOGGER.debug("Marking accessed parameters for task " + taskId);
-            }
-
-            // When a task can have internal temporal parameters,
-            // the not used ones have to be updated to perform the data delete
-            if ((task.getOnFailure() == OnFailure.CANCEL_SUCCESSORS && (task.getStatus() == TaskState.FAILED))
-                || (task.getStatus() == TaskState.CANCELED && task.getOnFailure() != OnFailure.IGNORE)) {
-                for (Parameter param : task.getTaskDescription().getParameters()) {
-                    param.cancel(task);
-                }
-                for (Parameter param : task.getUnusedIntermediateParameters()) {
-                    param.cancel(task);
-                }
-            } else {
-                for (Parameter param : task.getTaskDescription().getParameters()) {
-                    param.commit(task);
-                }
-                for (Parameter param : task.getUnusedIntermediateParameters()) {
-                    param.commit(task);
-                }
-            }
-
-            // Free barrier dependencies
-            if (DEBUG) {
-                LOGGER.debug("Freeing barriers for task " + taskId);
-            }
-
-            // Free dependencies
-            // Free task data dependencies
-            if (DEBUG) {
-                LOGGER.debug("Releasing waiting tasks for task " + taskId);
-            }
-            task.notifyListeners();
-
-            // Check if the finished task was the last writer of a file, but only if task generation has finished
-            // Task generation is finished if we are on noMoreTasks but we are not on a barrier
-            if (DEBUG) {
-                LOGGER.debug("Checking result file transfers for task " + taskId);
-            }
-
-            Application app = task.getApplication();
-            // Release task groups of the task
-            app.endTask(task);
-
-            TaskMonitor registeredMonitor = task.getTaskMonitor();
-            switch (taskState) {
-                case FAILED:
-                    registeredMonitor.onFailure();
-                    break;
-                case CANCELED:
-                    registeredMonitor.onCancellation();
-                    break;
-                default:
-                    registeredMonitor.onCompletion();
-            }
-
-            // Releases commutative groups dependent and releases all the waiting tasks
-            task.releaseCommutativeGroups();
-
-            // If we are not retrieving the checkpoint
-            if (!checkpointing) {
-                if (DEBUG) {
-                    LOGGER.debug("Checkpoint saving task " + taskId);
-                }
-                app.getCP().endTask(task);
-            }
-        }
-
-        // Release data dependent tasks
-        if (DEBUG) {
-            LOGGER.debug("Releasing data dependant tasks for task " + taskId);
-        }
-        aTask.releaseDataDependents();
-
     }
 
     /**
