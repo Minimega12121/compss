@@ -52,7 +52,7 @@ public class CollectiveParameter extends DependencyParameter<CollectionAccessPar
     /**
      * Default constructor. Intended to be called from COMPSsRuntimeImpl when gathering and compacting parameter
      * information fed from bindings or Java Loader
-     * 
+     *
      * @param app Application performing the access
      * @param type type of collection
      * @param id identifier of the collection
@@ -162,5 +162,21 @@ public class CollectiveParameter extends DependencyParameter<CollectionAccessPar
             // If not existing, the collection was already removed. No need to do anything
         }
         return hasParamEdge;
+    }
+
+    @Override
+    public void cancel(Task task) {
+        for (Parameter sp : this.getElements()) {
+            sp.cancel(task);
+        }
+        super.cancel(task);
+    }
+
+    @Override
+    public void commit(Task task) {
+        for (Parameter sp : this.getElements()) {
+            sp.commit(task);
+        }
+        super.commit(task);
     }
 }

@@ -23,7 +23,6 @@ import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.TaskState;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
-import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.OnFailure;
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
@@ -33,20 +32,13 @@ import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.data.params.DataParams;
-import es.bsc.compss.types.parameter.impl.CollectiveParameter;
-import es.bsc.compss.types.parameter.impl.DependencyParameter;
-import es.bsc.compss.types.parameter.impl.ObjectParameter;
 import es.bsc.compss.types.parameter.impl.Parameter;
 import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.util.ErrorManager;
 
-import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import storage.StubItf;
 
 
 /**
@@ -160,14 +152,23 @@ public class TaskAnalyser {
                 LOGGER.debug("Marking accessed parameters for task " + taskId);
             }
 
-            for (Parameter param : task.getTaskDescription().getParameters()) {
-                updateParameter(task, param);
-            }
-
             // When a task can have internal temporal parameters,
             // the not used ones have to be updated to perform the data delete
-            for (Parameter param : task.getUnusedIntermediateParameters()) {
-                updateParameter(task, param);
+            if ((task.getOnFailure() == OnFailure.CANCEL_SUCCESSORS && (task.getStatus() == TaskState.FAILED))
+                || (task.getStatus() == TaskState.CANCELED && task.getOnFailure() != OnFailure.IGNORE)) {
+                for (Parameter param : task.getTaskDescription().getParameters()) {
+                    param.cancel(task);
+                }
+                for (Parameter param : task.getUnusedIntermediateParameters()) {
+                    param.cancel(task);
+                }
+            } else {
+                for (Parameter param : task.getTaskDescription().getParameters()) {
+                    param.commit(task);
+                }
+                for (Parameter param : task.getUnusedIntermediateParameters()) {
+                    param.commit(task);
+                }
             }
 
             // Free barrier dependencies
@@ -266,60 +267,6 @@ public class TaskAnalyser {
             }
         } else {
             LOGGER.warn("Writters info for data " + dataId + " not found.");
-        }
-    }
-
-    /*
-     * *************************************************************************************************************
-     * DATA DEPENDENCY MANAGEMENT PRIVATE METHODS
-     ***************************************************************************************************************/
-
-    private void updateParameter(Task task, Parameter p) {
-        if (p.isCollective()) {
-            CollectiveParameter cParam = (CollectiveParameter) p;
-            for (Parameter sp : cParam.getElements()) {
-                updateParameter(task, sp);
-            }
-        }
-        if (p.isPotentialDependency()) {
-            DependencyParameter dp = (DependencyParameter) p;
-            EngineDataAccessId dAccId = dp.getDataAccessId();
-            if (dAccId == null) {
-                LOGGER.warn("Parameter for task " + task.getId()
-                    + " has no access ID. It could be from a cancelled type. Ignoring ... ");
-                return;
-            }
-            int dataId = dAccId.getDataId();
-
-            DataType type = p.getType();
-            if (type != DataType.DIRECTORY_T || type != DataType.STREAM_T || type != DataType.EXTERNAL_STREAM_T) {
-                if (DEBUG) {
-                    int currentTaskId = task.getId();
-                    LOGGER.debug("Removing writters info for datum " + dataId + " and task " + currentTaskId);
-                }
-                DataAccessesInfo dai = DataAccessesInfo.get(dataId);
-                if (dai != null) {
-                    switch (dp.getDirection()) {
-                        case OUT:
-                        case INOUT:
-                            dai.completedProducer(task);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-
-            if (DEBUG) {
-                LOGGER.debug("Treating that data " + dAccId + " has been accessed at " + dp.getDataTarget());
-            }
-
-            if ((task.getOnFailure() == OnFailure.CANCEL_SUCCESSORS && (task.getStatus() == TaskState.FAILED))
-                || (task.getStatus() == TaskState.CANCELED && task.getOnFailure() != OnFailure.IGNORE)) {
-                DataInfo.cancelAccess(dAccId, task.wasSubmited());
-            } else {
-                DataInfo.commitAccess(dAccId);
-            }
         }
     }
 }

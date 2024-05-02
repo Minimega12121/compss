@@ -45,7 +45,6 @@ public class Task extends AbstractTask {
     // Task ID management
     private static final int FIRST_TASK_ID = 1;
     private static AtomicInteger nextTaskId = new AtomicInteger(FIRST_TASK_ID);
-
     private final TaskDescription<Parameter> taskDescription;
 
     // Scheduling info

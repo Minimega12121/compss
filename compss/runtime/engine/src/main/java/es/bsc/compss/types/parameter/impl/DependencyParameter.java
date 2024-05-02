@@ -21,13 +21,16 @@ import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
+import es.bsc.compss.types.TaskState;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.Direction;
+import es.bsc.compss.types.annotations.parameter.OnFailure;
 import es.bsc.compss.types.annotations.parameter.StdIOStream;
 
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
+import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import org.apache.logging.log4j.LogManager;
@@ -164,6 +167,20 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
     }
 
     @Override
+    public void cancel(Task task) {
+        EngineDataAccessId dAccId = this.getDataAccessId();
+        updateParameter(task);
+        DataInfo.cancelAccess(dAccId, task.wasSubmited());
+    }
+
+    @Override
+    public void commit(Task task) {
+        EngineDataAccessId dAccId = this.getDataAccessId();
+        updateParameter(task);
+        DataInfo.commitAccess(dAccId);
+    }
+
+    @Override
     public void remove() {
         try {
             this.getAccess().getData().delete();
@@ -262,6 +279,39 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
 
         if (DEBUG) {
             LOGGER.debug("New writer for datum " + dataId + " is task " + currentTaskId);
+        }
+    }
+
+    private void updateParameter(Task task) {
+        EngineDataAccessId dAccId = this.getDataAccessId();
+        if (dAccId == null) {
+            LOGGER.warn("Parameter for task " + task.getId()
+                + " has no access ID. It could be from a cancelled type. Ignoring ... ");
+            return;
+        }
+        int dataId = dAccId.getDataId();
+
+        DataType type = this.getType();
+        if (type != DataType.DIRECTORY_T || type != DataType.STREAM_T || type != DataType.EXTERNAL_STREAM_T) {
+            if (DEBUG) {
+                int currentTaskId = task.getId();
+                LOGGER.debug("Removing writters info for datum " + dataId + " and task " + currentTaskId);
+            }
+            DataAccessesInfo dai = DataAccessesInfo.get(dataId);
+            if (dai != null) {
+                switch (this.getDirection()) {
+                    case OUT:
+                    case INOUT:
+                        dai.completedProducer(task);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        if (DEBUG) {
+            LOGGER.debug("Treating that data " + dAccId + " has been accessed at " + this.getDataTarget());
         }
     }
 }

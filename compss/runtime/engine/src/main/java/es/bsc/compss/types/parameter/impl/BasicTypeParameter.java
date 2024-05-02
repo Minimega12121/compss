@@ -99,6 +99,16 @@ public class BasicTypeParameter extends Parameter implements es.bsc.compss.types
     }
 
     @Override
+    public void cancel(Task t) {
+        // Nothing to do
+    }
+
+    @Override
+    public void commit(Task t) {
+        // Nothing to do
+    }
+
+    @Override
     public void remove() {
         // Nothing to do
     }
