@@ -289,18 +289,6 @@ public class TaskAnalyser {
     }
 
     /**
-     * Barrier.
-     *
-     * @param request Barrier request.
-     */
-    public void barrier(BarrierRequest request) {
-        Application app = request.getApp();
-
-        app.reachesBarrier(request);
-        app.getGH().barrier(DataAccessesInfo.getAll());
-    }
-
-    /**
      * Deletes the specified data and its renamings.
      *
      * @param data data to be deleted

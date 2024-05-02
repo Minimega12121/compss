@@ -94,7 +94,7 @@ public class BarrierRequest extends APRequest implements Barrier {
     }
 
     public void handleBarrier(TaskAnalyser ta) {
-        ta.barrier(this);
+        app.reachesBarrier(this);
     }
 
     @Override

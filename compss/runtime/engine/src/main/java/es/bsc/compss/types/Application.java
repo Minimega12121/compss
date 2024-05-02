@@ -21,6 +21,7 @@ import es.bsc.compss.api.ApplicationRunner;
 import es.bsc.compss.checkpoint.CheckpointManager;
 import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.log.Loggers;
+import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.request.ap.BarrierGroupRequest;
@@ -437,8 +438,8 @@ public class Application {
      * @param barrier barrier object to indicate that all task have finished.
      */
     public final void reachesBarrier(Barrier barrier) {
-        TaskGroup baseGroup = this.currentTaskGroups.firstElement();
-        this.reachesGroupBarrier(baseGroup, barrier);
+        doBarrier(barrier);
+        this.GH.barrier(DataAccessesInfo.getAll());
     }
 
     /**
@@ -447,8 +448,13 @@ public class Application {
      * @param barrier barrier object to indicate that all task have finished.
      */
     public final void endReached(Barrier barrier) {
-        reachesBarrier(barrier);
+        doBarrier(barrier);
         this.GH.endApp();
+    }
+
+    private void doBarrier(Barrier barrier) {
+        TaskGroup baseGroup = this.currentTaskGroups.firstElement();
+        this.reachesGroupBarrier(baseGroup, barrier);
     }
 
     /*
