@@ -18,10 +18,15 @@ package es.bsc.compss.types.parameter.impl;
 
 import es.bsc.compss.api.ParameterMonitor;
 import es.bsc.compss.types.Application;
+import es.bsc.compss.types.Task;
+import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.Direction;
 import es.bsc.compss.types.annotations.parameter.StdIOStream;
 import es.bsc.compss.types.data.accessparams.CollectionAccessParams;
+import es.bsc.compss.types.data.info.DataInfo;
+import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
+
 import java.util.Iterator;
 
 import java.util.List;
@@ -132,5 +137,30 @@ public class CollectiveParameter extends DependencyParameter<CollectionAccessPar
             sb.append("\t").append(s).append("\n");
         }
         return sb.toString();
+    }
+
+    @Override
+    public boolean register(Task task, boolean isConstraining) {
+        boolean hasParamEdge = false;
+        Application app = task.getApplication();
+        app.getGH().startGroupingEdges();
+        for (Parameter content : this.getElements()) {
+            boolean hasCollectionParamEdge = content.register(task, isConstraining);
+            hasParamEdge = hasParamEdge || hasCollectionParamEdge;
+        }
+        app.getGH().stopGroupingEdges();
+
+        hasParamEdge = super.register(task, isConstraining);
+
+        try {
+            DataInfo dataInfo = this.getAccess().getData().delete();
+            int dataId = dataInfo.getDataId();
+            LOGGER.info("Deleting data " + dataId);
+
+            DataAccessesInfo.remove(dataId);
+        } catch (ValueUnawareRuntimeException e) {
+            // If not existing, the collection was already removed. No need to do anything
+        }
+        return hasParamEdge;
     }
 }

@@ -21,7 +21,6 @@ import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
-import es.bsc.compss.types.TaskDescription;
 import es.bsc.compss.types.TaskState;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.annotations.parameter.DataType;
@@ -38,7 +37,6 @@ import es.bsc.compss.types.parameter.impl.CollectiveParameter;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.parameter.impl.ObjectParameter;
 import es.bsc.compss.types.parameter.impl.Parameter;
-import es.bsc.compss.types.request.ap.BarrierRequest;
 import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.util.ErrorManager;
@@ -68,64 +66,6 @@ public class TaskAnalyser {
      */
     public TaskAnalyser() {
         LOGGER.info("Initialization finished");
-    }
-
-    /**
-     * Process the dependencies of a new task {@code currentTask}.
-     *
-     * @param currentTask Task.
-     */
-    public void processTask(Task currentTask) {
-        TaskDescription description = currentTask.getTaskDescription();
-        LOGGER.info("New " + description.getType().toString().toLowerCase() + " task: Name:" + description.getName()
-            + "), ID = " + currentTask.getId() + " APP = " + currentTask.getApplication().getId());
-
-        Application app = currentTask.getApplication();
-        app.newTask(currentTask);
-        app.getGH().startTaskAnalysis(currentTask);
-
-        // Check scheduling enforcing data
-        int constrainingParam = -1;
-
-        // Process parameters
-        boolean taskHasEdge = processTaskParameters(currentTask, constrainingParam);
-        registerIntermediateParameter(currentTask);
-        markIntermediateParametersToDelete(currentTask);
-        app.getGH().endTaskAnalysis(currentTask, taskHasEdge);
-
-        // Prepare checkpointer for task
-        app.getCP().newTask(currentTask);
-    }
-
-    private boolean processTaskParameters(Task currentTask, int constrainingParam) {
-        List<Parameter> parameters = currentTask.getParameters();
-        boolean taskHasEdge = false;
-        for (int paramIdx = 0; paramIdx < parameters.size(); paramIdx++) {
-            boolean isConstraining = paramIdx == constrainingParam;
-            Parameter param = parameters.get(paramIdx);
-            boolean paramHasEdge = registerParameterAccessAndAddDependencies(currentTask, param, isConstraining);
-            taskHasEdge = taskHasEdge || paramHasEdge;
-        }
-        return taskHasEdge;
-    }
-
-    private void markIntermediateParametersToDelete(Task task) {
-        for (Parameter p : task.getParameterDataToRemove()) {
-            if (p.isPotentialDependency()) {
-                DependencyParameter dp = (DependencyParameter) p;
-                try {
-                    dp.getAccess().getData().delete();
-                } catch (ValueUnawareRuntimeException e) {
-                    // If not existing, the parameter was already removed. No need to do anything
-                }
-            }
-        }
-    }
-
-    private void registerIntermediateParameter(Task task) {
-        for (Parameter p : task.getIntermediateParameters()) {
-            registerParameterAccessAndAddDependencies(task, p, false);
-        }
     }
 
     /**
@@ -333,150 +273,6 @@ public class TaskAnalyser {
      * *************************************************************************************************************
      * DATA DEPENDENCY MANAGEMENT PRIVATE METHODS
      ***************************************************************************************************************/
-    private boolean registerParameterAccessAndAddDependencies(Task currentTask, Parameter p, boolean isConstraining) {
-        boolean hasParamEdge = false;
-        if (p.isCollective()) {
-            CollectiveParameter cp = (CollectiveParameter) p;
-            Application app = currentTask.getApplication();
-            app.getGH().startGroupingEdges();
-            for (Parameter content : cp.getElements()) {
-                boolean hasCollectionParamEdge =
-                    registerParameterAccessAndAddDependencies(currentTask, content, isConstraining);
-                hasParamEdge = hasParamEdge || hasCollectionParamEdge;
-            }
-            app.getGH().stopGroupingEdges();
-        } else {
-            if (p.getType() == DataType.OBJECT_T) {
-                ObjectParameter op = (ObjectParameter) p;
-                // Check if its PSCO class and persisted to infer its type
-                if (op.getValue() instanceof StubItf && ((StubItf) op.getValue()).getID() != null) {
-                    op.setType(DataType.PSCO_T);
-                }
-            }
-        }
-
-        // Inform the Data Manager about the new accesses
-        EngineDataAccessId daId;
-        AccessParams access = p.getAccess();
-        if (access != null) {
-            daId = access.register();
-        } else {
-            daId = null;
-        }
-
-        if (p.isCollective()) {
-            try {
-                deleteData(access.getData(), false);
-            } catch (ValueUnawareRuntimeException e) {
-                // If not existing, the collection was already removed. No need to do anything
-            }
-        }
-
-        if (daId != null) {
-            // Add parameter dependencies
-            DependencyParameter dp = (DependencyParameter) p;
-            dp.setDataAccessId(daId);
-            hasParamEdge = addDependencies(currentTask, isConstraining, dp);
-        } else {
-            // Basic types do not produce access dependencies
-            currentTask.registerFreeParam(p);
-        }
-        // Return data Id
-        return hasParamEdge;
-    }
-
-    private boolean addDependencies(Task currentTask, boolean isConstraining, DependencyParameter dp) {
-        // Add dependencies to the graph and register output values for future dependencies
-        boolean hasParamEdge = false;
-        EngineDataAccessId daId = dp.getDataAccessId();
-        int dataId = daId.getDataId();
-        DataAccessesInfo dai = DataAccessesInfo.get(dataId);
-        switch (dp.getAccess().getMode()) {
-            case R:
-                hasParamEdge = checkInputDependency(currentTask, dp, false, dataId, dai, isConstraining);
-                break;
-            case RW:
-                hasParamEdge = checkInputDependency(currentTask, dp, false, dataId, dai, isConstraining);
-                registerOutputValues(currentTask, dp, false, dai);
-                break;
-            case W:
-                // Register output values
-                registerOutputValues(currentTask, dp, false, dai);
-                break;
-            case C:
-                hasParamEdge = checkInputDependency(currentTask, dp, true, dataId, dai, isConstraining);
-                registerOutputValues(currentTask, dp, true, dai);
-                break;
-            case CV:
-                hasParamEdge = checkInputDependency(currentTask, dp, false, dataId, dai, isConstraining);
-                registerOutputValues(currentTask, dp, false, dai);
-                break;
-        }
-        return hasParamEdge;
-    }
-
-    private boolean checkInputDependency(Task currentTask, DependencyParameter dp, boolean isConcurrent, int dataId,
-        DataAccessesInfo dai, boolean isConstraining) {
-        if (DEBUG) {
-            LOGGER.debug("Checking READ dependency for datum " + dataId + " and task " + currentTask.getId());
-        }
-        boolean hasEdge = false;
-        if (dai != null) {
-            hasEdge = dai.readValue(currentTask, dp, isConcurrent);
-            if (isConstraining) {
-                AbstractTask lastWriter = dai.getConstrainingProducer();
-                currentTask.setEnforcingTask((Task) lastWriter);
-            }
-        } else {
-            // Task is free
-            if (DEBUG) {
-                LOGGER.debug("There is no last writer for datum " + dataId);
-            }
-            currentTask.registerFreeParam(dp);
-        }
-        return hasEdge;
-    }
-
-    /**
-     * Registers the output values of the task {@code currentTask}.
-     *
-     * @param currentTask Task.
-     * @param dp Dependency Parameter.
-     * @param isConcurrent data access was done in concurrent mode
-     * @param dai AccessInfo related to the data being accessed
-     */
-    private void registerOutputValues(Task currentTask, DependencyParameter dp, boolean isConcurrent,
-        DataAccessesInfo dai) {
-        int currentTaskId = currentTask.getId();
-        int dataId = dp.getDataAccessId().getDataId();
-        Application app = currentTask.getApplication();
-
-        if (DEBUG) {
-            LOGGER.debug("Checking WRITE dependency for datum " + dataId + " and task " + currentTaskId);
-        }
-
-        if (dai == null) {
-            dai = DataAccessesInfo.createAccessInfo(dataId, dp.getType());
-        }
-        dai.writeValue(currentTask, dp, isConcurrent);
-
-        // Update file and PSCO lists
-        switch (dp.getType()) {
-            case DIRECTORY_T:
-            case FILE_T:
-                FileInfo fInfo = (FileInfo) dp.getAccess().getDataInfo();
-                app.addWrittenFile(fInfo);
-                break;
-            default:
-                // Nothing to do with basic types
-                // Objects are not checked, their version will be only get if the main accesses them
-                break;
-        }
-
-        if (DEBUG) {
-            LOGGER.debug("New writer for datum " + dataId + " is task " + currentTaskId);
-        }
-    }
 
     private void updateParameter(Task task, Parameter p) {
         if (p.isCollective()) {

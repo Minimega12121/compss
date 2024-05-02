@@ -23,7 +23,9 @@ import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
+import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
+import es.bsc.compss.types.TaskDescription;
 import es.bsc.compss.types.TaskState;
 import es.bsc.compss.types.tracing.TraceEvent;
 
@@ -69,12 +71,12 @@ public class TaskAnalysisRequest extends APRequest {
         // Process task
         if (IS_TIMER_COMPSS_ENABLED) {
             long startTime = System.nanoTime();
-            ta.processTask(this.task);
+            processTask();
             long endTime = System.nanoTime();
             float elapsedTime = (endTime - startTime) / (float) 1_000_000;
             TIMER_LOGGER.info("[TIMER] TA Process of task " + this.task.getId() + ": " + elapsedTime + " ms");
         } else {
-            ta.processTask(this.task);
+            processTask();
         }
 
         // Check if the task has been checkpointed
@@ -91,6 +93,15 @@ public class TaskAnalysisRequest extends APRequest {
         // Notify task monitor
         TaskMonitor monitor = this.task.getTaskMonitor();
         monitor.onAccessesProcessed();
+    }
+
+    private void processTask() {
+        TaskDescription description = this.task.getTaskDescription();
+        LOGGER.info("New " + description.getType().toString().toLowerCase() + " task: Name:" + description.getName()
+            + "), ID = " + this.task.getId() + " APP = " + this.task.getApplication().getId());
+
+        Application app = this.task.getApplication();
+        app.newTask(this.task);
     }
 
     @Override

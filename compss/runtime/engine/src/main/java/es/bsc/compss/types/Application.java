@@ -357,6 +357,17 @@ public class Application {
             task.addTaskGroup(group);
             group.addTask(task);
         }
+        this.GH.startTaskAnalysis(task);
+
+        // Check scheduling enforcing data
+        int constrainingParam = -1;
+
+        // Process parameters
+        boolean taskHasEdge = task.register(constrainingParam);
+        this.GH.endTaskAnalysis(task, taskHasEdge);
+
+        // Prepare checkpointer for task
+        this.CP.newTask(task);
     }
 
     /**

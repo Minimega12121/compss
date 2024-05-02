@@ -29,8 +29,10 @@ import es.bsc.compss.types.colors.ColorNode;
 import es.bsc.compss.types.data.location.DataLocation;
 import es.bsc.compss.types.data.location.ProtocolType;
 import es.bsc.compss.types.parameter.impl.CollectiveParameter;
+import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.parameter.impl.FileParameter;
 import es.bsc.compss.types.parameter.impl.Parameter;
+import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.types.uri.SimpleURI;
 import es.bsc.compss.util.ErrorManager;
 import es.bsc.compss.util.ResourceManager;
@@ -323,4 +325,26 @@ public class ReduceTask extends Task {
         return interParams;
     }
 
+    @Override
+    public boolean register(int constrainingParam) {
+        boolean hasEdge = super.register(constrainingParam);
+        // Register Intermediate parameters
+        for (Parameter p : this.getIntermediateParameters()) {
+            p.register(this, false);
+        }
+
+        // Marking intermediate parameters for deletion
+        for (Parameter p : this.getParameterDataToRemove()) {
+            p.remove();
+            if (p.isPotentialDependency()) {
+                DependencyParameter dp = (DependencyParameter) p;
+                try {
+                    dp.getAccess().getData().delete();
+                } catch (ValueUnawareRuntimeException e) {
+                    // If not existing, the parameter was already removed. No need to do anything
+                }
+            }
+        }
+        return hasEdge;
+    }
 }
