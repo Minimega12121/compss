@@ -26,7 +26,6 @@ import es.bsc.compss.types.colors.ColorConfiguration;
 import es.bsc.compss.types.colors.ColorNode;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.implementations.TaskType;
-import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.parameter.impl.Parameter;
 import es.bsc.compss.util.CoreManager;
 import es.bsc.compss.util.ErrorManager;
@@ -415,21 +414,6 @@ public class Task extends AbstractTask {
         return buffer.toString();
     }
 
-    @Override
-    public List<Parameter> getParameterDataToRemove() {
-        return new LinkedList<>();
-    }
-
-    @Override
-    public List<Parameter> getIntermediateParameters() {
-        return new LinkedList<>();
-    }
-
-    @Override
-    public List<Parameter> getUnusedIntermediateParameters() {
-        return new LinkedList<>();
-    }
-
     public List<Parameter> getParameters() {
         return this.taskDescription.getParameters();
     }
@@ -508,19 +492,9 @@ public class Task extends AbstractTask {
         // the not used ones have to be updated to perform the data delete
         if ((this.getOnFailure() == OnFailure.CANCEL_SUCCESSORS && (this.getStatus() == TaskState.FAILED))
             || (this.getStatus() == TaskState.CANCELED && this.getOnFailure() != OnFailure.IGNORE)) {
-            for (Parameter param : this.getTaskDescription().getParameters()) {
-                param.cancel(this);
-            }
-            for (Parameter param : this.getUnusedIntermediateParameters()) {
-                param.cancel(this);
-            }
+            cancelParams();
         } else {
-            for (Parameter param : this.getTaskDescription().getParameters()) {
-                param.commit(this);
-            }
-            for (Parameter param : this.getUnusedIntermediateParameters()) {
-                param.commit(this);
-            }
+            commitParams();
         }
 
         // Free barrier dependencies
@@ -568,5 +542,17 @@ public class Task extends AbstractTask {
             app.getCP().endTask(this);
         }
         super.end(checkpointing);
+    }
+
+    protected void commitParams() {
+        for (Parameter param : this.getTaskDescription().getParameters()) {
+            param.commit(this);
+        }
+    }
+
+    protected void cancelParams() {
+        for (Parameter param : this.getTaskDescription().getParameters()) {
+            param.cancel(this);
+        }
     }
 }

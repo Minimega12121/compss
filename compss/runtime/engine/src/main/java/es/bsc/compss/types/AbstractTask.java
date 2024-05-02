@@ -305,27 +305,6 @@ public abstract class AbstractTask implements Comparable<AbstractTask> {
     }
 
     /**
-     * Returns the parameters to mark to remove.
-     *
-     * @return list of parameters to mark to remove.
-     */
-    public abstract List<Parameter> getParameterDataToRemove();
-
-    /**
-     * Returns the temporal intermediate parameters.
-     *
-     * @return list of intermediate parameters.
-     */
-    public abstract List<Parameter> getIntermediateParameters();
-
-    /**
-     * Returns the task's intermediate parameters not used during the execution.
-     *
-     * @return The list of unused parameters.
-     */
-    public abstract List<Parameter> getUnusedIntermediateParameters();
-
-    /**
      * Returns the DOT description of the task (only for monitoring).
      *
      * @return A string containing the DOT description of the task.

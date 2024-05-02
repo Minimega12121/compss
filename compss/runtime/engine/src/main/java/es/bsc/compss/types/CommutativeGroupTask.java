@@ -207,21 +207,6 @@ public class CommutativeGroupTask extends AbstractTask {
     }
 
     @Override
-    public List<Parameter> getParameterDataToRemove() {
-        return new LinkedList<>();
-    }
-
-    @Override
-    public List<Parameter> getIntermediateParameters() {
-        return new LinkedList<>();
-    }
-
-    @Override
-    public List<Parameter> getUnusedIntermediateParameters() {
-        return new LinkedList<>();
-    }
-
-    @Override
     public boolean isReduction() {
         return false;
     }

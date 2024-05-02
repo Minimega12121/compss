@@ -283,8 +283,7 @@ public class ReduceTask extends Task {
         this.intermediateCollections.clear();
     }
 
-    @Override
-    public List<Parameter> getUnusedIntermediateParameters() {
+    private List<Parameter> getUnusedIntermediateParameters() {
         this.partialsIn.addAll(this.partialsOut);
         return partialsIn;
     }
@@ -305,8 +304,7 @@ public class ReduceTask extends Task {
         return color.getFillColor();
     }
 
-    @Override
-    public List<Parameter> getParameterDataToRemove() {
+    private List<Parameter> getParameterDataToRemove() {
         List<Parameter> dataToRemove = new LinkedList<>();
         dataToRemove.addAll(getIntermediateInParameters());
         dataToRemove.addAll(getIntermediateOutParameters());
@@ -314,8 +312,7 @@ public class ReduceTask extends Task {
         return dataToRemove;
     }
 
-    @Override
-    public List<Parameter> getIntermediateParameters() {
+    private List<Parameter> getIntermediateParameters() {
         List<Parameter> interParams = new LinkedList<>();
         // The order matters
         interParams.addAll(getIntermediateOutParameters());
@@ -346,5 +343,19 @@ public class ReduceTask extends Task {
             }
         }
         return hasEdge;
+    }
+
+    protected void commitParams() {
+        super.commitParams();
+        for (Parameter param : this.getUnusedIntermediateParameters()) {
+            param.commit(this);
+        }
+    }
+
+    protected void cancelParams() {
+        super.cancelParams();
+        for (Parameter param : this.getUnusedIntermediateParameters()) {
+            param.cancel(this);
+        }
     }
 }
