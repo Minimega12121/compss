@@ -27,6 +27,10 @@ public interface EngineDataAccessId extends DataAccessId {
 
     DataInfo getAccessedDataInfo();
 
+    void commit();
+
+    void cancel(boolean keepModified);
+
     EngineDataAccessId consolidateValidVersions();
 
 

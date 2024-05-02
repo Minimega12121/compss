@@ -29,7 +29,6 @@ import es.bsc.compss.types.request.exceptions.NonExistingValueException;
 import es.bsc.compss.util.ErrorManager;
 
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 import org.apache.logging.log4j.LogManager;
@@ -46,9 +45,6 @@ public abstract class DataInfo<T extends DataParams> {
     // Component logger
     private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
-
-    // Map: file identifier -> file information
-    private static final Map<Integer, DataInfo> ID_TO_DATA = new TreeMap<>();
 
     protected static int nextDataId = FIRST_FILE_ID;
 
@@ -74,38 +70,6 @@ public abstract class DataInfo<T extends DataParams> {
 
 
     /**
-     * Marks that a given data {@code dAccId} has been accessed.
-     *
-     * @param dAccId DataAccessId.
-     */
-    public static void commitAccess(EngineDataAccessId dAccId) {
-        Integer dataId = dAccId.getDataId();
-        DataInfo di = DataInfo.get(dataId);
-        if (di != null) {
-            di.committedAccess(dAccId);
-        } else {
-            LOGGER.warn("Access of Data" + dAccId.getDataId() + " in Mode " + dAccId.getDirection().name()
-                + "can not be mark as accessed because do not exist in DIP.");
-        }
-    }
-
-    /**
-     * Removes the versions associated with the given DataAccessId {@code dAccId} to if the task was canceled or not.
-     *
-     * @param dAccId DataAccessId.
-     */
-    public static void cancelAccess(EngineDataAccessId dAccId, boolean keepModified) {
-        Integer dataId = dAccId.getDataId();
-        DataInfo di = DataInfo.get(dataId);
-        if (di != null) {
-            di.cancelledAccess(dAccId, keepModified);
-        } else {
-            LOGGER.debug("Access of Data" + dAccId.getDataId() + " in Mode " + dAccId.getDirection().name()
-                + " can not be cancelled because do not exist in DIP.");
-        }
-    }
-
-    /**
      * Creates a new DataInfo instance with and registers a new LogicalData.
      *
      * @param data description of the data related to the info
@@ -121,7 +85,6 @@ public abstract class DataInfo<T extends DataParams> {
         this.pendingDeletions = new LinkedList<>();
         this.canceledVersions = new LinkedList<>();
         this.deleted = false;
-        ID_TO_DATA.put(dataId, this);
     }
 
     /**
@@ -292,14 +255,18 @@ public abstract class DataInfo<T extends DataParams> {
         }
     }
 
-    private void committedAccess(EngineDataAccessId dAccId) {
+    /**
+     * Marks that a given version {@code dAccId} has been accessed.
+     *
+     * @param dAccId DataAccessId.
+     */
+    public void committedAccess(EngineDataAccessId dAccId) {
         Integer rVersionId = null;
         Integer wVersionId;
-        boolean deleted = false;
 
         if (dAccId.isRead()) {
             rVersionId = ((ReadingDataAccessId) dAccId).getReadDataInstance().getVersionId();
-            deleted = this.versionHasBeenRead(rVersionId);
+            this.versionHasBeenRead(rVersionId);
         }
 
         if (dAccId.isWrite()) {
@@ -308,11 +275,7 @@ public abstract class DataInfo<T extends DataParams> {
                 rVersionId = wVersionId - 1;
             }
             this.tryRemoveVersion(rVersionId);
-            deleted = this.versionHasBeenWritten(wVersionId);
-        }
-
-        if (deleted) {
-            this.deregister();
+            this.versionHasBeenWritten(wVersionId);
         }
     }
 
@@ -320,32 +283,26 @@ public abstract class DataInfo<T extends DataParams> {
      * Returns whether the specified version {@code versionId} has been read or not.
      *
      * @param versionId Version Id.
-     * @return {@code true} if the version Id has no pending reads, {@code false} otherwise.
      */
-    private boolean versionHasBeenRead(int versionId) {
+    private void versionHasBeenRead(int versionId) {
         DataVersion readVersion = this.versions.get(versionId);
         if (readVersion.hasBeenRead()) {
             readVersion.getDataInstanceId().delete();
             this.versions.remove(versionId);
-            return this.versions.isEmpty();
         }
-        return false;
     }
 
     /**
      * Returns whether the data has already been written or not.
      *
      * @param versionId Version Id.
-     * @return {@code true} if the data has been written, {@code false} otherwise.
      */
-    private boolean versionHasBeenWritten(int versionId) {
+    private void versionHasBeenWritten(int versionId) {
         DataVersion writtenVersion = versions.get(versionId);
         if (writtenVersion.hasBeenWritten()) {
             writtenVersion.getDataInstanceId().delete();
             this.versions.remove(versionId);
-            return this.versions.isEmpty();
         }
-        return false;
     }
 
     /**
@@ -357,15 +314,20 @@ public abstract class DataInfo<T extends DataParams> {
         return this.currentVersion.hasBeenUsed();
     }
 
-    private void cancelledAccess(EngineDataAccessId dAccId, boolean keepModified) {
+    /**
+     * Removes the versions associated with the given DataAccessId {@code dAccId} to if the task was canceled or not.
+     *
+     * @param dAccId DataAccessId.
+     * @param keepModified {@literal true}, if the value resulting from the access should be kept
+     */
+    public void cancelledAccess(EngineDataAccessId dAccId, boolean keepModified) {
         Integer rVersionId;
         Integer wVersionId;
-        boolean deleted = false;
         switch (dAccId.getDirection()) {
             case C:
             case R:
                 rVersionId = ((RAccessId) dAccId).getReadDataInstance().getVersionId();
-                deleted = this.canceledReadVersion(rVersionId);
+                this.canceledReadVersion(rVersionId);
                 break;
             case CV:
             case RW:
@@ -375,20 +337,16 @@ public abstract class DataInfo<T extends DataParams> {
                     this.versionHasBeenRead(rVersionId);
                     // read data version can be removed
                     this.tryRemoveVersion(rVersionId);
-                    deleted = this.versionHasBeenWritten(wVersionId);
+                    this.versionHasBeenWritten(wVersionId);
                 } else {
                     this.canceledReadVersion(rVersionId);
-                    deleted = this.canceledWriteVersion(wVersionId);
+                    this.canceledWriteVersion(wVersionId);
                 }
                 break;
             default:// case W:
                 wVersionId = ((WAccessId) dAccId).getWrittenDataInstance().getVersionId();
-                deleted = this.canceledWriteVersion(wVersionId);
+                this.canceledWriteVersion(wVersionId);
                 break;
-        }
-
-        if (deleted) {
-            this.deregister();
         }
     }
 
@@ -396,9 +354,8 @@ public abstract class DataInfo<T extends DataParams> {
      * Cancels the given read version {@code versionId}.
      *
      * @param versionId Version Id.
-     * @return {@literal true} if there are no more versions for the data; {@literal false} otherwise.
      */
-    private boolean canceledReadVersion(Integer versionId) {
+    private void canceledReadVersion(Integer versionId) {
         DataVersion readVersion = this.versions.get(versionId);
         if (!deleted && readVersion.isToDelete() && readVersion.hasBeenUsed()) {
             readVersion.unmarkToDelete();
@@ -406,19 +363,15 @@ public abstract class DataInfo<T extends DataParams> {
         if (readVersion.hasBeenRead()) {
             readVersion.getDataInstanceId().delete();
             this.versions.remove(versionId);
-            return this.versions.isEmpty();
         }
-        return false;
-
     }
 
     /**
      * Cancels the given version {@code versionId}.
      *
      * @param versionId Version Id.
-     * @return true if no more versions
      */
-    private boolean canceledWriteVersion(Integer versionId) {
+    private void canceledWriteVersion(Integer versionId) {
         DataVersion version = this.versions.get(versionId);
         version.versionCancelled();
         this.canceledVersions.add(versionId);
@@ -431,38 +384,14 @@ public abstract class DataInfo<T extends DataParams> {
             if (lastVersion > 1) {
                 this.currentVersionId = lastVersion;
                 this.currentVersion = this.versions.get(this.currentVersionId);
-                return false;
             } else if (lastVersion == 1) {
                 DataVersion firstVersion = this.getFirstVersion();
                 if (firstVersion != null && firstVersion.hasBeenUsed()) {
                     this.currentVersionId = lastVersion;
                     this.currentVersion = firstVersion;
-                    return false;
-                } else {
-                    return true;
                 }
-            } else {
-                return true;
             }
         }
-        return false;
-    }
-
-    /**
-     * Deregisters the data from the collection.
-     */
-    private void deregister() {
-        ID_TO_DATA.remove(this.dataId);
-    }
-
-    /**
-     * Obtains the DataInfo for a given dataId.
-     * 
-     * @param dataId Id of the data to retrieve
-     * @return DataInfo for the dataId passed in as parameter
-     */
-    private static DataInfo get(Integer dataId) {
-        return ID_TO_DATA.get(dataId);
     }
 
     /**
@@ -510,9 +439,6 @@ public abstract class DataInfo<T extends DataParams> {
             }
             for (int versionId : removedVersions) {
                 this.versions.remove(versionId);
-            }
-            if (this.versions.isEmpty()) {
-                deregister();
             }
         }
     }

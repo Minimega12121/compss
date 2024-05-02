@@ -42,4 +42,13 @@ public abstract class EngineDataAccessIdImpl implements EngineDataAccessId {
         return this.data.getDataId();
     }
 
+    @Override
+    public final void commit() {
+        this.data.committedAccess(this);
+    }
+
+    @Override
+    public final void cancel(boolean keepModified) {
+        this.data.cancelledAccess(this, keepModified);
+    }
 }

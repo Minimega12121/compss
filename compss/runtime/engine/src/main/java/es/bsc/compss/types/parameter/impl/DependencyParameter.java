@@ -170,14 +170,14 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
     public void cancel(Task task) {
         EngineDataAccessId dAccId = this.getDataAccessId();
         updateParameter(task);
-        DataInfo.cancelAccess(dAccId, task.wasSubmited());
+        dAccId.cancel(task.wasSubmited());
     }
 
     @Override
     public void commit(Task task) {
         EngineDataAccessId dAccId = this.getDataAccessId();
         updateParameter(task);
-        DataInfo.commitAccess(dAccId);
+        dAccId.commit();
     }
 
     @Override
