@@ -172,16 +172,16 @@ public abstract class DataInfo<T extends DataParams> {
             switch (mode) {
                 case C:
                 case R:
-                    daId = new RAccessId(this.currentVersion);
+                    daId = new RAccessId(this, this.currentVersion);
                     break;
                 case W:
-                    daId = new WAccessId(this.currentVersion);
+                    daId = new WAccessId(this, this.currentVersion);
                     break;
                 case CV:
                 case RW:
                     DataVersion readInstance = this.versions.get(this.currentVersionId - 1);
                     if (readInstance != null) {
-                        daId = new RWAccessId(readInstance, this.currentVersion);
+                        daId = new RWAccessId(this, readInstance, this.currentVersion);
                     } else {
                         LOGGER.warn("Previous instance for data" + this.dataId + " is null.");
                     }
@@ -205,7 +205,7 @@ public abstract class DataInfo<T extends DataParams> {
             case C:
             case R:
                 this.willBeRead();
-                daId = new RAccessId(this.currentVersion);
+                daId = new RAccessId(this, this.currentVersion);
                 if (DEBUG) {
                     StringBuilder sb = new StringBuilder("");
                     sb.append("Access:").append("\n");
@@ -218,7 +218,7 @@ public abstract class DataInfo<T extends DataParams> {
 
             case W:
                 this.willBeWritten();
-                daId = new WAccessId(this.currentVersion);
+                daId = new WAccessId(this, this.currentVersion);
                 if (DEBUG) {
                     StringBuilder sb = new StringBuilder("");
                     sb.append("Access:").append("\n");
@@ -236,7 +236,7 @@ public abstract class DataInfo<T extends DataParams> {
                 this.willBeWritten();
                 DataVersion writtenInstance = this.currentVersion;
                 if (readInstance != null) {
-                    daId = new RWAccessId(readInstance, writtenInstance);
+                    daId = new RWAccessId(this, readInstance, writtenInstance);
                     if (DEBUG) {
                         StringBuilder sb = new StringBuilder("");
                         sb.append("Access:").append("\n");

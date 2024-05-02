@@ -19,43 +19,42 @@ package es.bsc.compss.types.data.accessid;
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
+import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
 
 
-public class RWAccessId implements ReadingDataAccessId, WritingDataAccessId {
+public class RWAccessId extends EngineDataAccessIdImpl implements ReadingDataAccessId, WritingDataAccessId {
 
     /**
      * Serializable objects Version UID are 1L in all Runtime.
      */
     private static final long serialVersionUID = 1L;
 
-    // File version read
+    // Data version read
     private DataVersion readDataVersion;
-    // File version written
+    // Data version written
     private DataVersion writtenDataVersion;
 
 
     /**
-     * Creates a new ReadWrite Access Id for serialization.
+     * Creates a new ReadWrite Access Id.
      */
     public RWAccessId() {
-        // For serialization
+        super();
+        // To enact placeholder RW access for commutative accesses.
     }
 
     /**
      * Creates a new ReadWrite Access Id with read version {@code rdv} and write version {@code wdv}.
-     * 
+     *
+     * @param data data being accessed.
      * @param rdv Read version.
      * @param wdv Write version.
      */
-    public RWAccessId(DataVersion rdv, DataVersion wdv) {
+    public RWAccessId(DataInfo data, DataVersion rdv, DataVersion wdv) {
+        super(data);
         this.readDataVersion = rdv;
         this.writtenDataVersion = wdv;
-    }
-
-    @Override
-    public int getDataId() {
-        return this.readDataVersion.getDataInstanceId().getDataId();
     }
 
     @Override
@@ -119,7 +118,7 @@ public class RWAccessId implements ReadingDataAccessId, WritingDataAccessId {
         if (!this.readDataVersion.isValid()) {
             DataVersion validR = this.readDataVersion.getPreviousValidPredecessor();
             if (validR != null) {
-                return new RWAccessId(validR, this.writtenDataVersion);
+                return new RWAccessId(this.getAccessedDataInfo(), validR, this.writtenDataVersion);
             } else {
                 return null;
             }

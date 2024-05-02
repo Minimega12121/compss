@@ -18,10 +18,11 @@ package es.bsc.compss.types.data.accessid;
 
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
+import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
 
 
-public class WAccessId implements WritingDataAccessId {
+public class WAccessId extends EngineDataAccessIdImpl implements WritingDataAccessId {
 
     /**
      * Serializable objects Version UID are 1L in all Runtime.
@@ -33,24 +34,22 @@ public class WAccessId implements WritingDataAccessId {
 
 
     /**
-     * Creates a new Write Access Id for serialization.
+     * Creates a new ReadWrite Access Id.
      */
     public WAccessId() {
-        // For serialization
+        super();
+        // To enact placeholder RW access for commutative accesses.
     }
 
     /**
      * Creates a new WriteAccessId with the given data version.
-     * 
+     *
+     * @param data data being accessed.
      * @param wdv Write version.
      */
-    public WAccessId(DataVersion wdv) {
+    public WAccessId(DataInfo data, DataVersion wdv) {
+        super(data);
         this.writtenDataVersion = wdv;
-    }
-
-    @Override
-    public int getDataId() {
-        return this.writtenDataVersion.getDataInstanceId().getDataId();
     }
 
     @Override
