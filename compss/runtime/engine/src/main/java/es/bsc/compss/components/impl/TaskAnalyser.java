@@ -58,44 +58,4 @@ public class TaskAnalyser {
         LOGGER.info("Initialization finished");
     }
 
-    /**
-     * Deletes the specified data and its renamings.
-     *
-     * @param data data to be deleted
-     * @param applicationDelete whether the user code requested to delete the data ({@literal true}) or was removed by
-     *            the runtime ({@literal false})
-     * @throws ValueUnawareRuntimeException the runtime is not aware of the data
-     */
-    public void deleteData(DataParams data, boolean applicationDelete) throws ValueUnawareRuntimeException {
-        DataInfo dataInfo = data.delete();
-        int dataId = dataInfo.getDataId();
-        LOGGER.info("Deleting data " + dataId);
-
-        // Deleting checkpointed data that is obsolete, INOUT that has a newest version
-        if (applicationDelete) {
-            Application app = data.getApp();
-            app.getCP().deletedData(dataInfo);
-        }
-
-        DataAccessesInfo dai = DataAccessesInfo.remove(dataId);
-        if (dai != null) {
-            switch (dai.getDataType()) {
-                case STREAM_T:
-                case EXTERNAL_STREAM_T:
-                    // No data to delete
-                    break;
-                case FILE_T:
-                    // Remove file data form the list of written files
-                    Application app = data.getApp();
-                    FileInfo fInfo = (FileInfo) data.getRegisteredData();
-                    app.removeWrittenFile(fInfo);
-                    break;
-                default:
-                    // Nothing to do for other types
-                    break;
-            }
-        } else {
-            LOGGER.warn("Writters info for data " + dataId + " not found.");
-        }
-    }
 }
