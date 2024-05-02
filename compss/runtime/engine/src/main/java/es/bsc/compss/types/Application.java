@@ -53,7 +53,7 @@ public class Application {
 
     private static GraphHandler GH;
     private static CheckpointManager CP;
-    
+
     private static final int DEFAULT_THROTTLE_WAIT_TASK_COUNT = Integer.MAX_VALUE;
     private static final int DEFAULT_THROTTLE_INTERVAL = 10;
 
