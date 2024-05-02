@@ -18,7 +18,6 @@ package es.bsc.compss.checkpoint.types.request.ap;
 
 import es.bsc.compss.checkpoint.CheckpointRecord;
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.request.exceptions.ShutdownException;
 import es.bsc.compss.types.tracing.TraceEvent;
@@ -42,7 +41,7 @@ public class CheckpointerSaveLastDataVersionsRequest extends CheckpointerRequest
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td, CheckpointRecord cp)
+    public void process(AccessProcessor ap, TaskDispatcher td, CheckpointRecord cp)
         throws ShutdownException, COMPSsException {
         cp.requestSaveAllLastDataVersion();
     }

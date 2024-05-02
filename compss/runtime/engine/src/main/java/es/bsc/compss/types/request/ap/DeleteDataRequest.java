@@ -17,7 +17,6 @@
 package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
@@ -52,7 +51,7 @@ public class DeleteDataRequest extends APRequest {
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) {
+    public void process(AccessProcessor ap, TaskDispatcher td) {
         try {
             // File is involved in some task execution
             // File Won't be read by any future task or from the main code.

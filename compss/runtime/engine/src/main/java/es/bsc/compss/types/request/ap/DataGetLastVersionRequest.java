@@ -17,7 +17,6 @@
 package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.data.LogicalData;
 import es.bsc.compss.types.data.info.DataInfo;
@@ -59,7 +58,7 @@ public class DataGetLastVersionRequest extends APRequest {
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) {
+    public void process(AccessProcessor ap, TaskDispatcher td) {
         this.response = null;
         DataInfo dInfo = data.getRegisteredData();
         if (dInfo != null) {

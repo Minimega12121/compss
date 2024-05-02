@@ -17,7 +17,6 @@
 package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.request.exceptions.ShutdownException;
@@ -44,9 +43,8 @@ public class CancelApplicationTasksRequest extends CancelTaskGroupRequest {
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td)
-        throws ShutdownException, COMPSsException {
+    public void process(AccessProcessor ap, TaskDispatcher td) throws ShutdownException, COMPSsException {
         LOGGER.debug("Cancelling tasks of application " + getApp().getId());
-        super.cancelGroup(ta, td);
+        super.cancelGroup(td);
     }
 }

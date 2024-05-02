@@ -19,7 +19,6 @@ package es.bsc.compss.types.request.ap;
 import es.bsc.compss.COMPSsConstants;
 import es.bsc.compss.api.TaskMonitor;
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
@@ -67,7 +66,7 @@ public class TaskAnalysisRequest extends APRequest {
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) {
+    public void process(AccessProcessor ap, TaskDispatcher td) {
         // Process task
         if (IS_TIMER_COMPSS_ENABLED) {
             long startTime = System.nanoTime();

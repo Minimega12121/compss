@@ -17,7 +17,6 @@
 package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
@@ -65,13 +64,12 @@ public class CancelTaskGroupRequest extends APRequest {
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td)
-        throws ShutdownException, COMPSsException {
+    public void process(AccessProcessor ap, TaskDispatcher td) throws ShutdownException, COMPSsException {
         LOGGER.debug("Cancelling tasks of group " + groupName);
-        cancelGroup(ta, td);
+        cancelGroup(td);
     }
 
-    protected final void cancelGroup(TaskAnalyser ta, TaskDispatcher td) {
+    protected final void cancelGroup(TaskDispatcher td) {
         TaskGroup tg = app.removeGroup(groupName);
         if (tg != null) {
             List<Task> tasks = tg.getTasks();

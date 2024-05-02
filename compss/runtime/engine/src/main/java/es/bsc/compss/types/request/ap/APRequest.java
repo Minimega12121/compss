@@ -17,7 +17,6 @@
 package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.request.exceptions.ShutdownException;
@@ -48,12 +47,10 @@ public abstract class APRequest {
      * Processes the Request.
      *
      * @param ap AccessProcessor processing the request.
-     * @param ta Task Analyser of the processing AccessProcessor.
      * @param td Task Dispatcher attached to the processing AccessProcessor.
      * @throws ShutdownException If the component has been shutdown unexpectedly.
      * @throws COMPSsException Exception thrown by user
      */
-    public abstract void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td)
-        throws ShutdownException, COMPSsException;
+    public abstract void process(AccessProcessor ap, TaskDispatcher td) throws ShutdownException, COMPSsException;
 
 }
