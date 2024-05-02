@@ -45,6 +45,7 @@ public class Task extends AbstractTask {
     // Task ID management
     private static final int FIRST_TASK_ID = 1;
     private static AtomicInteger nextTaskId = new AtomicInteger(FIRST_TASK_ID);
+
     private final TaskDescription<Parameter> taskDescription;
 
     // Scheduling info
@@ -361,20 +362,6 @@ public class Task extends AbstractTask {
     }
 
     /**
-     * Sets new version for the data {@code daId}.
-     *
-     * @param daId New data version.
-     */
-    public void setVersion(EngineDataAccessId daId) {
-        for (Parameter p : this.getTaskDescription().getParameters()) {
-            if (p.isPotentialDependency()
-                && ((DependencyParameter) p).getDataAccessId().getDataId() == daId.getDataId()) {
-                ((DependencyParameter) p).setDataAccessId(daId);
-            }
-        }
-    }
-
-    /**
      * Returns if the task is member of any task group.
      *
      * @return A boolean stating if the task is member of any task group.
@@ -391,7 +378,6 @@ public class Task extends AbstractTask {
     public boolean hasCommutativeParams() {
         for (Parameter p : this.getTaskDescription().getParameters()) {
             if (p.isPotentialDependency()) {
-
                 if (p.getDirection() == Direction.COMMUTATIVE) {
                     return true;
                 }
@@ -407,20 +393,6 @@ public class Task extends AbstractTask {
      */
     public OnFailure getOnFailure() {
         return this.taskDescription.getOnFailure();
-    }
-
-    /**
-     * Returns if the task was cancelled by an exception in any of the groups it belongs to.
-     *
-     * @return {@literal true} if the task was cancelled by an exception arisen in any of the groups it belngs to
-     */
-    public boolean isCancelledByException() {
-        for (TaskGroup tg : this.getTaskGroupList()) {
-            if (tg.hasException() && this.getStatus() == TaskState.CANCELED) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override

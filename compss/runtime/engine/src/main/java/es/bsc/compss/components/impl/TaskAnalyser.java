@@ -114,7 +114,7 @@ public class TaskAnalyser {
      */
     public void endTask(AbstractTask aTask, boolean checkpointing) {
         int taskId = aTask.getId();
-        long start = System.currentTimeMillis();
+
         if (aTask instanceof Task) {
             Task task = (Task) aTask;
             boolean isFree = task.isFree();
@@ -223,10 +223,6 @@ public class TaskAnalyser {
         }
         aTask.releaseDataDependents();
 
-        if (DEBUG) {
-            long time = System.currentTimeMillis() - start;
-            LOGGER.debug("Task " + taskId + " end message processed in " + time + " ms.");
-        }
     }
 
     /**

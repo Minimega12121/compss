@@ -52,7 +52,13 @@ public class TaskEndNotification extends APRequest {
 
     @Override
     public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) {
+        long start = System.currentTimeMillis();
         ta.endTask(this.task, false);
+        if (DEBUG) {
+            long time = System.currentTimeMillis() - start;
+            int taskId = this.task.getId();
+            LOGGER.debug("Task " + taskId + " end message processed in " + time + " ms.");
+        }
     }
 
     @Override
