@@ -19,11 +19,12 @@ package es.bsc.compss.types.request.ap;
 import es.bsc.compss.COMPSsConstants;
 import es.bsc.compss.api.TaskMonitor;
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
+import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
+import es.bsc.compss.types.TaskDescription;
 import es.bsc.compss.types.TaskState;
 import es.bsc.compss.types.tracing.TraceEvent;
 
@@ -65,16 +66,16 @@ public class TaskAnalysisRequest extends APRequest {
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) {
+    public void process(AccessProcessor ap, TaskDispatcher td) {
         // Process task
         if (IS_TIMER_COMPSS_ENABLED) {
             long startTime = System.nanoTime();
-            ta.processTask(this.task);
+            processTask();
             long endTime = System.nanoTime();
             float elapsedTime = (endTime - startTime) / (float) 1_000_000;
             TIMER_LOGGER.info("[TIMER] TA Process of task " + this.task.getId() + ": " + elapsedTime + " ms");
         } else {
-            ta.processTask(this.task);
+            processTask();
         }
 
         // Check if the task has been checkpointed
@@ -82,7 +83,7 @@ public class TaskAnalysisRequest extends APRequest {
             if (DEBUG) {
                 LOGGER.debug("Task " + this.task.getId() + " was checkpointed in a previous run. Skipping execution.");
             }
-            ta.endTask(this.task, true);
+            this.task.end(true);
         } else {
             // Send request to schedule task
             td.executeTask(ap, this.task);
@@ -91,6 +92,15 @@ public class TaskAnalysisRequest extends APRequest {
         // Notify task monitor
         TaskMonitor monitor = this.task.getTaskMonitor();
         monitor.onAccessesProcessed();
+    }
+
+    private void processTask() {
+        TaskDescription description = this.task.getTaskDescription();
+        LOGGER.info("New " + description.getType().toString().toLowerCase() + " task: Name:" + description.getName()
+            + "), ID = " + this.task.getId() + " APP = " + this.task.getApplication().getId());
+
+        Application app = this.task.getApplication();
+        app.newTask(this.task);
     }
 
     @Override

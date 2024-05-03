@@ -26,9 +26,9 @@ import es.bsc.compss.types.colors.ColorConfiguration;
 import es.bsc.compss.types.colors.ColorNode;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.implementations.TaskType;
-import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.parameter.impl.Parameter;
 import es.bsc.compss.util.CoreManager;
+import es.bsc.compss.util.ErrorManager;
 import es.bsc.compss.util.SignatureBuilder;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,6 +41,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Representation of a Task.
  */
 public class Task extends AbstractTask {
+
+    private static final String TASK_FAILED = "Task failed: ";
+    private static final String TASK_CANCELED = "Task canceled: ";
 
     // Task ID management
     private static final int FIRST_TASK_ID = 1;
@@ -362,20 +365,6 @@ public class Task extends AbstractTask {
     }
 
     /**
-     * Sets new version for the data {@code daId}.
-     *
-     * @param daId New data version.
-     */
-    public void setVersion(EngineDataAccessId daId) {
-        for (Parameter p : this.getTaskDescription().getParameters()) {
-            if (p.isPotentialDependency()
-                && ((DependencyParameter) p).getDataAccessId().getDataId() == daId.getDataId()) {
-                ((DependencyParameter) p).setDataAccessId(daId);
-            }
-        }
-    }
-
-    /**
      * Returns if the task is member of any task group.
      *
      * @return A boolean stating if the task is member of any task group.
@@ -392,7 +381,6 @@ public class Task extends AbstractTask {
     public boolean hasCommutativeParams() {
         for (Parameter p : this.getTaskDescription().getParameters()) {
             if (p.isPotentialDependency()) {
-
                 if (p.getDirection() == Direction.COMMUTATIVE) {
                     return true;
                 }
@@ -410,20 +398,6 @@ public class Task extends AbstractTask {
         return this.taskDescription.getOnFailure();
     }
 
-    /**
-     * Returns if the task was cancelled by an exception in any of the groups it belongs to.
-     *
-     * @return {@literal true} if the task was cancelled by an exception arisen in any of the groups it belngs to
-     */
-    public boolean isCancelledByException() {
-        for (TaskGroup tg : this.getTaskGroupList()) {
-            if (tg.hasException() && this.getStatus() == TaskState.CANCELED) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public int hashCode() {
         return super.hashCode();
@@ -438,21 +412,6 @@ public class Task extends AbstractTask {
         buffer.append(", ").append(getTaskDescription().toString()).append("]");
 
         return buffer.toString();
-    }
-
-    @Override
-    public List<Parameter> getParameterDataToRemove() {
-        return new LinkedList<>();
-    }
-
-    @Override
-    public List<Parameter> getIntermediateParameters() {
-        return new LinkedList<>();
-    }
-
-    @Override
-    public List<Parameter> getUnusedIntermediateParameters() {
-        return new LinkedList<>();
     }
 
     public List<Parameter> getParameters() {
@@ -473,4 +432,127 @@ public class Task extends AbstractTask {
 
     }
 
+    /**
+     * Registers the data accesses and dependencies of the task.
+     * 
+     * @return {@literal true}, if the task has requested an edge in the graph; {@literal false}, otherwise.
+     */
+    public boolean register(int constrainingParam) {
+        boolean taskHasEdge = false;
+        int paramIdx = 0;
+        for (Parameter param : this.getParameters()) {
+            boolean isConstraining = paramIdx == constrainingParam;
+            boolean paramHasEdge = param.register(this, isConstraining);
+            taskHasEdge = taskHasEdge || paramHasEdge;
+            paramIdx++;
+        }
+        return taskHasEdge;
+    }
+
+    @Override
+    public void end(boolean checkpointing) {
+        int taskId = this.getId();
+        boolean isFree = this.isFree();
+        TaskState taskState = this.getStatus();
+        LOGGER.info("Notification received for task " + taskId + " with end status " + taskState);
+
+        // Check status
+        if (!isFree) {
+            LOGGER.debug("Task " + taskId + " is not registered as free. Waiting for other executions to end");
+            return;
+        }
+
+        switch (taskState) {
+            case FAILED:
+                OnFailure onFailure = this.getOnFailure();
+                if (onFailure == OnFailure.RETRY || onFailure == OnFailure.FAIL) {
+                    // Raise error
+                    ErrorManager.error(TASK_FAILED + this);
+                    return;
+                }
+                if (onFailure == OnFailure.IGNORE || onFailure == OnFailure.CANCEL_SUCCESSORS) {
+                    // Show warning
+                    ErrorManager.warn(TASK_FAILED + this);
+                }
+                break;
+            case CANCELED:
+                // Show warning
+                ErrorManager.warn(TASK_CANCELED + this);
+                break;
+            default:
+                // Do nothing
+        }
+
+        // Mark parameter accesses
+        if (DEBUG) {
+            LOGGER.debug("Marking accessed parameters for task " + taskId);
+        }
+
+        // When a task can have internal temporal parameters,
+        // the not used ones have to be updated to perform the data delete
+        if ((this.getOnFailure() == OnFailure.CANCEL_SUCCESSORS && (this.getStatus() == TaskState.FAILED))
+            || (this.getStatus() == TaskState.CANCELED && this.getOnFailure() != OnFailure.IGNORE)) {
+            cancelParams();
+        } else {
+            commitParams();
+        }
+
+        // Free barrier dependencies
+        if (DEBUG) {
+            LOGGER.debug("Freeing barriers for task " + taskId);
+        }
+
+        // Free dependencies
+        // Free task data dependencies
+        if (DEBUG) {
+            LOGGER.debug("Releasing waiting tasks for task " + taskId);
+        }
+        this.notifyListeners();
+
+        // Check if the finished task was the last writer of a file, but only if task generation has finished
+        // Task generation is finished if we are on noMoreTasks but we are not on a barrier
+        if (DEBUG) {
+            LOGGER.debug("Checking result file transfers for task " + taskId);
+        }
+
+        Application app = this.getApplication();
+        // Release task groups of the task
+        app.endTask(this);
+
+        TaskMonitor registeredMonitor = this.getTaskMonitor();
+        switch (taskState) {
+            case FAILED:
+                registeredMonitor.onFailure();
+                break;
+            case CANCELED:
+                registeredMonitor.onCancellation();
+                break;
+            default:
+                registeredMonitor.onCompletion();
+        }
+
+        // Releases commutative groups dependent and releases all the waiting tasks
+        this.releaseCommutativeGroups();
+
+        // If we are not retrieving the checkpoint
+        if (!checkpointing) {
+            if (DEBUG) {
+                LOGGER.debug("Checkpoint saving task " + taskId);
+            }
+            app.getCP().endTask(this);
+        }
+        super.end(checkpointing);
+    }
+
+    protected void commitParams() {
+        for (Parameter param : this.getTaskDescription().getParameters()) {
+            param.commit(this);
+        }
+    }
+
+    protected void cancelParams() {
+        for (Parameter param : this.getTaskDescription().getParameters()) {
+            param.cancel(this);
+        }
+    }
 }

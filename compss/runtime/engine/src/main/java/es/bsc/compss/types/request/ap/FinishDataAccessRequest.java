@@ -17,7 +17,6 @@
 package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
@@ -48,7 +47,7 @@ public class FinishDataAccessRequest extends APRequest {
     }
 
     @Override
-    public void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) throws ShutdownException {
+    public void process(AccessProcessor ap, TaskDispatcher td) throws ShutdownException {
         access.finish(generatedData);
     }
 

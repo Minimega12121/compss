@@ -18,11 +18,13 @@ package es.bsc.compss.types.parameter.impl;
 
 import es.bsc.compss.api.ParameterMonitor;
 import es.bsc.compss.types.Application;
+import es.bsc.compss.types.Task;
 import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.Direction;
 import es.bsc.compss.types.annotations.parameter.StdIOStream;
 import es.bsc.compss.types.data.accessparams.ObjectAccessParams;
 import es.bsc.compss.types.data.params.ObjectData;
+import storage.StubItf;
 
 
 public class ObjectParameter<V extends Object, A extends ObjectAccessParams<V, D>, D extends ObjectData>
@@ -82,5 +84,16 @@ public class ObjectParameter<V extends Object, A extends ObjectAccessParams<V, D
     public String toString() {
         return "ObjectParameter with hash code " + this.getCode() + ", type " + getType() + ", direction "
             + getDirection();
+    }
+
+    @Override
+    public boolean register(Task task, boolean isConstraining) {
+        if (this.getType() == DataType.OBJECT_T) {
+            // Check if its PSCO class and persisted to infer its type
+            if (this.getValue() instanceof StubItf && ((StubItf) this.getValue()).getID() != null) {
+                this.setType(DataType.PSCO_T);
+            }
+        }
+        return super.register(task, isConstraining);
     }
 }

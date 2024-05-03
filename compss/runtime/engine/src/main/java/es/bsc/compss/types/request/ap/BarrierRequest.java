@@ -17,7 +17,6 @@
 package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.components.impl.AccessProcessor;
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Barrier;
@@ -88,13 +87,13 @@ public class BarrierRequest extends APRequest implements Barrier {
     }
 
     @Override
-    public final void process(AccessProcessor ap, TaskAnalyser ta, TaskDispatcher td) {
-        handleBarrier(ta);
+    public final void process(AccessProcessor ap, TaskDispatcher td) {
+        handleBarrier();
         sem.release();
     }
 
-    public void handleBarrier(TaskAnalyser ta) {
-        ta.barrier(this);
+    public void handleBarrier() {
+        app.reachesBarrier(this);
     }
 
     @Override

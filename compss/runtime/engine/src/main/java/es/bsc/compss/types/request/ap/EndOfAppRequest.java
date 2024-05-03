@@ -16,7 +16,6 @@
  */
 package es.bsc.compss.types.request.ap;
 
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.tracing.TraceEvent;
 
@@ -38,7 +37,7 @@ public class EndOfAppRequest extends BarrierRequest {
     }
 
     @Override
-    public void handleBarrier(TaskAnalyser ta) {
+    public void handleBarrier() {
         LOGGER.info("TA Processes no More tasks for app " + this.getApp().getId());
         Application app = this.getApp();
         app.endReached(this);

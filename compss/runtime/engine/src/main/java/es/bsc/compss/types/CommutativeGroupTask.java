@@ -21,6 +21,8 @@ import es.bsc.compss.scheduler.types.ActionGroup.MutexGroup;
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
+import es.bsc.compss.types.data.info.DataInfo;
+import es.bsc.compss.types.data.info.DataVersion;
 import es.bsc.compss.types.parameter.impl.Parameter;
 
 import java.util.LinkedList;
@@ -207,21 +209,6 @@ public class CommutativeGroupTask extends AbstractTask {
     }
 
     @Override
-    public List<Parameter> getParameterDataToRemove() {
-        return new LinkedList<>();
-    }
-
-    @Override
-    public List<Parameter> getIntermediateParameters() {
-        return new LinkedList<>();
-    }
-
-    @Override
-    public List<Parameter> getUnusedIntermediateParameters() {
-        return new LinkedList<>();
-    }
-
-    @Override
     public boolean isReduction() {
         return false;
     }
@@ -250,6 +237,20 @@ public class CommutativeGroupTask extends AbstractTask {
         @Override
         public int getDataId() {
             return firstAccess.getDataId();
+        }
+
+        public DataInfo getAccessedDataInfo() {
+            return firstAccess.getAccessedDataInfo();
+        }
+
+        @Override
+        public DataVersion getReadDataVersion() {
+            return firstAccess.getReadDataVersion();
+        }
+
+        @Override
+        public DataVersion getWrittenDataVersion() {
+            return firstAccess.getWrittenDataVersion();
         }
 
         @Override

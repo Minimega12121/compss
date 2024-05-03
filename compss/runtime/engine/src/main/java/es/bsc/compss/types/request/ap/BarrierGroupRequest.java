@@ -16,7 +16,6 @@
  */
 package es.bsc.compss.types.request.ap;
 
-import es.bsc.compss.components.impl.TaskAnalyser;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.tracing.TraceEvent;
 
@@ -47,7 +46,7 @@ public class BarrierGroupRequest extends BarrierRequest {
     }
 
     @Override
-    public void handleBarrier(TaskAnalyser ta) {
+    public void handleBarrier() {
         Application app = this.getApp();
         app.reachesGroupBarrier(this.groupName, this);
     }

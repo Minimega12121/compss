@@ -18,10 +18,11 @@ package es.bsc.compss.types.data.accessid;
 
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
+import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
 
 
-public class RAccessId implements ReadingDataAccessId {
+public class RAccessId extends EngineDataAccessIdImpl implements ReadingDataAccessId {
 
     /**
      * Serializable objects Version UID are 1L in all Runtime.
@@ -29,29 +30,27 @@ public class RAccessId implements ReadingDataAccessId {
     private static final long serialVersionUID = 1L;
 
     // File version read
-    // private DataInstanceId readDataInstance;
     private DataVersion readDataVersion;
 
 
     /**
-     * Creates a new Read Access Id for serialization.
+     * Creates a new ReadWrite Access Id.
      */
     public RAccessId() {
-        // For serialization
+        super();
+        // To enact placeholder RW access for commutative accesses.
     }
 
     /**
      * Sets a new data version.
-     * 
-     * @param rdv New data version.
+     *
+     * @param data Accessed data.
+     * @param rdv read data version.
      */
-    public RAccessId(DataVersion rdv) {
+    public RAccessId(DataInfo data, DataVersion rdv) {
+        super(data);
         this.readDataVersion = rdv;
-    }
 
-    @Override
-    public int getDataId() {
-        return this.readDataVersion.getDataInstanceId().getDataId();
     }
 
     @Override
@@ -100,7 +99,7 @@ public class RAccessId implements ReadingDataAccessId {
         if (!this.readDataVersion.isValid()) {
             DataVersion validR = this.readDataVersion.getPreviousValidPredecessor();
             if (validR != null) {
-                return new RAccessId(validR);
+                return new RAccessId(this.getAccessedDataInfo(), validR);
             } else {
                 return null;
             }

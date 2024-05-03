@@ -207,7 +207,7 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
             LOGGER.warn(this.getDataDescription() + " has not been accessed before");
             return;
         }
-        DataInfo.commitAccess(daid);
+        daid.commit();
     }
 
     /**
