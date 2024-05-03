@@ -16,6 +16,8 @@
  */
 package es.bsc.compss.api;
 
+import es.bsc.compss.worker.COMPSsException;
+
 import java.util.concurrent.Semaphore;
 
 
@@ -33,4 +35,32 @@ public interface ApplicationRunner {
      */
     public void readyToContinue(Semaphore sem);
 
+    /**
+     * Actions to be performed by monitor on task cancellation.
+     *
+     * @param e Exception raised during the task execution
+     */
+    public void onException(COMPSsException e);
+
+    /**
+     * Actions to be performed by monitor on task cancellation.
+     */
+    public void onCancellation();
+
+    /**
+     * Actions to be performed by monitor on task completion.
+     */
+    public void onCompletion();
+
+    /**
+     * Actions to be performed by monitor on task failure.
+     */
+    public void onFailure();
+
+    /**
+     * Returns the monitor for those tasks belonging to the application.
+     * 
+     * @return monitor for the tasks of the application
+     */
+    public TaskMonitor getTaskMonitor();
 }

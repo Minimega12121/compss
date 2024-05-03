@@ -17,6 +17,8 @@
 package es.bsc.compss.invokers;
 
 import es.bsc.compss.api.ApplicationRunner;
+import es.bsc.compss.api.TaskMonitor;
+import es.bsc.compss.api.impl.DoNothingApplicationMonitor;
 import es.bsc.compss.exceptions.InvokeExecutionException;
 import es.bsc.compss.execution.types.InvocationResources;
 import es.bsc.compss.executor.InvocationRunner;
@@ -55,7 +57,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public abstract class Invoker implements ApplicationRunner {
+public abstract class Invoker extends DoNothingApplicationMonitor {
 
     protected static final Logger LOGGER = LogManager.getLogger(Loggers.WORKER_INVOKER);
 

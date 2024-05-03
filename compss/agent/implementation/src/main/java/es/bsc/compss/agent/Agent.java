@@ -456,7 +456,7 @@ public class Agent {
             RUNTIME.registerCoreElement(ced);
             int numNodes = 1;
             RUNTIME.executeTask(appId, // APP ID
-                monitor, // Corresponding task monitor
+                monitor.getTaskMonitor(), // Corresponding task monitor
                 lang, true, null, null, ced.getCeSignature(), // Method to call
                 onFailure, // On failure behavior
                 0, // Time out of the task

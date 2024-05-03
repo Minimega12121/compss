@@ -694,7 +694,7 @@ call_operation() {
     fatal_error "At least one agent process has not yet finished its work after ${exec_time} seconds."  124
   fi
 
-  if grep -q "Job completed after" "${master_log}.outputlog"; then
+  if grep -q "App completed after" "${master_log}.outputlog"; then
     if [ ${verbose_level} -gt 0 ]; then
       display_success "Execution ended succesfully"
     fi
