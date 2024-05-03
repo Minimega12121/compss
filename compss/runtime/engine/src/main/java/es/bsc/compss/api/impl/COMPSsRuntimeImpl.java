@@ -157,9 +157,6 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
     private static final Logger DP_LOGGER = LogManager.getLogger(Loggers.DATA_PROVENANCE);
     private static final boolean DP_ENABLED = Boolean.parseBoolean(System.getProperty(COMPSsConstants.DATA_PROVENANCE));
 
-    // External Task monitor
-    private static final TaskMonitor DO_NOTHING_MONITOR = new DoNothingApplicationMonitor().getTaskMonitor();
-
     static {
         String defaultLang = System.getProperty(COMPSsConstants.LANG);
         Lang lang;
@@ -1282,11 +1279,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         }
 
         Application app = Application.registerApplication(appId);
-
-        if (monitor == null) {
-            monitor = DO_NOTHING_MONITOR;
-        }
-
+        monitor = app.getTaskMonitor();
         // Process the parameters
         List<Parameter> pars = processParameters(app, parameterCount, parameters, monitor);
         boolean hasReturn = hasReturn(pars);
@@ -1356,9 +1349,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
 
         Application app = Application.registerApplication(appId);
         app.checkThrottle();
-        if (monitor == null) {
-            monitor = DO_NOTHING_MONITOR;
-        }
+        monitor = app.getTaskMonitor();
 
         // Process the parameters
         List<Parameter> pars = processParameters(app, parameterCount, parameters, monitor);

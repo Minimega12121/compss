@@ -407,7 +407,7 @@ public class Agent {
         synchronized (RUNTIME) {
             // Making sure that the runtime has already been started
         }
-        Long appId = RUNTIME.registerApplication(ceiClass, null);
+        Long appId = RUNTIME.registerApplication(ceiClass, monitor);
         monitor.setAppId(appId);
         LOGGER.debug("New request to run as a " + lang + " task " + ced.getCeSignature());
         LOGGER.debug("appId: " + appId);

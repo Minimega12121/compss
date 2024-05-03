@@ -18,6 +18,8 @@ package es.bsc.compss.types;
 
 import es.bsc.compss.COMPSsConstants;
 import es.bsc.compss.api.ApplicationRunner;
+import es.bsc.compss.api.TaskMonitor;
+import es.bsc.compss.api.impl.DoNothingApplicationMonitor;
 import es.bsc.compss.checkpoint.CheckpointManager;
 import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.log.Loggers;
@@ -50,7 +52,8 @@ public class Application {
     private static final Random APP_ID_GENERATOR = new SecureRandom();
 
     private static final TreeMap<Long, Application> APPLICATIONS = new TreeMap<>();
-    private static final Application NO_APPLICATION = new Application(null, null, null);
+    private static final ApplicationRunner DEFAULT_RUNNER = new DoNothingApplicationMonitor();
+    private static final Application NO_APPLICATION = new Application(null, null, DEFAULT_RUNNER);
 
     private static GraphHandler GH;
     private static CheckpointManager CP;
@@ -180,6 +183,9 @@ public class Application {
             synchronized (APPLICATIONS) {
                 app = APPLICATIONS.get(appId);
                 if (app == null) {
+                    if (runner == null) {
+                        runner = DEFAULT_RUNNER;
+                    }
                     app = new Application(appId, parallelismSource, runner);
                     APPLICATIONS.put(appId, app);
                 }
@@ -205,7 +211,7 @@ public class Application {
 
     /**
      * Get all the registered applications.
-     * 
+     *
      * @return array with registered applications.
      */
     public static Application[] getApplications() {
@@ -276,6 +282,7 @@ public class Application {
     /*
      * ----------------------------------- GROUP MANAGEMENT -----------------------------------
      */
+
     /**
      * Registers a new group of tasks to the application.
      *
@@ -342,6 +349,7 @@ public class Application {
     /*
      * ----------------------------------- EXECUTION MANAGEMENT -----------------------------------
      */
+
     /**
      * Registers the existence of a new task for the application and registers it into all the currently open groups.
      *
@@ -403,22 +411,16 @@ public class Application {
      * The application's main code cannot make no progress until further notice.
      */
     public void stalled() {
-        if (runner != null) {
-            this.runner.stalledApplication();
-        }
+        this.runner.stalledApplication();
     }
 
     /**
      * The application's main code can resume the execution.
-     * 
+     *
      * @param sem notify when the runner is ready to continue
      */
     public void readyToContinue(Semaphore sem) {
-        if (this.runner != null) {
-            this.runner.readyToContinue(sem);
-        } else {
-            sem.release();
-        }
+        this.runner.readyToContinue(sem);
     }
 
     private void reachesGroupBarrier(TaskGroup tg, Barrier request) {
@@ -471,6 +473,7 @@ public class Application {
     /*
      * ----------------------------------- DATA MANAGEMENT -----------------------------------
      */
+
     /**
      * Stores the relation between a file and the corresponding dataInfo.
      *
@@ -636,4 +639,7 @@ public class Application {
         }
     }
 
+    public TaskMonitor getTaskMonitor() {
+        return this.runner.getTaskMonitor();
+    }
 }
