@@ -366,7 +366,7 @@ public class RESTAgent implements AgentInterface<RESTAgentConf> {
         }
         long appId;
         RESTAgentRequestListener requestListener = request.getRequestListener();
-        AppTaskMonitor monitor = new AppTaskMonitor(arguments, target, results, this, requestListener);
+        RESTAppMonitor monitor = new RESTAppMonitor(arguments, target, results, this, requestListener);
 
         // COMPUTE SIGNATURES
         StringBuilder typesSB = new StringBuilder();

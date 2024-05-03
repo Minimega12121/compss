@@ -50,7 +50,7 @@ import org.glassfish.jersey.client.ClientConfig;
 /**
  * Class handling the status changes for a task and the corresponding notifications to its orchestrator.
  */
-public class AppTaskMonitor extends AppMonitor implements RESTAgentRequestHandler {
+public class RESTAppMonitor extends AppMonitor implements RESTAgentRequestHandler {
 
     private static final Client CLIENT = ClientBuilder.newClient(new ClientConfig());
 
@@ -73,7 +73,7 @@ public class AppTaskMonitor extends AppMonitor implements RESTAgentRequestHandle
      * @param owner RESTAgent handling the request
      * @param requestListener handler to notify the final state of the app task execution
      */
-    public AppTaskMonitor(ApplicationParameter[] args, ApplicationParameter target, ApplicationParameter[] results,
+    public RESTAppMonitor(ApplicationParameter[] args, ApplicationParameter target, ApplicationParameter[] results,
         RESTAgent owner, RESTAgentRequestListener requestListener) {
         super(args, target, results);
         this.requestListener = requestListener;
@@ -83,111 +83,37 @@ public class AppTaskMonitor extends AppMonitor implements RESTAgentRequestHandle
     }
 
     @Override
-    public void specificOnCreation() {
-        profile.setTaskCreated(System.currentTimeMillis());
-    }
-
-    @Override
-    public void specificOnAccessesProcessed() {
-        profile.setTaskAnalyzed(System.currentTimeMillis());
-    }
-
-    @Override
-    public void specificOnSchedule() {
-        profile.setTaskScheduled(System.currentTimeMillis());
-    }
-
-    @Override
-    public void specificOnSubmission() {
-        profile.setTaskSubmitted(System.currentTimeMillis());
-    }
-
-    @Override
-    public void specificOnDataReception() {
-    }
-
-    @Override
-    public void specificOnExecutionStart() {
-        profile.setExecutionStart(System.currentTimeMillis());
-    }
-
-    @Override
-    public void specificOnExecutionStartAt(long ts) {
-        profile.setExecutionStart(ts);
-    }
-
-    @Override
-    public void specificOnExecutionEnd() {
-        profile.setExecutionEnd(System.currentTimeMillis());
-    }
-
-    @Override
-    public void specificOnExecutionEndAt(long ts) {
-        profile.setExecutionEnd(ts);
-    }
-
-    @Override
-    public void specificOnAbortedExecution() {
-        profile.setEndNotification(System.currentTimeMillis());
-    }
-
-    @Override
-    public void specificOnErrorExecution() {
-        profile.setEndNotification(System.currentTimeMillis());
-    }
-
-    @Override
-    public void specificOnFailedExecution() {
-        profile.setEndNotification(System.currentTimeMillis());
-        this.successful = false;
-    }
-
-    @Override
-    public void specificOnException(COMPSsException e) {
-        profile.setEndNotification(System.currentTimeMillis());
-    }
-
-    @Override
-    public void specificOnSuccessfulExecution() {
-        profile.setEndNotification(System.currentTimeMillis());
-        this.successful = true;
+    public UniqueTaskMonitor getTaskMonitor() {
+        return new RESTTaskMonitor();
     }
 
     @Override
     public void specificOnCancellation() {
-        profile.setTaskEnd(System.currentTimeMillis());
-        if (this.requestListener != null) {
-            this.requestListener.requestCompleted(this);
+        if (RESTAppMonitor.this.requestListener != null) {
+            RESTAppMonitor.this.requestListener.requestCompleted(RESTAppMonitor.this);
         }
-        System.out.println("Job cancelled after " + profile.getTotalTime());
+        System.out.println("App cancelled after " + profile.getTotalTime());
     }
 
     @Override
     public void specificOnCompletion() {
-        profile.setTaskEnd(System.currentTimeMillis());
-        if (this.requestListener != null) {
-            this.requestListener.requestCompleted(this);
+        if (RESTAppMonitor.this.requestListener != null) {
+            RESTAppMonitor.this.requestListener.requestCompleted(RESTAppMonitor.this);
         }
-        System.out.println("Job completed after " + profile.getTotalTime());
+        System.out.println("App completed after " + profile.getTotalTime());
+    }
+
+    @Override
+    public void specificOnException(COMPSsException e) {
+        // Do nothing
     }
 
     @Override
     public void specificOnFailure() {
-        profile.setTaskEnd(System.currentTimeMillis());
-        if (this.requestListener != null) {
-            this.requestListener.requestCompleted(this);
+        if (RESTAppMonitor.this.requestListener != null) {
+            RESTAppMonitor.this.requestListener.requestCompleted(RESTAppMonitor.this);
         }
-        System.out.println("Job failed after " + profile.getTotalTime());
-    }
-
-    private String[] remoteDataInfoToStringArray(Collection<RemoteDataLocation> remoteLocations) {
-        String[] res = new String[remoteLocations.size()];
-        int i = 0;
-        for (RemoteDataLocation remoteLoc : remoteLocations) {
-            res[i] = ((PrivateRemoteDataLocation) remoteLoc).getPath();
-            i++;
-        }
-        return res;
+        System.out.println("App failed after " + profile.getTotalTime());
     }
 
     @Override
@@ -211,6 +137,16 @@ public class AppTaskMonitor extends AppMonitor implements RESTAgentRequestHandle
         if (response.getStatusInfo().getStatusCode() != 200) {
             ErrorManager.warn("AGENT Could not notify Application " + getAppId() + " end to " + wt);
         }
+    }
+
+    private String[] remoteDataInfoToStringArray(Collection<RemoteDataLocation> remoteLocations) {
+        String[] res = new String[remoteLocations.size()];
+        int i = 0;
+        for (RemoteDataLocation remoteLoc : remoteLocations) {
+            res[i] = ((PrivateRemoteDataLocation) remoteLoc).getPath();
+            i++;
+        }
+        return res;
     }
 
     @Override
@@ -252,8 +188,98 @@ public class AppTaskMonitor extends AppMonitor implements RESTAgentRequestHandle
                     sem.acquireUninterruptibly(forwardToHosts.size());
                 }
 
-                AppTaskMonitor.this.owner.powerOff();
+                RESTAppMonitor.this.owner.powerOff();
             }
         }.start();
+    }
+
+
+    protected class RESTTaskMonitor extends UniqueTaskMonitor {
+
+        @Override
+        public void specificOnCreation() {
+            profile.setTaskCreated(System.currentTimeMillis());
+        }
+
+        @Override
+        public void specificOnAccessesProcessed() {
+            profile.setTaskAnalyzed(System.currentTimeMillis());
+        }
+
+        @Override
+        public void specificOnSchedule() {
+            profile.setTaskScheduled(System.currentTimeMillis());
+        }
+
+        @Override
+        public void specificOnSubmission() {
+            profile.setTaskSubmitted(System.currentTimeMillis());
+        }
+
+        @Override
+        public void specificOnDataReception() {
+        }
+
+        @Override
+        public void specificOnExecutionStart() {
+            profile.setExecutionStart(System.currentTimeMillis());
+        }
+
+        @Override
+        public void specificOnExecutionStartAt(long ts) {
+            profile.setExecutionStart(ts);
+        }
+
+        @Override
+        public void specificOnExecutionEnd() {
+            profile.setExecutionEnd(System.currentTimeMillis());
+        }
+
+        @Override
+        public void specificOnExecutionEndAt(long ts) {
+            profile.setExecutionEnd(ts);
+        }
+
+        @Override
+        public void specificOnAbortedExecution() {
+            profile.setEndNotification(System.currentTimeMillis());
+        }
+
+        @Override
+        public void specificOnErrorExecution() {
+            profile.setEndNotification(System.currentTimeMillis());
+        }
+
+        @Override
+        public void specificOnFailedExecution() {
+            profile.setEndNotification(System.currentTimeMillis());
+            RESTAppMonitor.this.successful = false;
+        }
+
+        @Override
+        public void specificOnException(COMPSsException e) {
+            profile.setEndNotification(System.currentTimeMillis());
+        }
+
+        @Override
+        public void specificOnSuccessfulExecution() {
+            profile.setEndNotification(System.currentTimeMillis());
+            RESTAppMonitor.this.successful = true;
+        }
+
+        @Override
+        public void specificOnCancellation() {
+            profile.setTaskEnd(System.currentTimeMillis());
+        }
+
+        @Override
+        public void specificOnCompletion() {
+            profile.setTaskEnd(System.currentTimeMillis());
+        }
+
+        @Override
+        public void specificOnFailure() {
+            profile.setTaskEnd(System.currentTimeMillis());
+        }
     }
 }

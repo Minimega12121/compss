@@ -39,7 +39,6 @@ import es.bsc.compss.scheduler.types.ActionOrchestrator;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.BindingObject;
 import es.bsc.compss.types.CoreElementDefinition;
-import es.bsc.compss.types.DoNothingTaskMonitor;
 import es.bsc.compss.types.ErrorHandler;
 import es.bsc.compss.types.WallClockTimerTask;
 import es.bsc.compss.types.annotations.Constants;
@@ -157,9 +156,6 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
     // Data Provenance logger
     private static final Logger DP_LOGGER = LogManager.getLogger(Loggers.DATA_PROVENANCE);
     private static final boolean DP_ENABLED = Boolean.parseBoolean(System.getProperty(COMPSsConstants.DATA_PROVENANCE));
-
-    // External Task monitor
-    private static final TaskMonitor DO_NOTHING_MONITOR = new DoNothingTaskMonitor();
 
     static {
         String defaultLang = System.getProperty(COMPSsConstants.LANG);
@@ -1283,11 +1279,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         }
 
         Application app = Application.registerApplication(appId);
-
-        if (monitor == null) {
-            monitor = DO_NOTHING_MONITOR;
-        }
-
+        monitor = app.getTaskMonitor();
         // Process the parameters
         List<Parameter> pars = processParameters(app, parameterCount, parameters, monitor);
         boolean hasReturn = hasReturn(pars);
@@ -1357,9 +1349,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
 
         Application app = Application.registerApplication(appId);
         app.checkThrottle();
-        if (monitor == null) {
-            monitor = DO_NOTHING_MONITOR;
-        }
+        monitor = app.getTaskMonitor();
 
         // Process the parameters
         List<Parameter> pars = processParameters(app, parameterCount, parameters, monitor);

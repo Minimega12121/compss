@@ -29,7 +29,6 @@ import es.bsc.compss.agent.comm.messages.types.CommParamCollection;
 import es.bsc.compss.agent.comm.messages.types.CommResource;
 import es.bsc.compss.agent.comm.messages.types.CommTask;
 import es.bsc.compss.agent.types.ApplicationParameter;
-import es.bsc.compss.agent.types.RemoteDataLocation;
 import es.bsc.compss.agent.types.Resource;
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
@@ -193,7 +192,7 @@ public class CommAgentImpl implements AgentInterface<CommAgentConfig>, CommAgent
 
         CommResource orchestrator = request.getOrchestrator();
         AppMonitor monitor;
-        monitor = new TaskMonitor(arguments, target, results, orchestrator, request);
+        monitor = new CommAppMonitor(arguments, target, results, orchestrator, request);
 
         CoreElementDefinition ced = new CoreElementDefinition();
         ced.setCeSignature(request.getCeSignature());
@@ -205,7 +204,7 @@ public class CommAgentImpl implements AgentInterface<CommAgentConfig>, CommAgent
             long appId = Agent.runTask(lang, ced, ceiClass, arguments, target, results, monitor, onFail);
             LOGGER.info("External job " + request.getJobId() + " is app " + appId);
         } catch (AgentException ae) {
-            monitor.onFailedExecution();
+            monitor.onFailure();
         }
     }
 

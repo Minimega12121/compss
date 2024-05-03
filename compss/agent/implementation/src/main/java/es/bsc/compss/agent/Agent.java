@@ -407,7 +407,7 @@ public class Agent {
         synchronized (RUNTIME) {
             // Making sure that the runtime has already been started
         }
-        Long appId = RUNTIME.registerApplication(ceiClass, null);
+        Long appId = RUNTIME.registerApplication(ceiClass, monitor);
         monitor.setAppId(appId);
         LOGGER.debug("New request to run as a " + lang + " task " + ced.getCeSignature());
         LOGGER.debug("appId: " + appId);
@@ -456,7 +456,7 @@ public class Agent {
             RUNTIME.registerCoreElement(ced);
             int numNodes = 1;
             RUNTIME.executeTask(appId, // APP ID
-                monitor, // Corresponding task monitor
+                monitor.getTaskMonitor(), // Corresponding task monitor
                 lang, true, null, null, ced.getCeSignature(), // Method to call
                 onFailure, // On failure behavior
                 0, // Time out of the task

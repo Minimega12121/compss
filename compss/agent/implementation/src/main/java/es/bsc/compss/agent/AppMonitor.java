@@ -22,6 +22,7 @@ import es.bsc.compss.agent.types.PrivateRemoteDataLocation;
 import es.bsc.compss.agent.types.RemoteDataLocation;
 import es.bsc.compss.agent.types.Resource;
 import es.bsc.compss.agent.types.SharedRemoteDataLocation;
+import es.bsc.compss.api.ApplicationRunner;
 import es.bsc.compss.api.ParameterCollectionMonitor;
 import es.bsc.compss.api.ParameterMonitor;
 import es.bsc.compss.api.TaskMonitor;
@@ -42,12 +43,13 @@ import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public abstract class AppMonitor implements TaskMonitor {
+public abstract class AppMonitor implements ApplicationRunner {
 
     private long appId;
     private TaskResult[] taskResults;
@@ -107,11 +109,6 @@ public abstract class AppMonitor implements TaskMonitor {
         }
     }
 
-    @Override
-    public ParameterMonitor getParameterMonitor(int paramId) {
-        return this.taskResults[paramId].getMonitor();
-    }
-
     public void setAppId(long appId) {
         this.appId = appId;
     }
@@ -120,96 +117,27 @@ public abstract class AppMonitor implements TaskMonitor {
         return this.appId;
     }
 
-    @Override
-    public final void onCreation() {
-        specificOnCreation();
+    public COMPSsException getException() {
+        return exception;
     }
 
-    protected abstract void specificOnCreation();
-
-    @Override
-    public final void onAccessesProcessed() {
-        specificOnAccessesProcessed();
+    public TaskResult[] getResults() {
+        return AppMonitor.this.taskResults;
     }
 
-    protected abstract void specificOnAccessesProcessed();
-
-    @Override
-    public final void onSchedule() {
-        specificOnSchedule();
+    public void setResults(TaskResult[] params) {
+        AppMonitor.this.taskResults = params;
     }
 
-    protected abstract void specificOnSchedule();
-
     @Override
-    public final void onSubmission() {
-        specificOnSubmission();
+    public void stalledApplication() {
+        // No need to do anything
     }
 
-    protected abstract void specificOnSubmission();
-
     @Override
-    public final void onDataReception() {
-        specificOnDataReception();
+    public void readyToContinue(Semaphore sem) {
+        // No need to do anything
     }
-
-    protected abstract void specificOnDataReception();
-
-    @Override
-    public final void onExecutionStart() {
-        specificOnExecutionStart();
-    }
-
-    protected abstract void specificOnExecutionStart();
-
-    @Override
-    public final void onExecutionStartAt(long t) {
-        specificOnExecutionStartAt(t);
-    }
-
-    protected abstract void specificOnExecutionStartAt(long t);
-
-    @Override
-    public final void onExecutionEnd() {
-        specificOnExecutionEnd();
-    }
-
-    protected abstract void specificOnExecutionEnd();
-
-    @Override
-    public final void onExecutionEndAt(long t) {
-        specificOnExecutionEndAt(t);
-    }
-
-    protected abstract void specificOnExecutionEndAt(long t);
-
-    @Override
-    public final void onAbortedExecution() {
-        specificOnAbortedExecution();
-    }
-
-    protected abstract void specificOnAbortedExecution();
-
-    @Override
-    public final void onErrorExecution() {
-        specificOnErrorExecution();
-    }
-
-    protected abstract void specificOnErrorExecution();
-
-    @Override
-    public final void onFailedExecution() {
-        specificOnFailedExecution();
-    }
-
-    protected abstract void specificOnFailedExecution();
-
-    @Override
-    public final void onSuccesfulExecution() {
-        specificOnSuccessfulExecution();
-    }
-
-    protected abstract void specificOnSuccessfulExecution();
 
     @Override
     public final void onCancellation() {
@@ -220,19 +148,11 @@ public abstract class AppMonitor implements TaskMonitor {
 
     @Override
     public final void onException(COMPSsException e) {
-        this.exception = e;
+        AppMonitor.this.exception = e;
         specificOnException(e);
     }
 
     protected abstract void specificOnException(COMPSsException e);
-
-    public TaskResult[] getResults() {
-        return this.taskResults;
-    }
-
-    public void setResults(TaskResult[] params) {
-        this.taskResults = params;
-    }
 
     @Override
     public final void onCompletion() {
@@ -262,10 +182,142 @@ public abstract class AppMonitor implements TaskMonitor {
 
     protected abstract void specificOnFailure();
 
-    public COMPSsException getException() {
-        return exception;
-    }
+    @Override
+    public abstract UniqueTaskMonitor getTaskMonitor();
 
+
+    protected abstract class UniqueTaskMonitor implements TaskMonitor {
+
+        @Override
+        public ParameterMonitor getParameterMonitor(int paramId) {
+            return AppMonitor.this.taskResults[paramId].getMonitor();
+        }
+
+        @Override
+        public final void onCreation() {
+            specificOnCreation();
+        }
+
+        protected abstract void specificOnCreation();
+
+        @Override
+        public final void onAccessesProcessed() {
+            specificOnAccessesProcessed();
+        }
+
+        protected abstract void specificOnAccessesProcessed();
+
+        @Override
+        public final void onSchedule() {
+            specificOnSchedule();
+        }
+
+        protected abstract void specificOnSchedule();
+
+        @Override
+        public final void onSubmission() {
+            specificOnSubmission();
+        }
+
+        protected abstract void specificOnSubmission();
+
+        @Override
+        public final void onDataReception() {
+            specificOnDataReception();
+        }
+
+        protected abstract void specificOnDataReception();
+
+        @Override
+        public final void onExecutionStart() {
+            specificOnExecutionStart();
+        }
+
+        protected abstract void specificOnExecutionStart();
+
+        @Override
+        public final void onExecutionStartAt(long t) {
+            specificOnExecutionStartAt(t);
+        }
+
+        protected abstract void specificOnExecutionStartAt(long t);
+
+        @Override
+        public final void onExecutionEnd() {
+            specificOnExecutionEnd();
+        }
+
+        protected abstract void specificOnExecutionEnd();
+
+        @Override
+        public final void onExecutionEndAt(long t) {
+            specificOnExecutionEndAt(t);
+        }
+
+        protected abstract void specificOnExecutionEndAt(long t);
+
+        @Override
+        public final void onAbortedExecution() {
+            specificOnAbortedExecution();
+        }
+
+        protected abstract void specificOnAbortedExecution();
+
+        @Override
+        public final void onErrorExecution() {
+            specificOnErrorExecution();
+        }
+
+        protected abstract void specificOnErrorExecution();
+
+        @Override
+        public final void onFailedExecution() {
+            specificOnFailedExecution();
+        }
+
+        protected abstract void specificOnFailedExecution();
+
+        @Override
+        public final void onSuccesfulExecution() {
+            specificOnSuccessfulExecution();
+        }
+
+        protected abstract void specificOnSuccessfulExecution();
+
+        @Override
+        public final void onCancellation() {
+            specificOnCancellation();
+            AppMonitor.this.onCancellation();
+        }
+
+        protected abstract void specificOnCancellation();
+
+        @Override
+        public final void onException(COMPSsException e) {
+            AppMonitor.this.exception = e;
+            specificOnException(e);
+            AppMonitor.this.onException(e);
+        }
+
+        protected abstract void specificOnException(COMPSsException e);
+
+        @Override
+        public final void onCompletion() {
+            specificOnCompletion();
+            AppMonitor.this.onCompletion();
+        }
+
+        protected abstract void specificOnCompletion();
+
+        @Override
+        public void onFailure() {
+            specificOnFailure();
+            AppMonitor.this.onFailure();
+        }
+
+        protected abstract void specificOnFailure();
+
+    }
 
     /**
      * Class representing a result of a task execution.
@@ -289,7 +341,7 @@ public abstract class AppMonitor implements TaskMonitor {
 
         /**
          * Returns all the locstions where to find the task result.
-         * 
+         *
          * @return returns a list of all the locations where to find the task result.
          */
         public Collection<RemoteDataLocation> getLocations() {
@@ -408,11 +460,8 @@ public abstract class AppMonitor implements TaskMonitor {
                         ErrorManager.error("Could not link " + externalDataId + " and " + dataName, ce);
                     }
                 }
-
             }
-
         }
-
     }
 
     /**
@@ -451,5 +500,4 @@ public abstract class AppMonitor implements TaskMonitor {
             }
         }
     }
-
 }
