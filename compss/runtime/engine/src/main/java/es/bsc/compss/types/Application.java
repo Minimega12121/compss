@@ -301,7 +301,7 @@ public class Application {
     }
 
     /**
-     * Removes and returns the peek of the TaskGroups stack.
+     * Removes the peek of the TaskGroups stack.
      */
     public final void closeCurrentTaskGroup() {
         popGroup();

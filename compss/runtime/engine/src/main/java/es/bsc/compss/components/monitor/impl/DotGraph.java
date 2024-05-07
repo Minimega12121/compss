@@ -262,7 +262,6 @@ public class DotGraph implements GraphHandler {
          */
 
         int oldSync = this.synchronizationId;
-        ;
         String newSyncStr = addSynchro(true);
 
         // Add edges from writers to barrier
