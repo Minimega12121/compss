@@ -90,6 +90,7 @@ if int(os.getenv("COMPSS_WITH_DLB", 0)) >= 1:
 
 
 HEADER = "*[PYTHON EXECUTOR] "
+EARING = False
 
 
 def shutdown_handler(
@@ -105,9 +106,14 @@ def shutdown_handler(
     :raises PyCOMPSsException: Received signal.
     """
     sys.stderr.write("[shutdown_handler] Received SIGTERM\n")
-    sys.stderr.write("SIGNAL: %d\n" % signal)
-    sys.stderr.write("FRAME: %s\n" % str(frame))
+    sys.stderr.write(f"SIGNAL: {signal}\n")
+    sys.stderr.write(f"FRAME: %{str(frame)}\n")
     traceback.print_stack(frame)
+    if EARING:
+        sys.stderr.write("[shutdown_handler] Stopping EAR\n")
+        import ear
+
+        ear.finalize()
     sys.stderr.flush()
     sys.stdout.flush()
     raise PyCOMPSsException("Received SIGTERM")
@@ -289,6 +295,8 @@ def executor(
     :param conf: Executor configuration.
     :return: None.
     """
+    global EARING
+
     try:
         # First thing to do is to emit the process identifier event
         emit_manual_event_explicit(
@@ -390,12 +398,9 @@ def executor(
                 raise general_exception from general_exception
 
         # Load ear if necessary
-        earing = False
         if conf.ear:
-            earing = True
-
-        if earing:
-            # Initialize streaming
+            EARING = True
+            # Initialize ear
             if __debug__:
                 logger.debug(
                     "%s[%s] Loading ear",
@@ -477,9 +482,9 @@ def executor(
 
         sys.stdout.flush()
         sys.stderr.flush()
-        if earing:
-            logger.debug("%s[%s] Stopping EAR", HEADER, str(process_name))
-            # Only needed in multiprocessing subprocesses
+        if EARING:
+            if __debug__:
+                logger.debug("%s[%s] Stopping EAR", HEADER, str(process_name))
             ear.finalize()
         if __debug__:
             logger.debug("%s[%s] Exiting process ", HEADER, str(process_name))

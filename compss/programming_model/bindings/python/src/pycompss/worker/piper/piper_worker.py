@@ -26,6 +26,7 @@ This file contains the multiprocessing piper worker code.
 import os
 import signal
 import sys
+import traceback
 
 # Used only for typing
 from multiprocessing import Process  # noqa: F401
@@ -58,6 +59,8 @@ from pycompss.worker.piper.commons.utils_logger import load_loggers
 PROCESSES = {}  # type: typing.Dict[str, Process]
 CACHE = None
 CACHE_PROCESS = None
+SUBHEADER = "[piper_worker.py]"
+EARING = False
 
 
 def shutdown_handler(
@@ -77,6 +80,16 @@ def shutdown_handler(
             proc.terminate()
     if CACHE and CACHE_PROCESS.is_alive():  # noqa
         CACHE_PROCESS.terminate()  # noqa
+    sys.stderr.write("[shutdown_handler] Received SIGTERM\n")
+    sys.stderr.write(f"SIGNAL: {signal}\n")
+    sys.stderr.write(f"FRAME: %{str(frame)}\n")
+    traceback.print_stack(frame)
+    if EARING:
+        import ear
+
+        ear.finalize()
+    sys.stderr.flush()
+    sys.stdout.flush()
 
 
 ######################
@@ -97,6 +110,7 @@ def compss_persistent_worker(
     """
     global CACHE
     global CACHE_PROCESS
+    global EARING
 
     # Catch SIGTERM sent by bindings_piper
     signal.signal(signal.SIGTERM, shutdown_handler)
@@ -111,12 +125,18 @@ def compss_persistent_worker(
     )
 
     if __debug__:
-        logger.debug("%s[piper_worker.py] wake up", HEADER)
+        logger.debug("%s%s wake up", HEADER, SUBHEADER)
         config.print_on_logger(logger)
+
+    if config.ear:
+        EARING = True
+        if __debug__:
+            logger.debug("%s%s Loading EAR", HEADER, SUBHEADER)
+        import ear
 
     if persistent_storage:
         # Initialize storage
-        logger.debug("%sStarting persistent storage", HEADER)
+        logger.debug("%s%s Starting persistent storage", HEADER, SUBHEADER)
         with EventWorker(TRACING_WORKER.init_storage_at_worker_event):
             from storage.api import (  # pylint: disable=E0401, C0415
                 # disable=import-error, import-outside-toplevel
@@ -177,7 +197,9 @@ def compss_persistent_worker(
     for i in range(0, config.tasks_x_node):
         exec_id = config.exec_ids[i]
         if __debug__:
-            logger.debug("%sLaunching process %s", HEADER, str(exec_id))
+            logger.debug(
+                "%s%s Launching process %s", HEADER, SUBHEADER, str(exec_id)
+            )
         process_name = "".join(("Process-", str(exec_id)))
         # set name for ear
         os.environ["SLURM_JOB_NAME"] = "python_executor_" + str(i)
@@ -240,8 +262,9 @@ def compss_persistent_worker(
                     cancel_pid_int = int(cancel_pid)
                 if __debug__:
                     logger.debug(
-                        "%sSignaling process with PID %s to cancel a task",
+                        "%s%s Signaling process with PID %s to cancel a task",
                         HEADER,
+                        SUBHEADER,
                         str(cancel_pid),
                     )
                 # Cancellation produced by COMPSs
@@ -254,7 +277,10 @@ def compss_persistent_worker(
                 if proc:
                     if proc.is_alive():
                         logger.warning(
-                            "%sForcing terminate on : %s", HEADER, proc.name
+                            "%s%s Forcing terminate on : %s",
+                            HEADER,
+                            SUBHEADER,
+                            proc.name,
                         )
                         proc.terminate()
                     proc.join()
@@ -276,14 +302,20 @@ def compss_persistent_worker(
     for i in range(0, config.tasks_x_node):
         if not queues[i].empty():
             logger.error(
-                "%sException in threads queue: %s",
+                "%s%s Exception in threads queue: %s",
                 HEADER,
+                SUBHEADER,
                 str(queues[i].get()),
             )
 
     # Check if there is any exception from the messages
     for msg in error_msgs:
-        logger.error("%sException in piper worker message: %s", HEADER, msg)
+        logger.error(
+            "%s%s Exception in piper worker message: %s",
+            HEADER,
+            SUBHEADER,
+            msg,
+        )
 
     for queue in queues:
         queue.close()
@@ -304,7 +336,7 @@ def compss_persistent_worker(
     if persistent_storage:
         # Finish storage
         if __debug__:
-            logger.debug("%sStopping persistent storage", HEADER)
+            logger.debug("%s%s Stopping persistent storage", HEADER, SUBHEADER)
         with EventWorker(TRACING_WORKER.finish_storage_at_worker_event):
             from storage.api import (  # pylint: disable=E0401, C0415
                 # disable=import-error, import-outside-toplevel
@@ -313,8 +345,13 @@ def compss_persistent_worker(
 
             finishStorageAtWorker()
 
+    if EARING:
+        if __debug__:
+            logger.debug("%s%s Stopping EAR", HEADER, SUBHEADER)
+        ear.finalize()
+
     if __debug__:
-        logger.debug("%sFinished", HEADER)
+        logger.debug("%s%s Finished", HEADER, SUBHEADER)
 
     control_pipe.write(TAGS.quit)
     control_pipe.close()
