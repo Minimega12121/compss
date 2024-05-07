@@ -59,7 +59,18 @@ public class Application {
     private static CheckpointManager CP;
 
     private static final int DEFAULT_THROTTLE_WAIT_TASK_COUNT = Integer.MAX_VALUE;
-    private static final int DEFAULT_THROTTLE_INTERVAL = 10;
+    private static final Semaphore THROTTLE;
+
+    static {
+        String maxTasks = System.getenv(COMPSsConstants.COMPSS_THROTTLE_MAX_TASKS);
+        int throttleThreshold;
+        if (maxTasks != null && !maxTasks.isEmpty()) {
+            throttleThreshold = Integer.parseInt(maxTasks);
+        } else {
+            throttleThreshold = DEFAULT_THROTTLE_WAIT_TASK_COUNT;
+        }
+        THROTTLE = new Semaphore(throttleThreshold);
+    }
 
     /*
      * Application definition
@@ -81,10 +92,6 @@ public class Application {
      */
     // Task count
     private int totalTaskCount;
-    private int throttleTaskCount;
-    private int throttleWaitTaskCount;
-    private int throttleReleaseTaskCount;
-    private Semaphore throttle = null;
 
     /*
      * Application's task groups
@@ -232,35 +239,14 @@ public class Application {
         this.codeToData = new TreeMap<>();
         this.collectionToData = new TreeMap<>();
         this.writtenFileData = new HashSet<>();
-        setThrottleValues();
     }
 
-    private void setThrottleValues() {
-        this.throttleTaskCount = 0;
-        String maxTasks = System.getenv(COMPSsConstants.COMPSS_THROTTLE_MAX_TASKS);
-        if (maxTasks != null && !maxTasks.isEmpty()) {
-            this.throttleWaitTaskCount = Integer.parseInt(maxTasks);
-        } else {
-            this.throttleWaitTaskCount = DEFAULT_THROTTLE_WAIT_TASK_COUNT;
-        }
-        String interval = System.getenv(COMPSsConstants.COMPSS_THROTTLE_INTERVAL);
-        if (interval != null && !interval.isEmpty()) {
-            this.throttleReleaseTaskCount = this.throttleWaitTaskCount - Integer.parseInt(interval);
-        } else {
-            this.throttleReleaseTaskCount = this.throttleWaitTaskCount - DEFAULT_THROTTLE_INTERVAL;
-        }
-
-    }
 
     /**
      * Check if throttle is exceeded and wait until throttle is correct.
      */
     public void checkThrottle() {
-        if (this.throttleTaskCount > this.throttleWaitTaskCount) {
-            ErrorManager.warn("Application " + this.id + "blocked by throttle...");
-            this.throttle = new Semaphore(0);
-            this.throttle.acquireUninterruptibly();
-        }
+        THROTTLE.acquireUninterruptibly();
     }
 
     public Long getId() {
@@ -356,9 +342,6 @@ public class Application {
      * @param task task to be added to the application's task groups
      */
     public void newTask(Task task) {
-        synchronized (this) {
-            this.throttleTaskCount++;
-        }
         this.totalTaskCount++;
         // Add task to the groups
         for (TaskGroup group : this.getCurrentGroups()) {
@@ -385,13 +368,7 @@ public class Application {
      * @param task finished task to be removed
      */
     public void endTask(Task task) {
-        synchronized (this) {
-            this.throttleTaskCount--;
-            if (this.throttleTaskCount < this.throttleReleaseTaskCount && throttle != null) {
-                throttle.release();
-                throttle = null;
-            }
-        }
+       THROTTLE.release();
         for (TaskGroup group : task.getTaskGroupList()) {
             group.removeTask(task);
             LOGGER.debug("Group " + group.getName() + " released task " + task.getId());
