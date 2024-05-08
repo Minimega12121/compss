@@ -323,8 +323,8 @@ public class ReduceTask extends Task {
     }
 
     @Override
-    public boolean register(int constrainingParam) {
-        boolean hasEdge = super.register(constrainingParam);
+    protected boolean registerTask() {
+        boolean hasEdge = super.registerTask();
         // Register Intermediate parameters
         for (Parameter p : this.getIntermediateParameters()) {
             p.register(this, false);

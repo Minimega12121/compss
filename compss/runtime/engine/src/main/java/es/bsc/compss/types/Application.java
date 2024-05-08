@@ -28,7 +28,6 @@ import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.request.ap.BarrierGroupRequest;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
-import es.bsc.compss.util.ErrorManager;
 
 import java.security.SecureRandom;
 import java.util.HashSet;
@@ -45,7 +44,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public class Application {
+public class Application implements ApplicationTaskMonitor {
 
     private static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
 
@@ -241,14 +240,6 @@ public class Application {
         this.writtenFileData = new HashSet<>();
     }
 
-
-    /**
-     * Check if throttle is exceeded and wait until throttle is correct.
-     */
-    public void checkThrottle() {
-        THROTTLE.acquireUninterruptibly();
-    }
-
     public Long getId() {
         return this.id;
     }
@@ -336,25 +327,26 @@ public class Application {
      * ----------------------------------- EXECUTION MANAGEMENT -----------------------------------
      */
 
-    /**
-     * Registers the existence of a new task for the application and registers it into all the currently open groups.
-     *
-     * @param task task to be added to the application's task groups
-     */
-    public void newTask(Task task) {
+    @Override
+    public void onTaskCreation(Task t) {
+        // Check if throttle is exceeded and wait until throttle is correct.
+        THROTTLE.acquireUninterruptibly();
         this.totalTaskCount++;
+        getTaskMonitor().onCreation();
+    }
+
+    @Override
+    public void onTaskAnalysisStart(Task task) {
         // Add task to the groups
         for (TaskGroup group : this.getCurrentGroups()) {
             task.addTaskGroup(group);
             group.addTask(task);
         }
         this.GH.startTaskAnalysis(task);
+    }
 
-        // Check scheduling enforcing data
-        int constrainingParam = -1;
-
-        // Process parameters
-        boolean taskHasEdge = task.register(constrainingParam);
+    @Override
+    public void onTaskAnalysisEnd(Task task, boolean taskHasEdge) {
         this.GH.endTaskAnalysis(task, taskHasEdge);
 
         // Prepare checkpointer for task
@@ -368,7 +360,7 @@ public class Application {
      * @param task finished task to be removed
      */
     public void endTask(Task task) {
-       THROTTLE.release();
+        THROTTLE.release();
         for (TaskGroup group : task.getTaskGroupList()) {
             group.removeTask(task);
             LOGGER.debug("Group " + group.getName() + " released task " + task.getId());
@@ -619,4 +611,5 @@ public class Application {
     public TaskMonitor getTaskMonitor() {
         return this.runner.getTaskMonitor();
     }
+
 }

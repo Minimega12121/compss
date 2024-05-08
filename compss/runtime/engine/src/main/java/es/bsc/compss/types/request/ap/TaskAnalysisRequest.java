@@ -99,8 +99,7 @@ public class TaskAnalysisRequest extends APRequest {
         LOGGER.info("New " + description.getType().toString().toLowerCase() + " task: Name:" + description.getName()
             + "), ID = " + this.task.getId() + " APP = " + this.task.getApplication().getId());
 
-        Application app = this.task.getApplication();
-        app.newTask(this.task);
+        task.register();
     }
 
     @Override

@@ -211,8 +211,8 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
             currentTask = new Task(app, lang, signature, isPrioritary, numNodes, isReduce, isReplicated, isDistributed,
                 hasTarget, numReturns, parameters, monitor, onFailure, timeOut);
         }
-        TaskMonitor registeredMonitor = currentTask.getTaskMonitor();
-        registeredMonitor.onCreation();
+
+        app.onTaskCreation(currentTask);
 
         LOGGER.debug("Requesting analysis of Task " + currentTask.getId());
         if (!this.requestQueue.offer(new TaskAnalysisRequest(currentTask))) {
@@ -242,8 +242,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
         Task currentTask = new Task(app, declareMethodFullyQualifiedName, priority, hasTarget, numReturns, parameters,
             monitor, onFailure, timeOut);
 
-        TaskMonitor registeredMonitor = currentTask.getTaskMonitor();
-        registeredMonitor.onCreation();
+        app.onTaskCreation(currentTask);
 
         LOGGER.debug("Requesting analysis of new HTTP Task " + currentTask.getId());
 

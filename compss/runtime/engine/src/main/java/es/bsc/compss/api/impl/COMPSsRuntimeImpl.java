@@ -1345,7 +1345,6 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         }
 
         Application app = Application.registerApplication(appId);
-        app.checkThrottle();
         TaskMonitor monitor = app.getTaskMonitor();
 
         // Process the parameters
