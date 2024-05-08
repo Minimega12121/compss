@@ -2151,17 +2151,35 @@ launch() {
           # Launch worker with ear
           if [ "${ear_flags}" = true ]; then
             mkdir -p ${specific_log_dir}/energy
-            PRE_CMD="$EAR_INSTALL_PATH/bin/erun \"--ear=on --ear-user-db=${specific_log_dir}/energy/ear \""
+            if [ -z "${EAR_LITE}"  ]; then
+              # EAR_LITE not defined: we rely in srun (ear plugin in slurm)
+              PRE_CMD="--ear=on --ear-user-db=${specific_log_dir}/energy/ear "
+            else
+              # EAR_LITE is defined: so use erun
+              PRE_CMD="$EAR_INSTALL_PATH/bin/erun \"--ear=on --ear-user-db=${specific_log_dir}/energy/ear \""
+            fi
           else
-            PRE_CMD="$EAR_INSTALL_PATH/bin/erun ${ear_flags}"
+            if [ -z "${EAR_LITE}"  ]; then
+              PRE_CMD="${ear_flags}"
+            else
+              PRE_CMD="$EAR_INSTALL_PATH/bin/erun ${ear_flags}"
+            fi
           fi
           POST_CMD=
           WCMD="/bin/bash $WCMD"
 
           if [ "${log_level}" != "off" ]; then
-            echo "[LAUNCH_COMPSS] Launching worker in master (with ear) with id $hostid and command: ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} --program=\"$WCMD\" ${POST_CMD}"
+            if [ -z "${EAR_LITE}"  ]; then
+              echo "[LAUNCH_COMPSS] Launching worker in master (with ear) with id $hostid and command: ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} $WCMD ${POST_CMD}"
+            else
+              echo "[LAUNCH_COMPSS] Launching worker in master (with ear) with id $hostid and command: ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} --program=\"$WCMD\" ${POST_CMD}"
+            fi
           fi
-          ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} --program="$WCMD" ${POST_CMD} &
+          if [ -z "${EAR_LITE}"  ]; then
+            ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} $WCMD ${POST_CMD} &
+          else
+            ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} --program="$WCMD" ${POST_CMD} &
+          fi
         else
           # Launch normal worker
           if [ "${log_level}" != "off" ]; then
