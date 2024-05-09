@@ -107,7 +107,7 @@ public class ObjectAccessParams<T extends Object, D extends ObjectData> extends 
 
     @Override
     public String toString() {
-        return "[" + this.getApp() + ", " + this.mode + " ," + this.getCode() + "]";
+        return "[" + this.mode + " ," + this.getCode() + "]";
     }
 
 }

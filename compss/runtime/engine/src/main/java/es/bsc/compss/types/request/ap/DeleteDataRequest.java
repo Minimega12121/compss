@@ -30,6 +30,7 @@ import java.util.concurrent.Semaphore;
 
 public class DeleteDataRequest extends APRequest {
 
+    private final Application app;
     private final DataParams data;
     private final Semaphore sem;
 
@@ -39,12 +40,14 @@ public class DeleteDataRequest extends APRequest {
 
     /**
      * Creates a new request to delete a file.
-     * 
+     *
+     * @param app application requesting the data deletion
      * @param data data to delete
      * @param applicationDelete Whether the deletion was requested by the user code of the application {@literal true},
      *            or automatically removed by the runtime {@literal false}.
      */
-    public DeleteDataRequest(DataParams data, boolean applicationDelete) {
+    public DeleteDataRequest(Application app, DataParams data, boolean applicationDelete) {
+        this.app = app;
         this.data = data;
         this.sem = new Semaphore(0);
         this.applicationDelete = applicationDelete;
@@ -63,7 +66,6 @@ public class DeleteDataRequest extends APRequest {
 
             // Deleting checkpointed data that is obsolete, INOUT that has a newest version
             if (applicationDelete) {
-                Application app = data.getApp();
                 app.getCP().deletedData(dataInfo);
             }
 
@@ -76,7 +78,6 @@ public class DeleteDataRequest extends APRequest {
                         break;
                     case FILE_T:
                         // Remove file data form the list of written files
-                        Application app = data.getApp();
                         FileInfo fInfo = (FileInfo) data.getRegisteredData();
                         app.removeWrittenFile(fInfo);
                         break;

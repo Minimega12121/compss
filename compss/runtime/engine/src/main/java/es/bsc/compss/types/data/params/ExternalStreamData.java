@@ -16,13 +16,16 @@
  */
 package es.bsc.compss.types.data.params;
 
-import es.bsc.compss.types.Application;
-
-
 public class ExternalStreamData extends StreamData {
 
-    public ExternalStreamData(Application app, int code) {
-        super(app, code);
+    /**
+     * Constructs a new DataParams for an external stream.
+     *
+     * @param owner Owner of the stream
+     * @param code code identifying the stream
+     */
+    public ExternalStreamData(DataOwner owner, int code) {
+        super(owner, code);
     }
 
     @Override

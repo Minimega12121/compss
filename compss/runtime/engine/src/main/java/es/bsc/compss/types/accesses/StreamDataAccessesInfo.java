@@ -110,7 +110,7 @@ public class StreamDataAccessesInfo extends DataAccessesInfo {
     @Override
     public void mainAccess(RegisterDataAccessRequest rdar, EngineDataInstanceId accesedData) {
         // Add graph description
-        Application app = rdar.getAccessParams().getApp();
+        Application app = rdar.getAccess().getApp();
         for (AbstractTask lastWriter : this.streamWriters) {
             app.getGH().mainAccessToData(lastWriter, EdgeType.STREAM_DEPENDENCY, accesedData);
         }

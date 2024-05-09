@@ -113,15 +113,6 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
     }
 
     /**
-     * Returns the Id of the application accessing the value.
-     * 
-     * @return the Id of the application accessing the value
-     */
-    public final Application getApp() {
-        return data.getApp();
-    }
-
-    /**
      * Returns the data being accessed.
      * 
      * @return data being accessed

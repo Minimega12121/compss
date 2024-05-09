@@ -17,7 +17,6 @@
 package es.bsc.compss.types.data.params;
 
 import es.bsc.compss.log.Loggers;
-import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import org.apache.logging.log4j.LogManager;
@@ -30,20 +29,20 @@ public abstract class DataParams {
     private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
 
-    private final Application app;
+    private final DataOwner owner;
 
 
-    public DataParams(Application app) {
-        this.app = app;
+    public DataParams(DataOwner owner) {
+        this.owner = owner;
     }
 
     /**
-     * Returns the application using the data.
+     * Returns the owner of the data.
      * 
-     * @return application using the data
+     * @return owner of the data
      */
-    public Application getApp() {
-        return app;
+    public DataOwner getOwner() {
+        return owner;
     }
 
     /**

@@ -51,11 +51,11 @@ public class FileMainAccess<D extends FileData, P extends FileAccessParams<D>> e
     public static FileMainAccess<FileData, FileAccessParams<FileData>> constructFMA(Application app, Direction dir,
         DataLocation loc) {
         FileAccessParams<FileData> f = FileAccessParams.constructFAP(app, dir, loc);
-        return new FileMainAccess(f);
+        return new FileMainAccess(app, f);
     }
 
-    protected FileMainAccess(P params) {
-        super(params);
+    protected FileMainAccess(Application app, P params) {
+        super(app, params);
     }
 
     @Override

@@ -16,15 +16,20 @@
  */
 package es.bsc.compss.types.data.params;
 
-import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.StreamInfo;
 
 
 public class StreamData extends ObjectData {
 
-    public StreamData(Application app, int code) {
-        super(app, code);
+    /**
+     * Constructs a new DataParams for a stream.
+     *
+     * @param owner Owner of the stream
+     * @param code code identifying the object
+     */
+    public StreamData(DataOwner owner, int code) {
+        super(owner, code);
 
     }
 
@@ -36,8 +41,8 @@ public class StreamData extends ObjectData {
     @Override
     protected DataInfo registerData() {
         DataInfo sInfo = new StreamInfo(this);
-        Application app = this.getApp();
-        app.registerObjectData(code, sInfo);
+        DataOwner owner = this.getOwner();
+        owner.registerObjectData(code, sInfo);
         return sInfo;
     }
 

@@ -197,14 +197,14 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
 
     @Override
     public void mainAccess(RegisterDataAccessRequest rdar, EngineDataInstanceId accessedData) {
-        Application app = rdar.getAccessParams().getApp();
+        Application app = rdar.getAccess().getApp();
         if (lastWriter != null) {
             app.getGH().mainAccessToData(lastWriter, EdgeType.DATA_DEPENDENCY, accessedData);
             // Release task if possible. Otherwise add to waiting
             if (lastWriter.isPending()) {
                 lastWriter.addListener(rdar);
                 rdar.addPendingOperation();
-                if (rdar.getTaskAccessMode() == AccessParams.AccessMode.RW) {
+                if (rdar.getAccess().getParameters().getMode() == AccessParams.AccessMode.RW) {
                     updateLastWriter(null, app.getGH());
                 }
             }

@@ -17,7 +17,6 @@
 package es.bsc.compss.types.data.params;
 
 import es.bsc.compss.comm.Comm;
-import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.data.location.DataLocation;
@@ -36,11 +35,11 @@ public class FileData extends DataParams {
     /**
      * Constructs a new DataParams for a file.
      *
-     * @param app Application accessing the file
+     * @param owner Owner of the collection
      * @param loc location of the file
      */
-    public FileData(Application app, DataLocation loc) {
-        super(app);
+    public FileData(DataOwner owner, DataLocation loc) {
+        super(owner);
         this.loc = loc;
         this.locKey = loc.getLocationKey();
     }
@@ -52,24 +51,24 @@ public class FileData extends DataParams {
 
     @Override
     protected DataInfo registerData() {
-        Application app = this.getApp();
+        DataOwner owner = this.getOwner();
         DataInfo dInfo = new FileInfo(this);
-        app.registerFileData(this.locKey, dInfo);
+        owner.registerFileData(this.locKey, dInfo);
         return dInfo;
     }
 
     @Override
     public DataInfo getRegisteredData() {
-        Application app = this.getApp();
+        DataOwner owner = this.getOwner();
         String locationKey = loc.getLocationKey();
-        return app.getFileData(locationKey);
+        return owner.getFileData(locationKey);
     }
 
     @Override
     protected DataInfo unregisterData() throws ValueUnawareRuntimeException {
-        Application app = this.getApp();
+        DataOwner owner = this.getOwner();
         String locationKey = loc.getLocationKey();
-        return app.removeFileData(locationKey);
+        return owner.removeFileData(locationKey);
     }
 
     public DataLocation getLocation() {

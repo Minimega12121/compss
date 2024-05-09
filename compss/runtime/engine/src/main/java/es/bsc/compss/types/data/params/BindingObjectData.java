@@ -16,19 +16,16 @@
  */
 package es.bsc.compss.types.data.params;
 
-import es.bsc.compss.types.Application;
-
-
 public class BindingObjectData extends ObjectData {
 
     /**
      * Constructs a new DataParams for a binding object.
      *
-     * @param app Application accessing the object
+     * @param owner Owner of the binding object
      * @param code code identifying the object
      */
-    public BindingObjectData(Application app, int code) {
-        super(app, code);
+    public BindingObjectData(DataOwner owner, int code) {
+        super(owner, code);
     }
 
     @Override

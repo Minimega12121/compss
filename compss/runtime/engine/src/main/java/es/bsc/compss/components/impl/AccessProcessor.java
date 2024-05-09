@@ -273,11 +273,11 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     public <T> T mainAccess(MainAccess<T, ?, ?> ma) throws ValueUnawareRuntimeException {
         AccessParams<?> ap = ma.getParameters();
         if (DEBUG) {
-            LOGGER.debug("Requesting main access to " + ap.getDataDescription());
+            LOGGER.debug("Requesting main access to " + ap.getDataDescription() + " from App " + ma.getApp());
         }
 
         // Tell the DIP that the application wants to access an object
-        EngineDataAccessId daId = registerDataAccess(ap);
+        EngineDataAccessId daId = registerDataAccess(ma);
         if (daId == null) {
             ErrorManager.warn("No version available. Returning null");
             return ma.getUnavailableValueResponse();
@@ -442,11 +442,11 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     /**
      * Registers a new data access and waits for it to be available.
      *
-     * @param access Access parameters.
+     * @param access Access done by the main.
      * @return The registered access Id.
      * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
      */
-    private EngineDataAccessId registerDataAccess(AccessParams access) throws ValueUnawareRuntimeException {
+    private EngineDataAccessId registerDataAccess(MainAccess access) throws ValueUnawareRuntimeException {
         RegisterDataAccessRequest request = new RegisterDataAccessRequest(access);
         if (!this.requestQueue.offer(request)) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "register data access");
@@ -530,12 +530,13 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     /**
      * Marks a location for deletion.
      *
+     * @param app application requesting the data removal
      * @param data data to be marked for deletion
      * @param enableReuse {@literal true}, if the application must be able to use the same data name for a new data
      * @param applicationDelete {@literal true}, if the application requested the data deletion; {@literal false}
      *            otherwise
      */
-    public void deleteData(DataParams data, boolean enableReuse, boolean applicationDelete) {
+    public void deleteData(Application app, DataParams data, boolean enableReuse, boolean applicationDelete) {
         LOGGER.debug("Marking data " + data.getDescription() + " for deletion");
         boolean delete = true;
         // No need to wait if data is noReuse
@@ -562,7 +563,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
 
         // Request to delete data
         LOGGER.debug("Sending delete request for " + data.getDescription());
-        DeleteDataRequest req = new DeleteDataRequest(data, applicationDelete);
+        DeleteDataRequest req = new DeleteDataRequest(app, data, applicationDelete);
         if (!this.requestQueue.offer(req)) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "mark for deletion");
         }

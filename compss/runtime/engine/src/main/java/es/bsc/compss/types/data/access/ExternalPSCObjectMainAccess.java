@@ -43,11 +43,11 @@ public class ExternalPSCObjectMainAccess
     public static final ExternalPSCObjectMainAccess constructEPOMA(Application app, Direction dir, String pscoId,
         int hashCode) {
         ExternalPSCObjectAccessParams epoap = ExternalPSCObjectAccessParams.constructEPOAP(app, dir, pscoId, hashCode);
-        return new ExternalPSCObjectMainAccess(epoap);
+        return new ExternalPSCObjectMainAccess(app, epoap);
     }
 
-    protected ExternalPSCObjectMainAccess(ExternalPSCObjectAccessParams params) {
-        super(params);
+    protected ExternalPSCObjectMainAccess(Application app, ExternalPSCObjectAccessParams params) {
+        super(app, params);
     }
 
     /**

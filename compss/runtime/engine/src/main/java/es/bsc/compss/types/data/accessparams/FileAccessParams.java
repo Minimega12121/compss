@@ -96,7 +96,7 @@ public class FileAccessParams<D extends FileData> extends AccessParams<D> {
 
     @Override
     public String toString() {
-        return "[" + this.getApp() + ", " + this.mode + " ," + this.getLocation() + "]";
+        return "[" + this.mode + " ," + this.getLocation() + "]";
     }
 
 }

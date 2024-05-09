@@ -18,13 +18,16 @@ package es.bsc.compss.types.data.access;
 
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
+import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.location.DataLocation;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.uri.SimpleURI;
 import es.bsc.compss.util.ErrorManager;
+
 import java.io.IOException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,11 +41,22 @@ public abstract class MainAccess<V extends Object, D extends DataParams, P exten
     protected static final Logger LOGGER = LogManager.getLogger(Loggers.API);
     protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
+    private final Application app;
     private final P parameters;
 
 
-    protected MainAccess(P params) {
+    protected MainAccess(Application app, P params) {
+        this.app = app;
         this.parameters = params;
+    }
+
+    /**
+     * Returns the application performing the access.
+     * 
+     * @return application performing the access.
+     */
+    public Application getApp() {
+        return app;
     }
 
     /**
@@ -56,7 +70,7 @@ public abstract class MainAccess<V extends Object, D extends DataParams, P exten
 
     /**
      * Returns the value expected to be returned when there is no available version for the data.
-     * 
+     *
      * @return Returns the value expected to be returned when there is no available version for the data.
      */
     public abstract V getUnavailableValueResponse();

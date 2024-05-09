@@ -26,6 +26,7 @@ import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
+import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.request.ap.BarrierGroupRequest;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
@@ -44,7 +45,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public class Application implements ApplicationTaskMonitor {
+public class Application implements ApplicationTaskMonitor, DataOwner {
 
     private static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
 
@@ -443,97 +444,49 @@ public class Application implements ApplicationTaskMonitor {
      * ----------------------------------- DATA MANAGEMENT -----------------------------------
      */
 
-    /**
-     * Stores the relation between a file and the corresponding dataInfo.
-     *
-     * @param locationKey file location
-     * @param di data registered by the application
-     */
+    @Override
     public void registerFileData(String locationKey, DataInfo di) {
         this.nameToData.put(locationKey, di);
     }
 
-    /**
-     * Returns the Data related to a file.
-     *
-     * @param locationKey file location
-     * @return data related to the file
-     */
+    @Override
     public DataInfo getFileData(String locationKey) {
         return this.nameToData.get(locationKey);
     }
 
-    /**
-     * Removes any data association related to file location.
-     *
-     * @param locationKey file location
-     * @return data Id related to the file
-     * @throws ValueUnawareRuntimeException the application is not aware of the data
-     */
+    @Override
     public DataInfo removeFileData(String locationKey) throws ValueUnawareRuntimeException {
         DataInfo di = this.nameToData.remove(locationKey);
         return removeData(di);
     }
 
-    /**
-     * Stores the relation between an object and the corresponding dataInfo.
-     *
-     * @param code hashcode of the object
-     * @param di data registered by the application
-     */
+    @Override
     public void registerObjectData(int code, DataInfo di) {
         this.codeToData.put(code, di);
     }
 
-    /**
-     * Returns the Data related to an object.
-     *
-     * @param code hashcode of the object
-     * @return data related to the object
-     */
+    @Override
     public DataInfo getObjectData(int code) {
         return this.codeToData.get(code);
     }
 
-    /**
-     * Removes any data association related to an object.
-     *
-     * @param code hashcode of the object
-     * @return data Id related to the object
-     * @throws ValueUnawareRuntimeException the application is not aware of the data
-     */
+    @Override
     public DataInfo removeObjectData(int code) throws ValueUnawareRuntimeException {
         DataInfo di = this.codeToData.remove(code);
         return removeData(di);
     }
 
-    /**
-     * Stores the relation between a collection and the corresponding dataInfo.
-     *
-     * @param collectionId Id of the collection
-     * @param di data registered by the application
-     */
+    @Override
     public void registerCollectionData(String collectionId, DataInfo di) {
         this.collectionToData.put(collectionId, di);
     }
 
-    /**
-     * Returns the Data related to a collection.
-     *
-     * @param collectionId Id of the collection
-     * @return data related to the file
-     */
+    @Override
     public DataInfo getCollectionData(String collectionId) {
         return this.collectionToData.get(collectionId);
     }
 
-    /**
-     * Removes any data association related to a collection.
-     *
-     * @param collectionId Id of the collection
-     * @return data Id related to the file
-     * @throws ValueUnawareRuntimeException the application is not aware of the data
-     */
+    @Override
     public DataInfo removeCollectionData(String collectionId) throws ValueUnawareRuntimeException {
         DataInfo di = this.collectionToData.remove(collectionId);
         return removeData(di);

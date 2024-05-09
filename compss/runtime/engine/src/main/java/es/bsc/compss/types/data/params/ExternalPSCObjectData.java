@@ -16,19 +16,16 @@
  */
 package es.bsc.compss.types.data.params;
 
-import es.bsc.compss.types.Application;
-
-
 public class ExternalPSCObjectData extends ObjectData {
 
     /**
-     * Constructs a new DataParams for a binding object.
+     * Constructs a new DataParams for an external PSC Object.
      *
-     * @param app Application accessing the object
+     * @param owner owner of the psc object
      * @param code code identifying the object
      */
-    public ExternalPSCObjectData(Application app, int code) {
-        super(app, code);
+    public ExternalPSCObjectData(DataOwner owner, int code) {
+        super(owner, code);
     }
 
     @Override
