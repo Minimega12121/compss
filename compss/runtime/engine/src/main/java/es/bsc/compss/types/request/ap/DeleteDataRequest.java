@@ -60,7 +60,7 @@ public class DeleteDataRequest extends APRequest {
             // File Won't be read by any future task or from the main code.
             // Remove it from the dependency analysis and the files to be transferred back
             LOGGER.info("[DeleteDataRequest] Deleting Data in Task Analyser");
-            DataInfo dataInfo = data.delete();
+            DataInfo dataInfo = data.delete(this.app);
             int dataId = dataInfo.getDataId();
             LOGGER.info("Deleting data " + dataId);
 
@@ -78,7 +78,7 @@ public class DeleteDataRequest extends APRequest {
                         break;
                     case FILE_T:
                         // Remove file data form the list of written files
-                        FileInfo fInfo = (FileInfo) data.getRegisteredData();
+                        FileInfo fInfo = (FileInfo) data.getRegisteredData(this.app);
                         app.removeWrittenFile(fInfo);
                         break;
                     default:

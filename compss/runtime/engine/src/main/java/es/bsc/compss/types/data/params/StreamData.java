@@ -25,11 +25,10 @@ public class StreamData extends ObjectData {
     /**
      * Constructs a new DataParams for a stream.
      *
-     * @param owner Owner of the stream
      * @param code code identifying the object
      */
-    public StreamData(DataOwner owner, int code) {
-        super(owner, code);
+    public StreamData(int code) {
+        super(code);
 
     }
 
@@ -39,8 +38,8 @@ public class StreamData extends ObjectData {
     }
 
     @Override
-    protected DataInfo registerData() {
-        DataInfo sInfo = new StreamInfo(this, this.getOwner());
+    protected DataInfo registerData(DataOwner owner) {
+        DataInfo sInfo = new StreamInfo(this, owner);
         return sInfo;
     }
 

@@ -332,14 +332,10 @@ public class ReduceTask extends Task {
 
         // Marking intermediate parameters for deletion
         for (Parameter p : this.getParameterDataToRemove()) {
-            p.remove();
-            if (p.isPotentialDependency()) {
-                DependencyParameter dp = (DependencyParameter) p;
-                try {
-                    dp.getAccess().getData().delete();
-                } catch (ValueUnawareRuntimeException e) {
-                    // If not existing, the parameter was already removed. No need to do anything
-                }
+            try {
+                p.removeData();
+            } catch (ValueUnawareRuntimeException e) {
+                // If not existing, the parameter was already removed. No need to do anything
             }
         }
         return hasEdge;

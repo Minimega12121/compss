@@ -46,11 +46,11 @@ public class StreamAccessParams<T extends Object, D extends StreamData> extends 
      */
     public static final <T extends Object> StreamAccessParams<T, StreamData> constructStreamAP(Application app,
         Direction dir, T value, int code) {
-        return new StreamAccessParams(new StreamData(app, code), dir, value);
+        return new StreamAccessParams(app, new StreamData(code), dir, value);
     }
 
-    protected StreamAccessParams(D data, Direction dir, T value) {
-        super(data, dir, value);
+    protected StreamAccessParams(Application app, D data, Direction dir, T value) {
+        super(app, data, dir, value);
     }
 
     @Override

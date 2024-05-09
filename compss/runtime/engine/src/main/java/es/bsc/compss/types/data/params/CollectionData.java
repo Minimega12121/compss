@@ -29,11 +29,9 @@ public class CollectionData extends DataParams {
     /**
      * Constructs a new DataParams for a collection.
      *
-     * @param owner Owner of the collection
      * @param collectionId Id of the collection
      */
-    public CollectionData(DataOwner owner, String collectionId) {
-        super(owner);
+    public CollectionData(String collectionId) {
         this.collectionId = collectionId;
     }
 
@@ -43,20 +41,19 @@ public class CollectionData extends DataParams {
     }
 
     @Override
-    protected DataInfo registerData() {
-        DataInfo cInfo = new CollectionInfo(this, this.getOwner());
+    protected DataInfo registerData(DataOwner owner) {
+        DataInfo cInfo = new CollectionInfo(this, owner);
         return cInfo;
     }
 
     @Override
-    public DataInfo getRegisteredData() {
-        DataOwner owner = this.getOwner();
+    public DataInfo getRegisteredData(DataOwner owner) {
+        ;
         return owner.getCollectionData(this.collectionId);
     }
 
     @Override
-    protected DataInfo unregisterData() throws ValueUnawareRuntimeException {
-        DataOwner owner = this.getOwner();
+    protected DataInfo unregisterData(DataOwner owner) throws ValueUnawareRuntimeException {
         return owner.removeCollectionData(this.collectionId);
     }
 

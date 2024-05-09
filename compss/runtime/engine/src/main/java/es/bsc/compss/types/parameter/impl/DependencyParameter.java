@@ -21,11 +21,9 @@ import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
-import es.bsc.compss.types.TaskState;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.Direction;
-import es.bsc.compss.types.annotations.parameter.OnFailure;
 import es.bsc.compss.types.annotations.parameter.StdIOStream;
 
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
@@ -35,7 +33,6 @@ import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import storage.StubItf;
 
 
 public abstract class DependencyParameter<T extends AccessParams> extends Parameter
@@ -181,12 +178,10 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
     }
 
     @Override
-    public void remove() {
-        try {
-            this.getAccess().getData().delete();
-        } catch (ValueUnawareRuntimeException e) {
-            // If not existing, the parameter was already removed. No need to do anything
-        }
+    public DataInfo removeData() throws ValueUnawareRuntimeException {
+        AccessParams access = this.getAccess();
+        Application app = access.getApp();
+        return access.getData().delete(app);
     }
 
     private boolean addDependencies(Task currentTask, boolean isConstraining, DependencyParameter dp) {

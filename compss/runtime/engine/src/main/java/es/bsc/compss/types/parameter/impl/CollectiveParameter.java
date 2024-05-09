@@ -153,7 +153,7 @@ public class CollectiveParameter extends DependencyParameter<CollectionAccessPar
         hasParamEdge = super.register(task, isConstraining);
 
         try {
-            DataInfo dataInfo = this.getAccess().getData().delete();
+            DataInfo dataInfo = this.removeData();
             int dataId = dataInfo.getDataId();
             LOGGER.info("Deleting data " + dataId);
 

@@ -29,11 +29,9 @@ public class ObjectData extends DataParams {
     /**
      * Constructs a new DataParams for an object.
      *
-     * @param owner Owner of the object
      * @param code code identifying the object
      */
-    public ObjectData(DataOwner owner, int code) {
-        super(owner);
+    public ObjectData(int code) {
         this.code = code;
     }
 
@@ -43,20 +41,18 @@ public class ObjectData extends DataParams {
     }
 
     @Override
-    protected DataInfo registerData() {
-        DataInfo oInfo = new ObjectInfo(this, this.getOwner());
+    protected DataInfo registerData(DataOwner owner) {
+        DataInfo oInfo = new ObjectInfo(this, owner);
         return oInfo;
     }
 
     @Override
-    public DataInfo getRegisteredData() {
-        DataOwner owner = this.getOwner();
+    public DataInfo getRegisteredData(DataOwner owner) {
         return owner.getObjectData(code);
     }
 
     @Override
-    protected DataInfo unregisterData() throws ValueUnawareRuntimeException {
-        DataOwner owner = this.getOwner();
+    protected DataInfo unregisterData(DataOwner owner) throws ValueUnawareRuntimeException {
         return owner.removeObjectData(code);
     }
 

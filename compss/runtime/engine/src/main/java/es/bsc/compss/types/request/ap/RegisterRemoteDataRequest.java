@@ -20,6 +20,7 @@ import es.bsc.compss.comm.Comm;
 import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.exceptions.CommException;
+import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ShutdownException;
@@ -29,6 +30,7 @@ import es.bsc.compss.util.ErrorManager;
 
 public class RegisterRemoteDataRequest extends APRequest {
 
+    private final Application app;
     private final DataParams accessedValue;
     private final String data;
 
@@ -36,10 +38,12 @@ public class RegisterRemoteDataRequest extends APRequest {
     /**
      * Contructs a new Request to register an external file and bind it to an existing LogicalData.
      *
+     * @param app application accessing the value
      * @param accessedValue the value being accessed by the application
      * @param data Existing LogicalData to bind the value access.
      */
-    public RegisterRemoteDataRequest(DataParams accessedValue, String data) {
+    public RegisterRemoteDataRequest(Application app, DataParams accessedValue, String data) {
+        this.app = app;
         this.accessedValue = accessedValue;
         this.data = data;
     }
@@ -51,12 +55,12 @@ public class RegisterRemoteDataRequest extends APRequest {
 
     @Override
     public void process(AccessProcessor ap, TaskDispatcher td) throws ShutdownException {
-        DataInfo dInfo = accessedValue.getRegisteredData();
+        DataInfo dInfo = accessedValue.getRegisteredData(app);
         if (dInfo == null) {
             if (DEBUG) {
                 LOGGER.debug("Registering Remote data on DIP: " + accessedValue.getDescription());
             }
-            dInfo = accessedValue.register();
+            dInfo = accessedValue.register(app);
         }
         if (data != null && dInfo != null) {
             String existingRename = dInfo.getCurrentDataVersion().getDataInstanceId().getRenaming();

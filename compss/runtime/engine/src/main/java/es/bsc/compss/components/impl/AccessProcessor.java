@@ -309,14 +309,15 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     }
 
     /**
-     * Returns the Identifier of the data corresponding to the last version of an dat.
+     * Returns the Identifier of the data corresponding to the last version of a data.
      *
+     * @param app application obtaining the last access for the data
      * @param data Description of the data being accessed.
      * @return data corresponding to the last version of the data.
      */
-    public LogicalData getDataLastVersion(DataParams data) {
+    public LogicalData getDataLastVersion(Application app, DataParams data) {
         // Ask for the object
-        DataGetLastVersionRequest odr = new DataGetLastVersionRequest(data);
+        DataGetLastVersionRequest odr = new DataGetLastVersionRequest(app, data);
         if (!this.requestQueue.offer(odr)) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "data version query");
         }
@@ -385,11 +386,12 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     /**
      * Returns whether the @{code data} has already been accessed or not.
      *
+     * @param app application accessing the value
      * @param data querying data
      * @return {@code true} if the data has been accessed, {@code false} otherwise.
      */
-    public boolean alreadyAccessed(DataParams data) {
-        AlreadyAccessedRequest request = new AlreadyAccessedRequest(data);
+    public boolean alreadyAccessed(Application app, DataParams data) {
+        AlreadyAccessedRequest request = new AlreadyAccessedRequest(app, data);
         if (!this.requestQueue.offer(request)) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "already accessed location");
         }
@@ -541,7 +543,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
         boolean delete = true;
         // No need to wait if data is noReuse
         if (enableReuse) {
-            WaitForDataReadyToDeleteRequest request = new WaitForDataReadyToDeleteRequest(data);
+            WaitForDataReadyToDeleteRequest request = new WaitForDataReadyToDeleteRequest(app, data);
             // Wait for data to be ready for deletion
             if (!this.requestQueue.offer(request)) {
                 ErrorManager.error(ERROR_QUEUE_OFFER + "wait for data ready to delete");
@@ -604,11 +606,12 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     /**
      * Registers a data value as available on remote locations.
      *
+     * @param app application accessing the value
      * @param accessedValue the value being accessed by the application
      * @param dataId name of the data associated to the object
      */
-    public void registerRemoteData(DataParams accessedValue, String dataId) {
-        RegisterRemoteDataRequest request = new RegisterRemoteDataRequest(accessedValue, dataId);
+    public void registerRemoteData(Application app, DataParams accessedValue, String dataId) {
+        RegisterRemoteDataRequest request = new RegisterRemoteDataRequest(app, accessedValue, dataId);
         if (!this.requestQueue.offer(request)) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "register data");
         }

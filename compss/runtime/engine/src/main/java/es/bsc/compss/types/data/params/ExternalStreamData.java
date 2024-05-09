@@ -21,11 +21,10 @@ public class ExternalStreamData extends StreamData {
     /**
      * Constructs a new DataParams for an external stream.
      *
-     * @param owner Owner of the stream
      * @param code code identifying the stream
      */
-    public ExternalStreamData(DataOwner owner, int code) {
-        super(owner, code);
+    public ExternalStreamData(int code) {
+        super(code);
     }
 
     @Override

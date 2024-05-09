@@ -21,11 +21,10 @@ public class ExternalPSCObjectData extends ObjectData {
     /**
      * Constructs a new DataParams for an external PSC Object.
      *
-     * @param owner owner of the psc object
      * @param code code identifying the object
      */
-    public ExternalPSCObjectData(DataOwner owner, int code) {
-        super(owner, code);
+    public ExternalPSCObjectData(int code) {
+        super(code);
     }
 
     @Override

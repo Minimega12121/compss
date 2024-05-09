@@ -720,7 +720,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
                         ErrorManager.fatal(ERROR_FILE_NAME, ioe);
                         return;
                     }
-                    dp = new FileData(app, loc);
+                    dp = new FileData(loc);
                 } catch (NullPointerException npe) {
                     LOGGER.error(ERROR_FILE_NAME, npe);
                     ErrorManager.fatal(ERROR_FILE_NAME, npe);
@@ -729,7 +729,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
             case OBJECT_T:
             case PSCO_T:
                 int hashcode = oReg.newObjectParameter(appId, stub);
-                dp = new ObjectData(app, hashcode);
+                dp = new ObjectData(hashcode);
                 break;
             case STREAM_T:
                 // int streamCode = oReg.newObjectParameter(stub);
@@ -769,7 +769,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
                 }
                 throw new UnsupportedOperationException("Not implemented yet.");
             case COLLECTION_T:
-                dp = new CollectionData(app, (String) stub);
+                dp = new CollectionData((String) stub);
                 break;
             case DICT_COLLECTION_T:
                 throw new UnsupportedOperationException("Not implemented yet.");
@@ -779,7 +779,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
                 break;
         }
         if (dp != null) {
-            ap.registerRemoteData(dp, data);
+            ap.registerRemoteData(app, dp, data);
         }
     }
 
@@ -797,20 +797,20 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         }
 
         Application app = Application.registerApplication(appId);
-        FileData fd = new FileData(app, sourceLocation);
-        return bindExistingVersionToData(fd, dataId);
+        FileData fd = new FileData(sourceLocation);
+        return bindExistingVersionToData(app, fd, dataId);
     }
 
     @Override
     public boolean bindExistingVersionToData(Long appId, Object o, Integer hashCode, String dataId) {
         Application app = Application.registerApplication(appId);
-        ObjectData od = new ObjectData(app, hashCode);
-        return bindExistingVersionToData(od, dataId);
+        ObjectData od = new ObjectData(hashCode);
+        return bindExistingVersionToData(app, od, dataId);
     }
 
-    private boolean bindExistingVersionToData(DataParams data, String dataId) {
+    private boolean bindExistingVersionToData(Application app, DataParams data, String dataId) {
         LOGGER.debug("Binding " + data.getDescription() + "'s last version to data " + dataId);
-        LogicalData lastVersion = ap.getDataLastVersion(data);
+        LogicalData lastVersion = ap.getDataLastVersion(app, data);
         if (lastVersion != null) {
             LogicalData src = Comm.getData(dataId);
             try {
@@ -851,7 +851,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
                 String intermediateTmpPath = renamedPath + ".tmp";
                 FileOpsManager.moveSync(new File(renamedPath), new File(intermediateTmpPath));
                 closeFile(app, fileName, Direction.INOUT);
-                ap.deleteData(app, new FileData(app, sourceLocation), true, false);
+                ap.deleteData(app, new FileData(sourceLocation), true, false);
                 // In the case of Java file can be stored in the Stream Registry
                 if (sReg != null) {
                     sReg.deleteTaskFile(appId, fileName);
@@ -898,7 +898,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
             FileOpsManager.moveDirSync(new File(renamedPath), new File(intermediateTmpPath));
             closeFile(app, dirName, Direction.IN);
 
-            ap.deleteData(app, new FileData(app, sourceLocation), true, false);
+            ap.deleteData(app, new FileData(sourceLocation), true, false);
             // In the case of Java file can be stored in the Stream Registry
             if (sReg != null) {
                 sReg.deleteTaskFile(appId, dirName);
@@ -998,8 +998,8 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         }
         if (loc != null) {
             Application app = Application.registerApplication(appId);
-            FileData fd = new FileData(app, loc);
-            return ap.alreadyAccessed(fd);
+            FileData fd = new FileData(loc);
+            return ap.alreadyAccessed(app, fd);
         } else {
             return false;
         }
@@ -1149,7 +1149,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         try {
             DataLocation loc = createLocation(ProtocolType.FILE_URI, fileName);
             Application app = Application.registerApplication(appId);
-            ap.deleteData(app, new FileData(app, loc), waitForData, applicationDelete);
+            ap.deleteData(app, new FileData(loc), waitForData, applicationDelete);
             // Java case where task files are stored in the registry
             if (sReg != null) {
                 sReg.deleteTaskFile(appId, fileName);
@@ -1176,7 +1176,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         Application app = Application.registerApplication(appId);
         // This will remove the object from the Object Registry and the Data Info Provider
         // eventually allowing the garbage collector to free it (better use of memory)
-        ap.deleteData(app, new ObjectData(app, hashcode), false, false);
+        ap.deleteData(app, new ObjectData(hashcode), false, false);
     }
 
     @Override
@@ -1197,7 +1197,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         // Parse the binding object name and translate the access mode
         BindingObject bo = BindingObject.generate(fileName);
         int hashCode = externalObjectHashcode(bo.getId());
-        ap.deleteData(app, new BindingObjectData(app, hashCode), false, false);
+        ap.deleteData(app, new BindingObjectData(hashCode), false, false);
         if (Tracer.isActivated()) {
             Tracer.emitEventEnd(TraceEvent.DELETE);
         }

@@ -35,11 +35,9 @@ public class FileData extends DataParams {
     /**
      * Constructs a new DataParams for a file.
      *
-     * @param owner Owner of the collection
      * @param loc location of the file
      */
-    public FileData(DataOwner owner, DataLocation loc) {
-        super(owner);
+    public FileData(DataLocation loc) {
         this.loc = loc;
         this.locKey = loc.getLocationKey();
     }
@@ -58,21 +56,19 @@ public class FileData extends DataParams {
     }
 
     @Override
-    protected DataInfo registerData() {
-        DataInfo dInfo = new FileInfo(this, this.getOwner());
+    protected DataInfo registerData(DataOwner owner) {
+        DataInfo dInfo = new FileInfo(this, owner);
         return dInfo;
     }
 
     @Override
-    public DataInfo getRegisteredData() {
-        DataOwner owner = this.getOwner();
+    public DataInfo getRegisteredData(DataOwner owner) {
         String locationKey = loc.getLocationKey();
         return owner.getFileData(locationKey);
     }
 
     @Override
-    protected DataInfo unregisterData() throws ValueUnawareRuntimeException {
-        DataOwner owner = this.getOwner();
+    protected DataInfo unregisterData(DataOwner owner) throws ValueUnawareRuntimeException {
         String locationKey = loc.getLocationKey();
         return owner.removeFileData(locationKey);
     }

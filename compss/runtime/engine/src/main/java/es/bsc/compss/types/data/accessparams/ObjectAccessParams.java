@@ -47,11 +47,11 @@ public class ObjectAccessParams<T extends Object, D extends ObjectData> extends 
      */
     public static final <T extends Object> ObjectAccessParams<T, ObjectData> constructObjectAP(Application app,
         Direction dir, T value, int code) {
-        return new ObjectAccessParams(new ObjectData(app, code), dir, value);
+        return new ObjectAccessParams(app, new ObjectData(code), dir, value);
     }
 
-    protected ObjectAccessParams(D data, Direction dir, T value) {
-        super(data, dir);
+    protected ObjectAccessParams(Application app, D data, Direction dir, T value) {
+        super(app, data, dir);
         this.value = value;
     }
 
@@ -75,7 +75,7 @@ public class ObjectAccessParams<T extends Object, D extends ObjectData> extends 
 
     @Override
     public void checkAccessValidity() throws ValueUnawareRuntimeException {
-        DataInfo oInfo = data.getRegisteredData();
+        DataInfo oInfo = data.getRegisteredData(this.app);
         boolean validValue = oInfo.getCurrentDataVersion().isValueOnMain();
         if (validValue) {
             // Main code is still performing the same modification.

@@ -21,11 +21,10 @@ public class BindingObjectData extends ObjectData {
     /**
      * Constructs a new DataParams for a binding object.
      *
-     * @param owner Owner of the binding object
      * @param code code identifying the object
      */
-    public BindingObjectData(DataOwner owner, int code) {
-        super(owner, code);
+    public BindingObjectData(int code) {
+        super(code);
     }
 
     @Override

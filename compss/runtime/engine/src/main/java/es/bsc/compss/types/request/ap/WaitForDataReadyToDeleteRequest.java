@@ -18,6 +18,7 @@ package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.TaskDispatcher;
+import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.NonExistingValueException;
@@ -28,6 +29,7 @@ import java.util.concurrent.Semaphore;
 
 public class WaitForDataReadyToDeleteRequest extends APRequest {
 
+    private final Application app;
     private final DataParams data;
 
     private ValueUnawareRuntimeException vure = null;
@@ -37,12 +39,14 @@ public class WaitForDataReadyToDeleteRequest extends APRequest {
 
     /**
      * Creates a new request to wait for the data to be ready to be deleted.
-     * 
+     *
+     * @param app application waiting for the value to be deleted
      * @param data data to wait to be ready for its removal
      */
-    public WaitForDataReadyToDeleteRequest(DataParams data) {
+    public WaitForDataReadyToDeleteRequest(Application app, DataParams data) {
         this.data = data;
         this.sem = new Semaphore(0);
+        this.app = app;
     }
 
     @Override
@@ -50,7 +54,7 @@ public class WaitForDataReadyToDeleteRequest extends APRequest {
         LOGGER.info("[WaitForDataReadyToDelete] Notifying waiting data " + this.data.getDescription() + "to DIP...");
         try {
             LOGGER.debug("Waiting for data " + data.getDescription() + " to be ready for deletion");
-            DataInfo dataInfo = data.getRegisteredData();
+            DataInfo dataInfo = data.getRegisteredData(this.app);
             if (dataInfo == null) {
                 if (DEBUG) {
                     LOGGER.debug("No data found for data associated to " + data.getDescription());

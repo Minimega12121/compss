@@ -45,12 +45,12 @@ public class FileAccessParams<D extends FileData> extends AccessParams<D> {
      * @return new FileAccessParams instance
      */
     public static final FileAccessParams constructFAP(Application app, Direction dir, DataLocation loc) {
-        FileData fd = new FileData(app, loc);
-        return new FileAccessParams(fd, dir);
+        FileData fd = new FileData(loc);
+        return new FileAccessParams(app, fd, dir);
     }
 
-    protected FileAccessParams(D data, Direction dir) {
-        super(data, dir);
+    protected FileAccessParams(Application app, D data, Direction dir) {
+        super(app, data, dir);
     }
 
     /**
@@ -65,7 +65,7 @@ public class FileAccessParams<D extends FileData> extends AccessParams<D> {
     @Override
     public void checkAccessValidity() throws ValueUnawareRuntimeException {
         LOGGER.debug("Check already accessed: " + data.getDescription());
-        DataInfo dInfo = data.getRegisteredData();
+        DataInfo dInfo = data.getRegisteredData(this.app);
         boolean alreadyAccessed = dInfo != null;
         if (!alreadyAccessed) {
             LOGGER.debug(this.getDataDescription() + " accessed before, returning the same location");

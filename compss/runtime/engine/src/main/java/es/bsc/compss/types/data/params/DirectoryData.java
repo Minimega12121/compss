@@ -24,11 +24,10 @@ public class DirectoryData extends FileData {
     /**
      * Constructs a new DataParams for a directory.
      *
-     * @param owner Owner of the directory
      * @param loc location of the directory
      */
-    public DirectoryData(DataOwner owner, DataLocation loc) {
-        super(owner, loc);
+    public DirectoryData(DataLocation loc) {
+        super(loc);
     }
 
     @Override

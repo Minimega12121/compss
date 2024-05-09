@@ -23,6 +23,7 @@ import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
+import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
@@ -74,6 +75,7 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
     protected static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
     protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
+    protected final Application app;
     protected final D data;
     protected final AccessMode mode;
 
@@ -104,12 +106,23 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
     /**
      * Creates a new AccessParams instance.
      *
+     * @param app Application accessing the data
      * @param data Data being accessed
      * @param dir operation performed.
      */
-    protected AccessParams(D data, Direction dir) {
+    protected AccessParams(Application app, D data, Direction dir) {
+        this.app = app;
         this.data = data;
         this.mode = getAccessMode(dir);
+    }
+
+    /**
+     * Returns the application accessing the value.
+     * 
+     * @return application accessing the value.
+     */
+    public Application getApp() {
+        return app;
     }
 
     /**
@@ -131,7 +144,7 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
     }
 
     public DataInfo getDataInfo() {
-        return data.getRegisteredData();
+        return data.getRegisteredData(this.app);
     }
 
     public final String getDataDescription() {
@@ -151,13 +164,13 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
      * @return The registered access Id.
      */
     public final EngineDataAccessId register() {
-        DataInfo dInfo = this.data.getRegisteredData();
+        DataInfo dInfo = this.data.getRegisteredData(this.app);
         if (dInfo == null) {
             if (DEBUG) {
                 LOGGER.debug("FIRST access to " + this.getDataDescription());
             }
 
-            dInfo = this.data.register();
+            dInfo = this.data.register(this.app);
             DataVersion dv = dInfo.getCurrentDataVersion();
             this.registerValueForVersion(dv);
         } else {
@@ -187,7 +200,7 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
         if (generatedData != null && this.resultRemainOnMain()) {
             generatedData.getVersion().valueOnMain();
         }
-        DataInfo dInfo = this.data.getRegisteredData();
+        DataInfo dInfo = this.data.getRegisteredData(this.app);
         // First access to this file
         if (dInfo == null) {
             LOGGER.warn(this.getDataDescription() + " has not been accessed before");

@@ -29,21 +29,6 @@ public abstract class DataParams {
     private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
 
-    private final DataOwner owner;
-
-
-    public DataParams(DataOwner owner) {
-        this.owner = owner;
-    }
-
-    /**
-     * Returns the owner of the data.
-     * 
-     * @return owner of the data
-     */
-    public DataOwner getOwner() {
-        return owner;
-    }
 
     /**
      * Returns a string describing the data.
@@ -54,28 +39,30 @@ public abstract class DataParams {
 
     /**
      * Registers the data in the access dependency system.
-     * 
+     *
+     * @param owner Owner of the data
      * @return DataInfo associated with the registered data
      */
-    public final DataInfo register() {
+    public final DataInfo register(DataOwner owner) {
         if (DEBUG) {
             LOGGER.debug("Registering Data associated to " + this.getDescription());
         }
-        return registerData();
+        return registerData(owner);
     }
 
     /**
      * Marks a data for deletion.
      *
+     * @param owner Owner of the data
      * @return DataInfo associated with the data to remove
      * @throws ValueUnawareRuntimeException the runtime is not aware of the data
      */
-    public final DataInfo delete() throws ValueUnawareRuntimeException {
+    public final DataInfo delete(DataOwner owner) throws ValueUnawareRuntimeException {
         if (DEBUG) {
             LOGGER.debug("Deleting Data associated to " + this.getDescription());
         }
         try {
-            return this.unregisterData();
+            return this.unregisterData(owner);
         } catch (ValueUnawareRuntimeException vure) {
             if (DEBUG) {
                 LOGGER.debug("No data found for data associated to " + this.getDescription());
@@ -84,11 +71,29 @@ public abstract class DataParams {
         }
     }
 
-    protected abstract DataInfo registerData();
+    /**
+     * Creates and registers the DataInfo.
+     * 
+     * @param owner owner of the data
+     * @return DataInfo associated with the registered data
+     */
+    protected abstract DataInfo registerData(DataOwner owner);
 
-    public abstract DataInfo getRegisteredData();
+    /**
+     * Obtains a registered DataInfo corresponding to the data.
+     * 
+     * @param owner owner of the data
+     * @return DataInfo associated with the registered data
+     */
+    public abstract DataInfo getRegisteredData(DataOwner owner);
 
-    protected abstract DataInfo unregisterData() throws ValueUnawareRuntimeException;
+    /**
+     * Unregisters the DataInfo corresponding to the data.
+     * 
+     * @param owner owner of the data
+     * @return DataInfo associated with the registered data
+     */
+    protected abstract DataInfo unregisterData(DataOwner owner) throws ValueUnawareRuntimeException;
 
     /**
      * Deletes the local instance of the data.
