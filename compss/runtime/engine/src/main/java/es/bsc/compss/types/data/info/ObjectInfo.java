@@ -27,10 +27,10 @@ public class ObjectInfo extends DataInfo<ObjectData> {
      * Creates a new ObjectInfo instance for the given object.
      *
      * @param object description of the object related to the info
+     * @param owner owner of the fileInfo being created
      */
-    public ObjectInfo(ObjectData object) {
-        super(object);
-        DataOwner owner = this.getOwner();
+    public ObjectInfo(ObjectData object, DataOwner owner) {
+        super(object, owner);
         int code = object.getCode();
         owner.registerObjectData(code, this);
     }

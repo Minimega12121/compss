@@ -55,7 +55,7 @@ public abstract class DataParams {
     /**
      * Registers the data in the access dependency system.
      * 
-     * @return DataInfo associated with the data to remove
+     * @return DataInfo associated with the registered data
      */
     public final DataInfo register() {
         if (DEBUG) {

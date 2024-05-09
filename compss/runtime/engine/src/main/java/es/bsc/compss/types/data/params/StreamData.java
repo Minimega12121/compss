@@ -40,7 +40,7 @@ public class StreamData extends ObjectData {
 
     @Override
     protected DataInfo registerData() {
-        DataInfo sInfo = new StreamInfo(this);
+        DataInfo sInfo = new StreamInfo(this, this.getOwner());
         return sInfo;
     }
 

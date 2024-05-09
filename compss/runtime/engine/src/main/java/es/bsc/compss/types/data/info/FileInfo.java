@@ -49,10 +49,10 @@ public class FileInfo extends DataInfo<FileData> {
      * Creates a new FileInfo instance for a given file.
      * 
      * @param file description of the file related to the info
+     * @param owner owner of the fileInfo being created
      */
-    public FileInfo(FileData file) {
-        super(file);
-        DataOwner owner = this.getOwner();
+    public FileInfo(FileData file, DataOwner owner) {
+        super(file, owner);
         String locKey = file.getLocationKey();
         owner.registerFileData(locKey, this);
     }

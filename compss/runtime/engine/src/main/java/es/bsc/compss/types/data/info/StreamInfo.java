@@ -27,10 +27,10 @@ public class StreamInfo extends DataInfo<StreamData> {
      * Creates a new StreamInfo instance for the given stream.
      *
      * @param stream description of the stream related to the info
+     * @param owner owner of the StreamInfo being created
      */
-    public StreamInfo(StreamData stream) {
-        super(stream);
-        DataOwner owner = this.getOwner();
+    public StreamInfo(StreamData stream, DataOwner owner) {
+        super(stream, owner);
         int code = stream.getCode();
         owner.registerObjectData(code, this);
     }

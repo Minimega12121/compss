@@ -44,7 +44,7 @@ public class ObjectData extends DataParams {
 
     @Override
     protected DataInfo registerData() {
-        DataInfo oInfo = new ObjectInfo(this);
+        DataInfo oInfo = new ObjectInfo(this, this.getOwner());
         return oInfo;
     }
 

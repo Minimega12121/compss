@@ -33,10 +33,10 @@ public class CollectionInfo extends DataInfo<CollectionData> {
      * Creates a new CollectionInfo instance for the given collection.
      *
      * @param data description of the collection related to the info
+     * @param owner owner of the CollectionInfo being created
      */
-    public CollectionInfo(CollectionData data) {
-        super(data);
-        DataOwner owner = this.getOwner();
+    public CollectionInfo(CollectionData data, DataOwner owner) {
+        super(data, owner);
         owner.registerCollectionData(data.getCollectionId(), this);
     }
 

@@ -59,7 +59,7 @@ public class FileData extends DataParams {
 
     @Override
     protected DataInfo registerData() {
-        DataInfo dInfo = new FileInfo(this);
+        DataInfo dInfo = new FileInfo(this, this.getOwner());
         return dInfo;
     }
 

@@ -75,11 +75,12 @@ public abstract class DataInfo<T extends DataParams> {
      * Creates a new DataInfo instance with and registers a new LogicalData.
      *
      * @param data description of the data related to the info
+     * @param owner owner of the data being created
      */
-    public DataInfo(T data) {
+    public DataInfo(T data, DataOwner owner) {
         this.dataId = nextDataId++;
         this.params = data;
-        this.owner = data.getOwner();
+        this.owner = owner;
         this.versions = new TreeMap<>();
         this.currentVersionId = FIRST_VERSION_ID;
         this.currentVersion = new DataVersion(dataId, 1, null);
