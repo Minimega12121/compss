@@ -182,27 +182,11 @@ public abstract class DataInfo<T extends DataParams> {
             case R:
                 this.willBeRead();
                 daId = new RAccessId(this, this.currentVersion);
-                if (DEBUG) {
-                    StringBuilder sb = new StringBuilder("");
-                    sb.append("Access:").append("\n");
-                    sb.append("  * Type: R").append("\n");
-                    sb.append("  * Read Datum: d").append(daId.getDataId()).append("v")
-                        .append(((RAccessId) daId).getRVersionId()).append("\n");
-                    LOGGER.debug(sb.toString());
-                }
                 break;
 
             case W:
                 this.willBeWritten();
                 daId = new WAccessId(this, this.currentVersion);
-                if (DEBUG) {
-                    StringBuilder sb = new StringBuilder("");
-                    sb.append("Access:").append("\n");
-                    sb.append("  * Type: W").append("\n");
-                    sb.append("  * Write Datum: d").append(daId.getDataId()).append("v")
-                        .append(((WAccessId) daId).getWVersionId()).append("\n");
-                    LOGGER.debug(sb.toString());
-                }
                 break;
 
             case CV:
@@ -213,20 +197,13 @@ public abstract class DataInfo<T extends DataParams> {
                 DataVersion writtenInstance = this.currentVersion;
                 if (readInstance != null) {
                     daId = new RWAccessId(this, readInstance, writtenInstance);
-                    if (DEBUG) {
-                        StringBuilder sb = new StringBuilder("");
-                        sb.append("Access:").append("\n");
-                        sb.append("  * Type: RW").append("\n");
-                        sb.append("  * Read Datum: d").append(daId.getDataId()).append("v")
-                            .append(((RWAccessId) daId).getRVersionId()).append("\n");
-                        sb.append("  * Write Datum: d").append(daId.getDataId()).append("v")
-                            .append(((RWAccessId) daId).getWVersionId()).append("\n");
-                        LOGGER.debug(sb.toString());
-                    }
                 } else {
                     ErrorManager.warn("Previous instance for data" + this.dataId + " is null.");
                 }
                 break;
+        }
+        if (DEBUG && daId != null) {
+            LOGGER.debug(daId.toDebugString());
         }
         return daId;
     }
