@@ -16,6 +16,7 @@
  */
 package es.bsc.compss.types.data.info;
 
+import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.data.params.ObjectData;
 import java.util.concurrent.Semaphore;
 
@@ -29,6 +30,9 @@ public class ObjectInfo extends DataInfo<ObjectData> {
      */
     public ObjectInfo(ObjectData object) {
         super(object);
+        DataOwner owner = this.getOwner();
+        int code = object.getCode();
+        owner.registerObjectData(code, this);
     }
 
     /**

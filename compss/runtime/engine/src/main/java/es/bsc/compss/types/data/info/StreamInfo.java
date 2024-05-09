@@ -16,6 +16,7 @@
  */
 package es.bsc.compss.types.data.info;
 
+import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.data.params.StreamData;
 import java.util.concurrent.Semaphore;
 
@@ -29,6 +30,9 @@ public class StreamInfo extends DataInfo<StreamData> {
      */
     public StreamInfo(StreamData stream) {
         super(stream);
+        DataOwner owner = this.getOwner();
+        int code = stream.getCode();
+        owner.registerObjectData(code, this);
     }
 
     /**

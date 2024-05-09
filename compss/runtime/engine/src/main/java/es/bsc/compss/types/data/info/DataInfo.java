@@ -24,6 +24,7 @@ import es.bsc.compss.types.data.accessid.RAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
 import es.bsc.compss.types.data.accessid.WAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams.AccessMode;
+import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.NonExistingValueException;
 import es.bsc.compss.util.ErrorManager;
@@ -52,6 +53,7 @@ public abstract class DataInfo<T extends DataParams> {
     protected final int dataId;
     // Generating application
     protected final T params;
+    protected final DataOwner owner;
 
     // Current version
     protected DataVersion currentVersion;
@@ -77,6 +79,7 @@ public abstract class DataInfo<T extends DataParams> {
     public DataInfo(T data) {
         this.dataId = nextDataId++;
         this.params = data;
+        this.owner = data.getOwner();
         this.versions = new TreeMap<>();
         this.currentVersionId = FIRST_VERSION_ID;
         this.currentVersion = new DataVersion(dataId, 1, null);
@@ -103,6 +106,15 @@ public abstract class DataInfo<T extends DataParams> {
      */
     public final T getParams() {
         return params;
+    }
+
+    /**
+     * Returns the owner of the data.
+     * 
+     * @return owner of the data
+     */
+    public DataOwner getOwner() {
+        return owner;
     }
 
     /**

@@ -44,6 +44,14 @@ public class FileData extends DataParams {
         this.locKey = loc.getLocationKey();
     }
 
+    public DataLocation getLocation() {
+        return this.loc;
+    }
+
+    public String getLocationKey() {
+        return this.locKey;
+    }
+
     @Override
     public String getDescription() {
         return "file " + this.locKey;
@@ -51,9 +59,7 @@ public class FileData extends DataParams {
 
     @Override
     protected DataInfo registerData() {
-        DataOwner owner = this.getOwner();
         DataInfo dInfo = new FileInfo(this);
-        owner.registerFileData(this.locKey, dInfo);
         return dInfo;
     }
 
@@ -71,15 +77,10 @@ public class FileData extends DataParams {
         return owner.removeFileData(locationKey);
     }
 
-    public DataLocation getLocation() {
-        return this.loc;
-    }
-
     @Override
     public void deleteLocal() throws Exception {
         String filePath = getLocation().getURIInHost(Comm.getAppHost()).getPath();
         File f = new File(filePath);
         FileOpsManager.deleteSync(f);
     }
-
 }

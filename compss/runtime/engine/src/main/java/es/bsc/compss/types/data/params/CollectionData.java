@@ -45,8 +45,6 @@ public class CollectionData extends DataParams {
     @Override
     protected DataInfo registerData() {
         DataInfo cInfo = new CollectionInfo(this);
-        DataOwner owner = this.getOwner();
-        owner.registerCollectionData(this.collectionId, cInfo);
         return cInfo;
     }
 

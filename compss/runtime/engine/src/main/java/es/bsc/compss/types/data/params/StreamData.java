@@ -41,8 +41,6 @@ public class StreamData extends ObjectData {
     @Override
     protected DataInfo registerData() {
         DataInfo sInfo = new StreamInfo(this);
-        DataOwner owner = this.getOwner();
-        owner.registerObjectData(code, sInfo);
         return sInfo;
     }
 

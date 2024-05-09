@@ -24,6 +24,7 @@ import es.bsc.compss.types.data.listener.SafeCopyListener;
 import es.bsc.compss.types.data.location.DataLocation;
 import es.bsc.compss.types.data.location.LocationType;
 import es.bsc.compss.types.data.operation.copy.Copy;
+import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.data.params.FileData;
 import es.bsc.compss.types.request.exceptions.NonExistingValueException;
 import es.bsc.compss.types.uri.MultiURI;
@@ -51,6 +52,9 @@ public class FileInfo extends DataInfo<FileData> {
      */
     public FileInfo(FileData file) {
         super(file);
+        DataOwner owner = this.getOwner();
+        String locKey = file.getLocationKey();
+        owner.registerFileData(locKey, this);
     }
 
     /**
