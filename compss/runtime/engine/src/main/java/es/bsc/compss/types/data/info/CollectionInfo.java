@@ -27,7 +27,7 @@ import java.util.concurrent.Semaphore;
  *
  * @see DataInfo
  */
-public class CollectionInfo extends DataInfo<CollectionData> {
+public class CollectionInfo extends StandardDataInfo<CollectionData> {
 
     /**
      * Creates a new CollectionInfo instance for the given collection.

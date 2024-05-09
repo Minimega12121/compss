@@ -40,7 +40,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public class FileInfo extends DataInfo<FileData> {
+public class FileInfo extends StandardDataInfo<FileData> {
 
     private static final Logger LOGGER = LogManager.getLogger(Loggers.COMM);
 

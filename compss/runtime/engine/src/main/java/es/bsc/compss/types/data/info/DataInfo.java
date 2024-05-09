@@ -32,6 +32,7 @@ import es.bsc.compss.util.ErrorManager;
 import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -44,8 +45,8 @@ public abstract class DataInfo<T extends DataParams> {
     private static final int FIRST_VERSION_ID = 1;
 
     // Component logger
-    private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
-    private static final boolean DEBUG = LOGGER.isDebugEnabled();
+    protected static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
+    protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     protected static int nextDataId = FIRST_FILE_ID;
 
@@ -111,7 +112,7 @@ public abstract class DataInfo<T extends DataParams> {
 
     /**
      * Returns the owner of the data.
-     * 
+     *
      * @return owner of the data
      */
     public DataOwner getOwner() {
@@ -175,62 +176,7 @@ public abstract class DataInfo<T extends DataParams> {
      * @param mode access mode of the operation performed on the data
      * @return description of the access performed
      */
-    public final EngineDataAccessId willAccess(AccessMode mode) {
-        EngineDataAccessId daId = null;
-        switch (mode) {
-            case C:
-            case R:
-                this.willBeRead();
-                daId = new RAccessId(this, this.currentVersion);
-                break;
-
-            case W:
-                this.willBeWritten();
-                daId = new WAccessId(this, this.currentVersion);
-                break;
-
-            case CV:
-            case RW:
-                this.willBeRead();
-                DataVersion readInstance = this.currentVersion;
-                this.willBeWritten();
-                DataVersion writtenInstance = this.currentVersion;
-                if (readInstance != null) {
-                    daId = new RWAccessId(this, readInstance, writtenInstance);
-                } else {
-                    ErrorManager.warn("Previous instance for data" + this.dataId + " is null.");
-                }
-                break;
-        }
-        if (DEBUG && daId != null) {
-            LOGGER.debug(daId.toDebugString());
-        }
-        return daId;
-    }
-
-    /**
-     * Marks the data to be read.
-     */
-    private void willBeRead() {
-        this.currentVersion.versionUsed();
-        this.currentVersion.willBeRead();
-    }
-
-    /**
-     * Marks the data to be written.
-     */
-    protected void willBeWritten() {
-        this.currentVersionId++;
-        DataVersion validPred = currentVersion;
-        if (validPred.hasBeenCancelled()) {
-            validPred = validPred.getPreviousValidPredecessor();
-        }
-        DataVersion newVersion = new DataVersion(this.dataId, this.currentVersionId, validPred);
-        newVersion.willBeWritten();
-        this.versions.put(this.currentVersionId, newVersion);
-        this.currentVersion = newVersion;
-        this.currentVersion.versionUsed();
-    }
+    public abstract EngineDataAccessId willAccess(AccessMode mode);
 
     /**
      * Tries to remove the given version {@code versionId}.

@@ -21,7 +21,7 @@ import es.bsc.compss.types.data.params.ObjectData;
 import java.util.concurrent.Semaphore;
 
 
-public class ObjectInfo extends DataInfo<ObjectData> {
+public class ObjectInfo extends StandardDataInfo<ObjectData> {
 
     /**
      * Creates a new ObjectInfo instance for the given object.

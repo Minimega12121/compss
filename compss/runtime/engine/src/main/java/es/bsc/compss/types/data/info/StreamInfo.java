@@ -16,8 +16,14 @@
  */
 package es.bsc.compss.types.data.info;
 
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.accessid.RAccessId;
+import es.bsc.compss.types.data.accessid.WAccessId;
+import es.bsc.compss.types.data.accessparams.AccessParams.AccessMode;
 import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.data.params.StreamData;
+import es.bsc.compss.util.ErrorManager;
+
 import java.util.concurrent.Semaphore;
 
 
@@ -45,10 +51,28 @@ public class StreamInfo extends DataInfo<StreamData> {
     }
 
     @Override
-    public void willBeWritten() {
-        // Do not increase version on write, since Stream just publish values
-        this.currentVersion.willBeWritten();
-        this.currentVersion.versionUsed();
+    public EngineDataAccessId willAccess(AccessMode mode) {
+        EngineDataAccessId daId;
+        switch (mode) {
+            case R:
+                this.currentVersion.versionUsed();
+                this.currentVersion.willBeRead();
+                daId = new RAccessId(this, this.currentVersion);
+                break;
+
+            case W:
+                this.currentVersion.willBeWritten();
+                this.currentVersion.versionUsed();
+                daId = new WAccessId(this, this.currentVersion);
+                break;
+            default: // cases C, CV, RW
+                ErrorManager.warn("Unsupported type of access (" + mode + ") for stream " + this.dataId);
+                daId = null;
+        }
+        if (DEBUG && daId != null) {
+            LOGGER.debug(daId.toDebugString());
+        }
+        return daId;
     }
 
     @Override
