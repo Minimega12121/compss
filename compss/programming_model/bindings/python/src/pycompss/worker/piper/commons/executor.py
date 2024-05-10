@@ -400,6 +400,8 @@ def executor(
         # Load ear if necessary
         if conf.ear:
             EARING = True
+            # Enable accounting
+            del os.environ["EAR_DISABLE_NODE_METRICS"]
             # Initialize ear
             if __debug__:
                 logger.debug(
