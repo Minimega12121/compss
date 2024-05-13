@@ -20,24 +20,46 @@ public interface ApplicationTaskMonitor {
 
     /**
      * Notifies the monitor that a new task has been created.
-     * 
+     *
      * @param t Created task
      */
     void onTaskCreation(Task t);
 
     /**
      * A task analysis has been started.
-     * 
+     *
      * @param t task whose analysis started
      */
     void onTaskAnalysisStart(Task t);
 
     /**
      * A task analysis has finished.
-     * 
+     *
      * @param t task whose analysis finished
      * @param hasEdge @return {@literal true}, if the task has requested an edge in the graph; {@literal false},
      *            otherwise.
      */
     void onTaskAnalysisEnd(Task t, boolean hasEdge);
+
+    /**
+     * The application creates a new group of Commutative Task.
+     *
+     * @param g newly created group of commutative tasks
+     */
+    void onCommutativeGroupCreation(CommutativeGroupTask g);
+
+    /**
+     * The application detected that a task belongs to a commutative tasks group.
+     *
+     * @param t task belonging to a group
+     * @param g grop to whom the task belongs
+     */
+    void onTaskBelongsToCommutativeGroup(Task t, CommutativeGroupTask g);
+
+    /**
+     * The application detects that a commutative task group has been closed.
+     * 
+     * @param g closed group
+     */
+    void onCommutativeGroupClosure(CommutativeGroupTask g);
 }

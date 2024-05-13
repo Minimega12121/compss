@@ -69,6 +69,7 @@ public class CommutativeGroupTask extends AbstractTask {
         this.accesses = new LinkedList<>();
         this.comId = comId;
         this.actions = new MutexGroup();
+        this.getApplication().onCommutativeGroupCreation(this);
     }
 
     /**
@@ -93,7 +94,10 @@ public class CommutativeGroupTask extends AbstractTask {
      * Closes the group.
      */
     public void close() {
-        this.closed = true;
+        if (!this.isClosed()) {
+            this.closed = true;
+            this.getApplication().onCommutativeGroupClosure(this);
+        }
     }
 
     /**
@@ -112,6 +116,7 @@ public class CommutativeGroupTask extends AbstractTask {
      */
     public void addCommutativeTask(Task task) {
         this.commutativeTasks.add(task);
+        this.getApplication().onTaskBelongsToCommutativeGroup(task, this);
     }
 
     /**

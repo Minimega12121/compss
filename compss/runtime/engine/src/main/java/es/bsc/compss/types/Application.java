@@ -354,6 +354,22 @@ public class Application implements ApplicationTaskMonitor, DataOwner {
         this.CP.newTask(task);
     }
 
+    @Override
+    public void onCommutativeGroupCreation(CommutativeGroupTask g) {
+        this.GH.createCommutativeGroup(g);
+    }
+
+    @Override
+    public void onTaskBelongsToCommutativeGroup(Task t, CommutativeGroupTask g) {
+        this.GH.taskBelongsToCommutativeGroup(t, g);
+
+    }
+
+    @Override
+    public void onCommutativeGroupClosure(CommutativeGroupTask g) {
+        this.GH.closeCommutativeGroup(g);
+    }
+
     /**
      * Registers the end of a task execution belonging to the application and removes it from all the groups it belongs
      * to.

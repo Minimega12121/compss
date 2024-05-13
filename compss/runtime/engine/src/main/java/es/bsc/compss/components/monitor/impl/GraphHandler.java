@@ -37,14 +37,14 @@ public interface GraphHandler {
 
     void closeTaskGroup();
 
-    /**
-     * Closes a commutative group in the graph.
-     *
-     * @param group group to close in the graph.
-     */
-    public void closeCommutativeTasksGroup(CommutativeGroupTask group);
-
     void startTaskAnalysis(Task currentTask);
+
+    /**
+     * Creates a commutative group in the graph.
+     *
+     * @param group group to create in the graph.
+     */
+    public void createCommutativeGroup(CommutativeGroupTask group);
 
     /**
      * Adds a task in a commutative Group.
@@ -53,6 +53,13 @@ public interface GraphHandler {
      * @param group group to whom the task belongs.
      */
     public void taskBelongsToCommutativeGroup(Task task, CommutativeGroupTask group);
+
+    /**
+     * Closes a commutative group in the graph.
+     *
+     * @param group group to close in the graph.
+     */
+    public void closeCommutativeGroup(CommutativeGroupTask group);
 
     void startGroupingEdges();
 

@@ -66,11 +66,6 @@ public class DotGraph implements GraphHandler {
     }
 
     @Override
-    public void closeCommutativeTasksGroup(CommutativeGroupTask group) {
-        this.gm.closeCommutativeGroup(group.getCommutativeIdentifier().toString());
-    }
-
-    @Override
     public void startTaskAnalysis(Task task) {
         // Set the syncId of the task
         task.setSynchronizationId(this.synchronizationId);
@@ -82,8 +77,18 @@ public class DotGraph implements GraphHandler {
     }
 
     @Override
+    public void createCommutativeGroup(CommutativeGroupTask group) {
+        this.gm.addCommutativeGroup(group.getCommutativeIdentifier().toString());
+    }
+
+    @Override
     public void taskBelongsToCommutativeGroup(Task task, CommutativeGroupTask group) {
         this.gm.addTaskToCommutativeGroup(task, group.getCommutativeIdentifier().toString());
+    }
+
+    @Override
+    public void closeCommutativeGroup(CommutativeGroupTask group) {
+        this.gm.closeCommutativeGroup(group.getCommutativeIdentifier().toString());
     }
 
     @Override

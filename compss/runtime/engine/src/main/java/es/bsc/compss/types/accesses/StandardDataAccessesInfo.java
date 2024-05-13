@@ -17,7 +17,6 @@
 package es.bsc.compss.types.accesses;
 
 import es.bsc.compss.components.monitor.impl.EdgeType;
-import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.CommutativeGroupTask;
@@ -54,8 +53,7 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
     public void completedProducer(AbstractTask task) {
         int producerTaskId = task.getId();
         if (lastWriter != null && lastWriter.getId() == producerTaskId) {
-            Application app = task.getApplication();
-            updateLastWriter(null, app.getGH());
+            updateLastWriter(null);
         }
     }
 
@@ -98,7 +96,7 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
                         return hasEdge;
                     }
                 }
-                closeCommutativeTasksGroup(group, app.getGH());
+                group.close();
             }
 
             // Add dependency
@@ -140,11 +138,10 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
     @Override
     public void writeValue(Task t, DependencyParameter dp, boolean isConcurrent) {
         if (isConcurrent) {
-            this.concurrentReaders.add((Task) t);
+            this.concurrentReaders.add(t);
         } else {
             int dataId = dp.getDataAccessId().getDataId();
             LOGGER.info("Setting writer for data " + dataId);
-            Application app = t.getApplication();
             if (dp.getDirection() == Direction.COMMUTATIVE) {
                 Integer coreId = t.getTaskDescription().getCoreElement().getCoreId();
                 CommutativeIdentifier comId = new CommutativeIdentifier(coreId, dataId);
@@ -161,6 +158,7 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
 
                 EngineDataAccessId daId = dp.getDataAccessId();
                 if (group == null) {
+                    Application app = t.getApplication();
                     group = new CommutativeGroupTask(app, comId);
                     group.setGroupPredecessor(lastWriter, (RWAccessId) daId);
                 }
@@ -169,30 +167,22 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
                 group.addDataDependency(t, dp);
                 t.setCommutativeGroup(group, daId);
                 dp.setDataAccessId(group.getAccessPlaceHolder());
-                app.getGH().taskBelongsToCommutativeGroup(t, group);
-                updateLastWriter(group, app.getGH());
+                updateLastWriter(group);
             } else {
-                updateLastWriter(t, app.getGH());
+                updateLastWriter(t);
             }
             this.concurrentReaders.clear();
         }
     }
 
-    private void updateLastWriter(AbstractTask newWriter, GraphHandler gh) {
+    private void updateLastWriter(AbstractTask newWriter) {
         if (lastWriter != newWriter) {
             if (lastWriter instanceof CommutativeGroupTask) {
                 CommutativeGroupTask prevGroup = (CommutativeGroupTask) lastWriter;
-                closeCommutativeTasksGroup(prevGroup, gh);
+                prevGroup.close();
             }
         }
         this.lastWriter = newWriter;
-    }
-
-    private void closeCommutativeTasksGroup(CommutativeGroupTask group, GraphHandler gh) {
-        if (!group.isClosed()) {
-            group.close();
-            gh.closeCommutativeTasksGroup(group);
-        }
     }
 
     @Override
@@ -205,7 +195,7 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
                 lastWriter.addListener(rdar);
                 rdar.addPendingOperation();
                 if (rdar.getAccess().getParameters().getMode() == AccessParams.AccessMode.RW) {
-                    updateLastWriter(null, app.getGH());
+                    updateLastWriter(null);
                 }
             }
         }

@@ -47,17 +47,22 @@ public class NoGraph implements GraphHandler {
     }
 
     @Override
-    public final void closeCommutativeTasksGroup(CommutativeGroupTask group) {
-        // Do nothing
-    }
-
-    @Override
     public final void startTaskAnalysis(Task currentTask) {
         // Do nothing
     }
 
     @Override
+    public final void createCommutativeGroup(CommutativeGroupTask g) {
+        // Do nothing
+    }
+
+    @Override
     public final void taskBelongsToCommutativeGroup(Task task, CommutativeGroupTask group) {
+        // Do nothing
+    }
+
+    @Override
+    public final void closeCommutativeGroup(CommutativeGroupTask group) {
         // Do nothing
     }
 
