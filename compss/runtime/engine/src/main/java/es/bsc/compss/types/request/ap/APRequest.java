@@ -30,10 +30,10 @@ import org.apache.logging.log4j.Logger;
 /**
  * The TPRequest class represents any interaction with the TaskProcessor component.
  */
-public abstract class APRequest {
+public interface APRequest {
 
-    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
-    protected static final boolean DEBUG = LOGGER.isDebugEnabled();
+    Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
+    boolean DEBUG = LOGGER.isDebugEnabled();
 
 
     /**
@@ -41,7 +41,7 @@ public abstract class APRequest {
      * 
      * @return event to trace
      */
-    public abstract TraceEvent getEvent();
+    TraceEvent getEvent();
 
     /**
      * Processes the Request.
@@ -51,6 +51,6 @@ public abstract class APRequest {
      * @throws ShutdownException If the component has been shutdown unexpectedly.
      * @throws COMPSsException Exception thrown by user
      */
-    public abstract void process(AccessProcessor ap, TaskDispatcher td) throws ShutdownException, COMPSsException;
+    void process(AccessProcessor ap, TaskDispatcher td) throws ShutdownException, COMPSsException;
 
 }

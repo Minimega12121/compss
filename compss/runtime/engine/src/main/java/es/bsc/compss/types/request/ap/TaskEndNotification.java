@@ -22,7 +22,7 @@ import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.tracing.TraceEvent;
 
 
-public class TaskEndNotification extends APRequest {
+public class TaskEndNotification implements APRequest {
 
     private AbstractTask task;
 

@@ -33,7 +33,7 @@ import es.bsc.compss.types.tracing.TraceEvent;
 import java.util.concurrent.Semaphore;
 
 
-public class RegisterDataAccessRequest extends APRequest implements TaskListener {
+public class RegisterDataAccessRequest implements APRequest, TaskListener {
 
     private final MainAccess access;
     private EngineDataAccessId accessId;

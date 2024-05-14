@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 
-public class DeleteAllApplicationDataRequest extends APRequest {
+public class DeleteAllApplicationDataRequest implements APRequest {
 
     private final Application app;
     private final Semaphore sem;

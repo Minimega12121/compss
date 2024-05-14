@@ -28,7 +28,7 @@ import es.bsc.compss.types.tracing.TraceEvent;
 import es.bsc.compss.util.ErrorManager;
 
 
-public class RegisterRemoteDataRequest extends APRequest {
+public class RegisterRemoteDataRequest implements APRequest {
 
     private final Application app;
     private final DataParams accessedValue;

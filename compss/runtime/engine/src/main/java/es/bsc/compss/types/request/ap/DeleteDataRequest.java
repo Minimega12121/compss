@@ -28,7 +28,7 @@ import es.bsc.compss.types.tracing.TraceEvent;
 import java.util.concurrent.Semaphore;
 
 
-public class DeleteDataRequest extends APRequest {
+public class DeleteDataRequest implements APRequest {
 
     private final Application app;
     private final DataParams data;

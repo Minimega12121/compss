@@ -30,7 +30,7 @@ import java.util.concurrent.Semaphore;
 /**
  * The DataGetLastVersionRequest is a request for the last version of a file contained in a remote worker.
  */
-public class DataGetLastVersionRequest extends APRequest {
+public class DataGetLastVersionRequest implements APRequest {
 
     private final Semaphore sem;
     private final Application app;

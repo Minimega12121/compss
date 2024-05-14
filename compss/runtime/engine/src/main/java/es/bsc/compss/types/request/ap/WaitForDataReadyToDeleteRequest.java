@@ -27,7 +27,7 @@ import es.bsc.compss.types.tracing.TraceEvent;
 import java.util.concurrent.Semaphore;
 
 
-public class WaitForDataReadyToDeleteRequest extends APRequest {
+public class WaitForDataReadyToDeleteRequest implements APRequest {
 
     private final Application app;
     private final DataParams data;

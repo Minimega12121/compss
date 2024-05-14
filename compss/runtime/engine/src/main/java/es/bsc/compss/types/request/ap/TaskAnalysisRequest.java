@@ -32,7 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public class TaskAnalysisRequest extends APRequest {
+public class TaskAnalysisRequest implements APRequest {
 
     private static final Logger TIMER_LOGGER = LogManager.getLogger(Loggers.TIMER);
     private static final boolean IS_TIMER_COMPSS_ENABLED;

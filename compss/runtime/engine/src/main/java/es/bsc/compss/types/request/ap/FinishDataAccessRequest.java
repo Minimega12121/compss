@@ -24,7 +24,7 @@ import es.bsc.compss.types.request.exceptions.ShutdownException;
 import es.bsc.compss.types.tracing.TraceEvent;
 
 
-public class FinishDataAccessRequest extends APRequest {
+public class FinishDataAccessRequest implements APRequest {
 
     private final AccessParams access;
     private final EngineDataInstanceId generatedData;

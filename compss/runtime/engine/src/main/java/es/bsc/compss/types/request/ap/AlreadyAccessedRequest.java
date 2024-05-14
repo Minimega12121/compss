@@ -26,7 +26,7 @@ import es.bsc.compss.types.tracing.TraceEvent;
 import java.util.concurrent.Semaphore;
 
 
-public class AlreadyAccessedRequest extends APRequest {
+public class AlreadyAccessedRequest implements APRequest {
 
     private final Application app;
     private final DataParams data;

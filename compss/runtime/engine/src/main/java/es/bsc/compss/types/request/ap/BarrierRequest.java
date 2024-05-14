@@ -26,7 +26,7 @@ import es.bsc.compss.worker.COMPSsException;
 import java.util.concurrent.Semaphore;
 
 
-public class BarrierRequest extends APRequest implements Barrier {
+public class BarrierRequest implements APRequest, Barrier {
 
     private final String barrierName;
     private final Application app;

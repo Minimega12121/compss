@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 
-public class CancelTaskGroupRequest extends APRequest {
+public class CancelTaskGroupRequest implements APRequest {
 
     private final Application app;
     private final String groupName;

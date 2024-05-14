@@ -22,7 +22,7 @@ import es.bsc.compss.types.Application;
 import es.bsc.compss.types.tracing.TraceEvent;
 
 
-public class OpenTaskGroupRequest extends APRequest {
+public class OpenTaskGroupRequest implements APRequest {
 
     private String groupName;
     private Application app;
