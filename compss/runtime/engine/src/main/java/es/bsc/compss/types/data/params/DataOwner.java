@@ -16,7 +16,9 @@
  */
 package es.bsc.compss.types.data.params;
 
+import es.bsc.compss.types.data.info.CollectionInfo;
 import es.bsc.compss.types.data.info.DataInfo;
+import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
 
@@ -28,7 +30,7 @@ public interface DataOwner {
      * @param locationKey file location
      * @param di data registered by the application
      */
-    void registerFileData(String locationKey, DataInfo di);
+    void registerFileData(String locationKey, FileInfo di);
 
     /**
      * Returns the Data related to a file.
@@ -36,7 +38,7 @@ public interface DataOwner {
      * @param locationKey file location
      * @return data related to the file
      */
-    DataInfo getFileData(String locationKey);
+    FileInfo getFileData(String locationKey);
 
     /**
      * Removes any data association related to file location.
@@ -45,7 +47,7 @@ public interface DataOwner {
      * @return data Id related to the file
      * @throws ValueUnawareRuntimeException the application is not aware of the data
      */
-    DataInfo removeFileData(String locationKey) throws ValueUnawareRuntimeException;
+    FileInfo removeFileData(String locationKey) throws ValueUnawareRuntimeException;
 
     /**
      * Stores the relation between an object and the corresponding dataInfo.
@@ -78,7 +80,7 @@ public interface DataOwner {
      * @param collectionId Id of the collection
      * @param di data registered by the application
      */
-    void registerCollectionData(String collectionId, DataInfo di);
+    void registerCollectionData(String collectionId, CollectionInfo di);
 
     /**
      * Returns the Data related to a collection.
@@ -86,7 +88,7 @@ public interface DataOwner {
      * @param collectionId Id of the collection
      * @return data related to the file
      */
-    DataInfo getCollectionData(String collectionId);
+    CollectionInfo getCollectionData(String collectionId);
 
     /**
      * Removes any data association related to a collection.
@@ -95,6 +97,6 @@ public interface DataOwner {
      * @return data Id related to the file
      * @throws ValueUnawareRuntimeException the application is not aware of the data
      */
-    DataInfo removeCollectionData(String collectionId) throws ValueUnawareRuntimeException;
+    CollectionInfo removeCollectionData(String collectionId) throws ValueUnawareRuntimeException;
 
 }

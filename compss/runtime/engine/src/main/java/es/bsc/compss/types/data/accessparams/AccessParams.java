@@ -37,7 +37,7 @@ import org.apache.logging.log4j.Logger;
  */
 public abstract class AccessParams<D extends DataParams> implements Serializable {
 
-    public static enum AccessMode {
+    public enum AccessMode {
 
         R(true, false), // Read
         W(false, true), // Write

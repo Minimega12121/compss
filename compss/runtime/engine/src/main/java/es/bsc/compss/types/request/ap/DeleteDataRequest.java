@@ -70,22 +70,7 @@ public class DeleteDataRequest extends APRequest {
             }
 
             DataAccessesInfo dai = DataAccessesInfo.remove(dataId);
-            if (dai != null) {
-                switch (dai.getDataType()) {
-                    case STREAM_T:
-                    case EXTERNAL_STREAM_T:
-                        // No data to delete
-                        break;
-                    case FILE_T:
-                        // Remove file data form the list of written files
-                        FileInfo fInfo = (FileInfo) data.getRegisteredData(this.app);
-                        app.removeWrittenFile(fInfo);
-                        break;
-                    default:
-                        // Nothing to do for other types
-                        break;
-                }
-            } else {
+            if (dai == null) {
                 LOGGER.warn("Writters info for data " + dataId + " not found.");
             }
 

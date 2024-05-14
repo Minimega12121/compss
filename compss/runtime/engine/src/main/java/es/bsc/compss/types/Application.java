@@ -24,6 +24,7 @@ import es.bsc.compss.checkpoint.CheckpointManager;
 import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.accesses.DataAccessesInfo;
+import es.bsc.compss.types.data.info.CollectionInfo;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.data.params.DataOwner;
@@ -105,14 +106,11 @@ public class Application implements ApplicationTaskMonitor, DataOwner {
      * Application's Data
      */
     // Map: filename:host:path -> file identifier
-    private final TreeMap<String, DataInfo> nameToData;
+    private final TreeMap<String, FileInfo> nameToData;
     // Map: hash code -> object identifier
     private final TreeMap<Integer, DataInfo> codeToData;
     // Map: collectionName -> collection identifier
-    private final TreeMap<String, DataInfo> collectionToData;
-
-    // Set of written data ids (for result files)
-    private Set<FileInfo> writtenFileData;
+    private final TreeMap<String, CollectionInfo> collectionToData;
 
 
     public static void setCP(CheckpointManager cp) {
@@ -238,7 +236,6 @@ public class Application implements ApplicationTaskMonitor, DataOwner {
         this.nameToData = new TreeMap<>();
         this.codeToData = new TreeMap<>();
         this.collectionToData = new TreeMap<>();
-        this.writtenFileData = new HashSet<>();
     }
 
     public Long getId() {
@@ -461,19 +458,20 @@ public class Application implements ApplicationTaskMonitor, DataOwner {
      */
 
     @Override
-    public void registerFileData(String locationKey, DataInfo di) {
+    public void registerFileData(String locationKey, FileInfo di) {
         this.nameToData.put(locationKey, di);
     }
 
     @Override
-    public DataInfo getFileData(String locationKey) {
+    public FileInfo getFileData(String locationKey) {
         return this.nameToData.get(locationKey);
     }
 
     @Override
-    public DataInfo removeFileData(String locationKey) throws ValueUnawareRuntimeException {
-        DataInfo di = this.nameToData.remove(locationKey);
-        return removeData(di);
+    public FileInfo removeFileData(String locationKey) throws ValueUnawareRuntimeException {
+        FileInfo di = this.nameToData.remove(locationKey);
+        removeData(di);
+        return di;
     }
 
     @Override
@@ -489,32 +487,33 @@ public class Application implements ApplicationTaskMonitor, DataOwner {
     @Override
     public DataInfo removeObjectData(int code) throws ValueUnawareRuntimeException {
         DataInfo di = this.codeToData.remove(code);
-        return removeData(di);
+        removeData(di);
+        return di;
     }
 
     @Override
-    public void registerCollectionData(String collectionId, DataInfo di) {
+    public void registerCollectionData(String collectionId, CollectionInfo di) {
         this.collectionToData.put(collectionId, di);
     }
 
     @Override
-    public DataInfo getCollectionData(String collectionId) {
+    public CollectionInfo getCollectionData(String collectionId) {
         return this.collectionToData.get(collectionId);
     }
 
     @Override
-    public DataInfo removeCollectionData(String collectionId) throws ValueUnawareRuntimeException {
-        DataInfo di = this.collectionToData.remove(collectionId);
-        return removeData(di);
+    public CollectionInfo removeCollectionData(String collectionId) throws ValueUnawareRuntimeException {
+        CollectionInfo di = this.collectionToData.remove(collectionId);
+        removeData(di);
+        return di;
     }
 
-    private DataInfo removeData(DataInfo dataInfo) throws ValueUnawareRuntimeException {
+    private void removeData(DataInfo dataInfo) throws ValueUnawareRuntimeException {
         if (dataInfo == null) {
             throw new ValueUnawareRuntimeException();
         }
         // We delete the data associated with all the versions of the same object
         dataInfo.delete();
-        return dataInfo;
     }
 
     /**
@@ -535,32 +534,18 @@ public class Application implements ApplicationTaskMonitor, DataOwner {
     }
 
     /**
-     * Adds a data as an output file of the task.
-     *
-     * @param fInfo data to be registered as a file output.
-     */
-    public void addWrittenFile(FileInfo fInfo) {
-        this.writtenFileData.add(fInfo);
-    }
-
-    /**
-     * REmoves a data as an output file of the task.
-     *
-     * @param fInfo data to be unregistered as a file output.
-     */
-    public void removeWrittenFile(FileInfo fInfo) {
-        if (this.writtenFileData.remove(fInfo)) {
-            LOGGER.info(" Removed data " + fInfo.getDataId() + " from written files");
-        }
-    }
-
-    /**
      * Returns a set with all the FileIds written by the application.
      *
      * @return set with all the DataIds corresponding to files written by the application.
      */
     public Set<FileInfo> getWrittenFiles() {
-        return this.writtenFileData;
+        Set<FileInfo> wfiles = new HashSet<>();
+        for (DataInfo di : this.nameToData.values()) {
+            if (di.getCurrentDataVersion().getDataInstanceId().getVersionId() > 1) {
+                wfiles.add((FileInfo) di);
+            }
+        }
+        return wfiles;
     }
 
     public void setTimerTask(WallClockTimerTask wcTimerTask) {

@@ -248,7 +248,6 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
         DataAccessesInfo dai) {
         int currentTaskId = currentTask.getId();
         int dataId = dp.getDataAccessId().getDataId();
-        Application app = currentTask.getApplication();
 
         if (DEBUG) {
             LOGGER.debug("Checking WRITE dependency for datum " + dataId + " and task " + currentTaskId);
@@ -258,19 +257,6 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
             dai = DataAccessesInfo.createAccessInfo(dataId, dp.getType());
         }
         dai.writeValue(currentTask, dp, isConcurrent);
-
-        // Update file and PSCO lists
-        switch (dp.getType()) {
-            case DIRECTORY_T:
-            case FILE_T:
-                FileInfo fInfo = (FileInfo) dp.getAccess().getDataInfo();
-                app.addWrittenFile(fInfo);
-                break;
-            default:
-                // Nothing to do with basic types
-                // Objects are not checked, their version will be only get if the main accesses them
-                break;
-        }
 
         if (DEBUG) {
             LOGGER.debug("New writer for datum " + dataId + " is task " + currentTaskId);
