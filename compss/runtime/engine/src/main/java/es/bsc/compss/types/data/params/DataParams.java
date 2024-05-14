@@ -26,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 public abstract class DataParams {
 
     // Component logger
-    private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
+    private static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
 
 

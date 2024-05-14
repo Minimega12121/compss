@@ -34,7 +34,7 @@ import org.apache.logging.log4j.Logger;
 public class CommutativeGroupTask extends AbstractTask {
 
     // Logger
-    private static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
+    private static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     private static int commGroupTaskId = -1;

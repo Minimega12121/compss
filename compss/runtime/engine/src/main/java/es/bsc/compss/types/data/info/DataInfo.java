@@ -27,7 +27,6 @@ import es.bsc.compss.types.data.accessparams.AccessParams.AccessMode;
 import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.NonExistingValueException;
-import es.bsc.compss.util.ErrorManager;
 
 import java.util.LinkedList;
 import java.util.TreeMap;
@@ -45,7 +44,7 @@ public abstract class DataInfo<T extends DataParams> {
     private static final int FIRST_VERSION_ID = 1;
 
     // Component logger
-    protected static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
+    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
     protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     protected static int nextDataId = FIRST_FILE_ID;

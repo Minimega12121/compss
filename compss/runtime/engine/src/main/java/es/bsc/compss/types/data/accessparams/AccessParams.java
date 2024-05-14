@@ -23,7 +23,6 @@ import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
-import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
@@ -72,7 +71,7 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
     private static final long serialVersionUID = 1L;
 
     // Component logger
-    protected static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
+    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
     protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     protected final Application app;

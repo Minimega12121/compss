@@ -43,7 +43,7 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
     private static final long serialVersionUID = 1L;
 
     // Loggers
-    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
+    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
     protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     private final T access;

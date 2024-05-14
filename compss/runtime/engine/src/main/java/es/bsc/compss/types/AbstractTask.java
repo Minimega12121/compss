@@ -37,7 +37,7 @@ import org.apache.logging.log4j.Logger;
 public abstract class AbstractTask implements Comparable<AbstractTask> {
 
     // Logger
-    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
+    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
     protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     // Task fields
