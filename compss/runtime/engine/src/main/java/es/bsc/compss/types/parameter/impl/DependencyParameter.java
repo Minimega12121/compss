@@ -29,7 +29,6 @@ import es.bsc.compss.types.annotations.parameter.StdIOStream;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.info.DataInfo;
-import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -272,22 +271,19 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
         }
         int dataId = dAccId.getDataId();
 
-        DataType type = this.getType();
-        if (type != DataType.DIRECTORY_T || type != DataType.STREAM_T || type != DataType.EXTERNAL_STREAM_T) {
-            if (DEBUG) {
-                int currentTaskId = task.getId();
-                LOGGER.debug("Removing writters info for datum " + dataId + " and task " + currentTaskId);
-            }
-            DataAccessesInfo dai = DataAccessesInfo.get(dataId);
-            if (dai != null) {
-                switch (this.getDirection()) {
-                    case OUT:
-                    case INOUT:
-                        dai.completedProducer(task);
-                        break;
-                    default:
-                        break;
-                }
+        if (DEBUG) {
+            int currentTaskId = task.getId();
+            LOGGER.debug("Removing writters info for datum " + dataId + " and task " + currentTaskId);
+        }
+        DataAccessesInfo dai = DataAccessesInfo.get(dataId);
+        if (dai != null) {
+            switch (this.getDirection()) {
+                case OUT:
+                case INOUT:
+                    dai.completedProducer(task);
+                    break;
+                default:
+                    break;
             }
         }
 
