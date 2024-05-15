@@ -19,7 +19,6 @@ package es.bsc.compss.types.parameter.impl;
 import es.bsc.compss.api.ParameterMonitor;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
-import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.Direction;
 import es.bsc.compss.types.annotations.parameter.StdIOStream;
@@ -156,8 +155,6 @@ public class CollectiveParameter extends DependencyParameter<CollectionAccessPar
             DataInfo dataInfo = this.removeData();
             int dataId = dataInfo.getDataId();
             LOGGER.info("Deleting data " + dataId);
-
-            DataAccessesInfo.remove(dataId);
         } catch (ValueUnawareRuntimeException e) {
             // If not existing, the collection was already removed. No need to do anything
         }

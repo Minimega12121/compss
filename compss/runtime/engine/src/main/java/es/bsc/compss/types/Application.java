@@ -23,7 +23,6 @@ import es.bsc.compss.api.impl.DoNothingApplicationMonitor;
 import es.bsc.compss.checkpoint.CheckpointManager;
 import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.log.Loggers;
-import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.data.info.CollectionInfo;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
@@ -435,7 +434,7 @@ public class Application implements ApplicationTaskMonitor, DataOwner {
      */
     public final void reachesBarrier(Barrier barrier) {
         doBarrier(barrier);
-        this.GH.barrier(DataAccessesInfo.getAll());
+        this.GH.barrier(this.nameToData, this.codeToData, this.collectionToData);
     }
 
     /**

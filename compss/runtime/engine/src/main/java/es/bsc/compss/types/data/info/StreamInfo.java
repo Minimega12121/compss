@@ -16,18 +16,30 @@
  */
 package es.bsc.compss.types.data.info;
 
+import es.bsc.compss.components.monitor.impl.EdgeType;
+import es.bsc.compss.types.AbstractTask;
+import es.bsc.compss.types.Application;
+import es.bsc.compss.types.Task;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.RAccessId;
 import es.bsc.compss.types.data.accessid.WAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams.AccessMode;
 import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.data.params.StreamData;
+import es.bsc.compss.types.parameter.impl.DependencyParameter;
+import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
 import es.bsc.compss.util.ErrorManager;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 
 
 public class StreamInfo extends DataInfo<StreamData> {
+
+    private final List<AbstractTask> streamWriters = new ArrayList<>();
+
 
     /**
      * Creates a new StreamInfo instance for the given stream.
@@ -80,4 +92,90 @@ public class StreamInfo extends DataInfo<StreamData> {
         // Nothing to wait for
     }
 
+    @Override
+    public AbstractTask getProducer() {
+        if (!streamWriters.isEmpty()) {
+            return streamWriters.get(0);
+        }
+        return null;
+    }
+
+    @Override
+    public void completedProducer(AbstractTask task) {
+        this.streamWriters.remove(task);
+    }
+
+    @Override
+    public boolean readValue(Task task, DependencyParameter dp, boolean isConcurrent) {
+        int dataId = dp.getDataAccessId().getDataId();
+        if (!streamWriters.isEmpty()) {
+            if (DEBUG) {
+                StringBuilder sb = new StringBuilder();
+                if (streamWriters.size() > 1) {
+                    sb.append("Last writers for stream datum ");
+                    sb.append(dataId);
+                    sb.append(" are tasks ");
+                } else {
+                    sb.append("Last writer for stream datum ");
+                    sb.append(dataId);
+                    sb.append(" is task ");
+                }
+                for (AbstractTask lastWriter : streamWriters) {
+                    sb.append(lastWriter.getId());
+                    sb.append(" ");
+                }
+                LOGGER.debug(sb.toString());
+            }
+
+            // Add dependencies
+            for (AbstractTask lastWriter : streamWriters) {
+                // Debug message
+                if (DEBUG) {
+                    LOGGER.debug(
+                        "Adding stream dependency between task " + lastWriter.getId() + " and task " + task.getId());
+                }
+
+                // Add dependency
+                task.addStreamDataDependency(lastWriter);
+            }
+        } else {
+            // Task is free
+            if (DEBUG) {
+                LOGGER.debug("There is no last stream writer for datum " + dataId);
+            }
+        }
+
+        // Add edge to graph
+        Application app = task.getApplication();
+        app.getGH().addStreamDependency(task, dataId, false);
+        return true;
+    }
+
+    @Override
+    public void writeValue(Task t, DependencyParameter dp, boolean isConcurrent) {
+        this.streamWriters.add(t);
+        Integer dataId = dp.getDataAccessId().getDataId();
+        Application app = t.getApplication();
+        app.getGH().addStreamDependency(t, dataId, true);
+    }
+
+    @Override
+    public void mainAccess(RegisterDataAccessRequest rdar, EngineDataAccessId access) {
+        EngineDataInstanceId accessedData;
+        if (access.isWrite()) {
+            accessedData = ((EngineDataAccessId.WritingDataAccessId) access).getWrittenDataInstance();
+        } else {
+            accessedData = ((EngineDataAccessId.ReadingDataAccessId) access).getReadDataInstance();
+        }
+        // Add graph description
+        Application app = rdar.getAccess().getApp();
+        for (AbstractTask lastWriter : this.streamWriters) {
+            app.getGH().mainAccessToData(lastWriter, EdgeType.STREAM_DEPENDENCY, accessedData);
+        }
+    }
+
+    @Override
+    public List<AbstractTask> getDataWriters() {
+        return streamWriters;
+    }
 }

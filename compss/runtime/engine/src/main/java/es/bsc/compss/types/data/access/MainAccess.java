@@ -19,10 +19,10 @@ package es.bsc.compss.types.data.access;
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.Application;
-import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
+import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.location.DataLocation;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
@@ -56,7 +56,7 @@ public abstract class MainAccess<V extends Object, D extends DataParams, P exten
 
     /**
      * Returns the application performing the access.
-     * 
+     *
      * @return application performing the access.
      */
     public Application getApp() {
@@ -117,9 +117,8 @@ public abstract class MainAccess<V extends Object, D extends DataParams, P exten
                 Application app = this.getApp();
                 app.getCP().mainAccess(di);
 
-                int dataId = accessId.getDataId();
                 // Retrieve writers information
-                DataAccessesInfo dai = DataAccessesInfo.get(dataId);
+                DataInfo dai = accessId.getAccessedDataInfo();
                 if (dai != null) {
                     dai.mainAccess(rdar, accessId);
                 }

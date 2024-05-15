@@ -19,18 +19,22 @@ package es.bsc.compss.components.monitor.impl;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.CommutativeGroupTask;
 import es.bsc.compss.types.Task;
-import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
+import es.bsc.compss.types.data.info.CollectionInfo;
+import es.bsc.compss.types.data.info.DataInfo;
+import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.request.ap.BarrierGroupRequest;
 
 import java.io.BufferedWriter;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 
 public class DotGraph implements GraphHandler {
@@ -258,7 +262,8 @@ public class DotGraph implements GraphHandler {
     }
 
     @Override
-    public void barrier(Map<Integer, DataAccessesInfo> accessesInfo) {
+    public void barrier(Map<String, FileInfo> files, Map<Integer, DataInfo> objects,
+        Map<String, CollectionInfo> collections) {
         // Addition of missing commutative groups to graph
         this.gm.closeCommutativeGroups();
         /**
@@ -271,13 +276,19 @@ public class DotGraph implements GraphHandler {
 
         // Add edges from writers to barrier
         Set<AbstractTask> uniqueWriters = new HashSet<>();
-        for (DataAccessesInfo dai : accessesInfo.values()) {
-            if (dai != null) {
-                // Add data writers
-                List<AbstractTask> dataWriters = dai.getDataWriters();
-                // Add stream writers
+        for (DataInfo di : files.values()) {
+            if (di != null) {
+                List<AbstractTask> dataWriters = di.getDataWriters();
                 uniqueWriters.addAll(dataWriters);
             }
+        }
+        for (DataInfo di : objects.values()) {
+            List<AbstractTask> dataWriters = di.getDataWriters();
+            uniqueWriters.addAll(dataWriters);
+        }
+        for (DataInfo di : collections.values()) {
+            List<AbstractTask> dataWriters = di.getDataWriters();
+            uniqueWriters.addAll(dataWriters);
         }
         for (AbstractTask writer : uniqueWriters) {
             if (writer != null && writer.getSynchronizationId() == oldSync) {

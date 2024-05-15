@@ -17,6 +17,8 @@
 package es.bsc.compss.types.data.info;
 
 import es.bsc.compss.log.Loggers;
+import es.bsc.compss.types.AbstractTask;
+import es.bsc.compss.types.Task;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
@@ -26,9 +28,12 @@ import es.bsc.compss.types.data.accessid.WAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams.AccessMode;
 import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.data.params.DataParams;
+import es.bsc.compss.types.parameter.impl.DependencyParameter;
+import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
 import es.bsc.compss.types.request.exceptions.NonExistingValueException;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 
@@ -395,4 +400,51 @@ public abstract class DataInfo<T extends DataParams> {
         return this.currentVersion.isToDelete();
     }
 
+    /**
+     * Registers a task reading the data value.
+     *
+     * @param t task reading the value
+     * @param dp parameter corresponding to the data value
+     * @param isConcurrent {@literal true} if the reading was due to a concuerrent access; {@literal false} otherwise.
+     * @return {@literal true}, if an edge has been printed; {@literal false}, otherwise.
+     */
+    public abstract boolean readValue(Task t, DependencyParameter dp, boolean isConcurrent);
+
+    /**
+     * Registers a task writting on the data value.
+     *
+     * @param t task writting the value
+     * @param dp parameter corresponding to the data value
+     * @param isConcurrent {@literal true} if the writting was due to a concuerrent access; {@literal false} otherwise.
+     */
+    public abstract void writeValue(Task t, DependencyParameter dp, boolean isConcurrent);
+
+    /**
+     * Registers an access from the application main code to the value.
+     *
+     * @param rdar Request to access the data value
+     * @param access data access description with instances
+     */
+    public abstract void mainAccess(RegisterDataAccessRequest rdar, EngineDataAccessId access);
+
+    /**
+     * Registers a data producer as completed.
+     *
+     * @param task Data Producer
+     */
+    public abstract void completedProducer(AbstractTask task);
+
+    /**
+     * Obtains the task/task group producing the data.
+     * 
+     * @return the task/task group producing the data
+     */
+    public abstract AbstractTask getProducer();
+
+    /**
+     * Returns the last Tasks producing the value.
+     *
+     * @return last tasks generating the value.
+     */
+    public abstract List<AbstractTask> getDataWriters();
 }

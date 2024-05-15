@@ -19,9 +19,7 @@ package es.bsc.compss.types.request.ap;
 import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.Application;
-import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.data.info.DataInfo;
-import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.types.tracing.TraceEvent;
@@ -68,12 +66,6 @@ public class DeleteDataRequest implements APRequest {
             if (applicationDelete) {
                 app.getCP().deletedData(dataInfo);
             }
-
-            DataAccessesInfo dai = DataAccessesInfo.remove(dataId);
-            if (dai == null) {
-                LOGGER.warn("Writters info for data " + dataId + " not found.");
-            }
-
         } catch (ValueUnawareRuntimeException vure) {
             unawareException = vure;
         }
