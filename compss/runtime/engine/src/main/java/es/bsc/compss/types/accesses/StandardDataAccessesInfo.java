@@ -196,24 +196,19 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
         Application app = rdar.getAccess().getApp();
         if (lastWriter != null) {
             app.getGH().mainAccessToData(lastWriter, EdgeType.DATA_DEPENDENCY, accessedData);
-            // Release task if possible. Otherwise add to waiting
-            if (lastWriter.isPending()) {
-                lastWriter.addListener(rdar);
-                rdar.addPendingOperation();
-                if (rdar.getAccess().getParameters().getMode() == AccessParams.AccessMode.RW) {
-                    updateLastWriter(null);
-                }
-            }
+            lastWriter.addListener(rdar);
+            rdar.addPendingOperation();
         }
-
         for (AbstractTask task : this.concurrentReaders) {
             app.getGH().mainAccessToData(task, EdgeType.DATA_DEPENDENCY, accessedData);
-            if (task != null && task.isPending()) {
-                task.addListener(rdar);
-                rdar.addPendingOperation();
-            }
+            task.addListener(rdar);
+            rdar.addPendingOperation();
         }
         this.concurrentReaders.clear();
+
+        if (rdar.getAccess().getParameters().getMode().isWrite()) {
+            updateLastWriter(null);
+        }
     }
 
     @Override
