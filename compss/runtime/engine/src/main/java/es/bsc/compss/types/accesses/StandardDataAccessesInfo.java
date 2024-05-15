@@ -186,7 +186,13 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
     }
 
     @Override
-    public void mainAccess(RegisterDataAccessRequest rdar, EngineDataInstanceId accessedData) {
+    public void mainAccess(RegisterDataAccessRequest rdar, EngineDataAccessId access) {
+        EngineDataInstanceId accessedData;
+        if (access.isWrite()) {
+            accessedData = ((EngineDataAccessId.WritingDataAccessId) access).getWrittenDataInstance();
+        } else {
+            accessedData = ((EngineDataAccessId.ReadingDataAccessId) access).getReadDataInstance();
+        }
         Application app = rdar.getAccess().getApp();
         if (lastWriter != null) {
             app.getGH().mainAccessToData(lastWriter, EdgeType.DATA_DEPENDENCY, accessedData);

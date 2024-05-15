@@ -20,13 +20,8 @@ import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.TaskListener;
-import es.bsc.compss.types.accesses.DataAccessesInfo;
-import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.access.MainAccess;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
-import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
-import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
-import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.types.tracing.TraceEvent;
 
@@ -75,43 +70,7 @@ public class RegisterDataAccessRequest implements APRequest, TaskListener {
     @Override
     public void process(AccessProcessor ap, TaskDispatcher td) {
         try {
-            AccessParams accessParams = this.access.getParameters();
-            if (DEBUG) {
-                LOGGER.debug("Registering access " + accessParams.toString() + " from App "
-                    + this.access.getApp().getId() + "'s main code");
-            }
-            accessParams.checkAccessValidity();
-            this.accessId = accessParams.register();
-            if (this.accessId == null) {
-                if (DEBUG) {
-                    LOGGER.debug("Accessing a canceled data from main code. Returning null");
-                }
-            } else {
-                if (DEBUG) {
-                    LOGGER.debug("Registered access to data " + this.accessId.getDataId() + " from main code");
-                }
-
-                if (this.accessId.isRead()) {
-                    EngineDataAccessId.ReadingDataAccessId rdaId = (ReadingDataAccessId) this.accessId;
-                    EngineDataInstanceId di = rdaId.getReadDataInstance();
-                    Application app = this.access.getApp();
-                    app.getCP().mainAccess(di);
-
-                    int dataId = this.accessId.getDataId();
-                    // Retrieve writers information
-                    DataAccessesInfo dai = DataAccessesInfo.get(dataId);
-                    if (dai != null) {
-                        EngineDataInstanceId depInstance;
-                        if (this.accessId.isWrite()) {
-                            depInstance = ((WritingDataAccessId) this.accessId).getWrittenDataInstance();
-                        } else {
-                            depInstance = di;
-                        }
-                        dai.mainAccess(this, depInstance);
-                    }
-                }
-            }
-
+            this.accessId = this.access.register(this);
         } catch (ValueUnawareRuntimeException e) {
             this.unawareException = e;
         }

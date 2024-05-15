@@ -22,8 +22,10 @@ import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.data.EngineDataInstanceId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -108,11 +110,17 @@ public class StreamDataAccessesInfo extends DataAccessesInfo {
     }
 
     @Override
-    public void mainAccess(RegisterDataAccessRequest rdar, EngineDataInstanceId accesedData) {
+    public void mainAccess(RegisterDataAccessRequest rdar, EngineDataAccessId access) {
+        EngineDataInstanceId accessedData;
+        if (access.isWrite()) {
+            accessedData = ((EngineDataAccessId.WritingDataAccessId) access).getWrittenDataInstance();
+        } else {
+            accessedData = ((EngineDataAccessId.ReadingDataAccessId) access).getReadDataInstance();
+        }
         // Add graph description
         Application app = rdar.getAccess().getApp();
         for (AbstractTask lastWriter : this.streamWriters) {
-            app.getGH().mainAccessToData(lastWriter, EdgeType.STREAM_DEPENDENCY, accesedData);
+            app.getGH().mainAccessToData(lastWriter, EdgeType.STREAM_DEPENDENCY, accessedData);
         }
     }
 

@@ -19,10 +19,14 @@ package es.bsc.compss.types.data.access;
 import es.bsc.compss.comm.Comm;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.Application;
+import es.bsc.compss.types.accesses.DataAccessesInfo;
+import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.location.DataLocation;
 import es.bsc.compss.types.data.params.DataParams;
+import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
+import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.types.uri.SimpleURI;
 import es.bsc.compss.util.ErrorManager;
 
@@ -82,6 +86,47 @@ public abstract class MainAccess<V extends Object, D extends DataParams, P exten
      * @return last version of the accessed data.
      */
     public abstract V fetch(EngineDataAccessId daId);
+
+    /**
+     * Registers the main access and detects the dependencies.
+     *
+     * @param rdar element to notify when dependencies are discovered
+     * @return The registered access Id.
+     * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
+     */
+    public EngineDataAccessId register(RegisterDataAccessRequest rdar) throws ValueUnawareRuntimeException {
+        AccessParams accessParams = this.parameters;
+        if (DEBUG) {
+            Long appId = this.getApp().getId();
+            LOGGER.debug("Registering access " + accessParams.toString() + " from App " + appId + "'s main code");
+        }
+        accessParams.checkAccessValidity();
+        EngineDataAccessId accessId = accessParams.register();
+        if (accessId == null) {
+            if (DEBUG) {
+                LOGGER.debug("Accessing a canceled data from main code. Returning null");
+            }
+        } else {
+            if (DEBUG) {
+                LOGGER.debug("Registered access to data " + accessId.getDataId() + " from main code");
+            }
+
+            if (accessId.isRead()) {
+                EngineDataAccessId.ReadingDataAccessId rdaId = (EngineDataAccessId.ReadingDataAccessId) accessId;
+                EngineDataInstanceId di = rdaId.getReadDataInstance();
+                Application app = this.getApp();
+                app.getCP().mainAccess(di);
+
+                int dataId = accessId.getDataId();
+                // Retrieve writers information
+                DataAccessesInfo dai = DataAccessesInfo.get(dataId);
+                if (dai != null) {
+                    dai.mainAccess(rdar, accessId);
+                }
+            }
+        }
+        return accessId;
+    }
 
     /**
      * Returns whether the registration of the access leads to its immediate finalization.

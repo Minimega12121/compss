@@ -20,7 +20,7 @@ import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Task;
 import es.bsc.compss.types.annotations.parameter.DataType;
-import es.bsc.compss.types.data.EngineDataInstanceId;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
 import java.util.List;
@@ -85,9 +85,9 @@ public abstract class DataAccessesInfo {
      * Registers an access from the application main code to the value.
      *
      * @param rdar Request to access the data value
-     * @param depInstance data instance being accessed
+     * @param access data access description with instances
      */
-    public abstract void mainAccess(RegisterDataAccessRequest rdar, EngineDataInstanceId depInstance);
+    public abstract void mainAccess(RegisterDataAccessRequest rdar, EngineDataAccessId access);
 
     @Override
     public String toString() {
