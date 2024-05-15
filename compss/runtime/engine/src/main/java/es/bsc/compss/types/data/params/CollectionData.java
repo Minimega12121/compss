@@ -48,7 +48,6 @@ public class CollectionData extends DataParams {
 
     @Override
     public DataInfo getRegisteredData(DataOwner owner) {
-        ;
         return owner.getCollectionData(this.collectionId);
     }
 

@@ -118,7 +118,7 @@ public abstract class StandardDataInfo<T extends DataParams> extends DataInfo<T>
     }
 
     @Override
-    public AbstractTask getProducer() {
+    public AbstractTask getLastVersionProducer() {
         return this.lastWriter;
     }
 
@@ -127,7 +127,7 @@ public abstract class StandardDataInfo<T extends DataParams> extends DataInfo<T>
         if (this.concurrentReaders.isEmpty() || isConcurrent) {
             return readDependency(task, dp);
         } else {
-            return concurrentDependency(task, dp);
+            return dependsFromConcurrent(task, dp);
         }
     }
 
@@ -173,7 +173,7 @@ public abstract class StandardDataInfo<T extends DataParams> extends DataInfo<T>
         return hasEdge;
     }
 
-    private boolean concurrentDependency(Task task, DependencyParameter dp) {
+    private boolean dependsFromConcurrent(Task task, DependencyParameter dp) {
         int dataId = dp.getDataAccessId().getDataId();
         if (!this.concurrentReaders.contains(task)) {
             if (DEBUG) {

@@ -142,10 +142,6 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
         return this.mode;
     }
 
-    public DataInfo getDataInfo() {
-        return data.getRegisteredData(this.app);
-    }
-
     public final String getDataDescription() {
         return data.getDescription();
     }
@@ -177,9 +173,9 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
                 LOGGER.debug("Another access to " + this.getDataDescription());
             }
         }
+        this.externalRegister();
 
         EngineDataAccessId daId = dInfo.willAccess(this.mode);
-        this.externalRegister();
         return daId;
     }
 

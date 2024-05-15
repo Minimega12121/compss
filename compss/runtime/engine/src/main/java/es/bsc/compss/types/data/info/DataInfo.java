@@ -435,11 +435,11 @@ public abstract class DataInfo<T extends DataParams> {
     public abstract void completedProducer(AbstractTask task);
 
     /**
-     * Obtains the task/task group producing the data.
+     * Obtains the task/task group producing the last version of the data.
      * 
-     * @return the task/task group producing the data
+     * @return the task/task group producing the last version of the data
      */
-    public abstract AbstractTask getProducer();
+    public abstract AbstractTask getLastVersionProducer();
 
     /**
      * Returns the last Tasks producing the value.

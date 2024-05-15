@@ -221,7 +221,7 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
         if (di != null) {
             hasEdge = di.readValue(currentTask, dp, isConcurrent);
             if (isConstraining) {
-                AbstractTask lastWriter = di.getProducer();
+                AbstractTask lastWriter = di.getLastVersionProducer();
                 currentTask.setEnforcingTask((Task) lastWriter);
             }
         } else {

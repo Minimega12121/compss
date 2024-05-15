@@ -93,7 +93,7 @@ public class StreamInfo extends DataInfo<StreamData> {
     }
 
     @Override
-    public AbstractTask getProducer() {
+    public AbstractTask getLastVersionProducer() {
         if (!streamWriters.isEmpty()) {
             return streamWriters.get(0);
         }

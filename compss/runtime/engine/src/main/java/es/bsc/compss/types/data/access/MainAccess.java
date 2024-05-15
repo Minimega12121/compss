@@ -113,15 +113,13 @@ public abstract class MainAccess<V extends Object, D extends DataParams, P exten
 
             if (accessId.isRead()) {
                 EngineDataAccessId.ReadingDataAccessId rdaId = (EngineDataAccessId.ReadingDataAccessId) accessId;
-                EngineDataInstanceId di = rdaId.getReadDataInstance();
+                EngineDataInstanceId rdiID = rdaId.getReadDataInstance();
                 Application app = this.getApp();
-                app.getCP().mainAccess(di);
+                app.getCP().mainAccess(rdiID);
 
                 // Retrieve writers information
-                DataInfo dai = accessId.getAccessedDataInfo();
-                if (dai != null) {
-                    dai.mainAccess(rdar, accessId);
-                }
+                DataInfo di = accessId.getAccessedDataInfo();
+                di.mainAccess(rdar, accessId);
             }
         }
         return accessId;
