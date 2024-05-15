@@ -42,16 +42,6 @@ public abstract class DataAccessesInfo {
 
     private static final Map<Integer, DataAccessesInfo> ACCESSES_INFO = new TreeMap<>();
 
-    private final DataType dataType;
-
-
-    protected DataAccessesInfo(DataType type) {
-        this.dataType = type;
-    }
-
-    public DataType getDataType() {
-        return this.dataType;
-    }
 
     /**
      * Registers a data producer as completed.
@@ -89,19 +79,6 @@ public abstract class DataAccessesInfo {
      */
     public abstract void mainAccess(RegisterDataAccessRequest rdar, EngineDataAccessId access);
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("WI [ ");
-        sb.append("dataType = ").append(this.dataType).append(", ");
-        sb.append(this.toStringDetails());
-        sb.append("]");
-
-        return sb.toString();
-    }
-
-    protected abstract String toStringDetails();
-
     /**
      * Returns the last Tasks producing the value.
      * 
@@ -120,10 +97,10 @@ public abstract class DataAccessesInfo {
         switch (type) {
             case STREAM_T:
             case EXTERNAL_STREAM_T:
-                ai = new StreamDataAccessesInfo(type);
+                ai = new StreamDataAccessesInfo();
                 break;
             default:
-                ai = new StandardDataAccessesInfo(type);
+                ai = new StandardDataAccessesInfo();
                 break;
         }
         ACCESSES_INFO.put(dataId, ai);

@@ -45,10 +45,6 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
     private final List<Task> concurrentReaders = new ArrayList<>();
 
 
-    public StandardDataAccessesInfo(DataType dataType) {
-        super(dataType);
-    }
-
     @Override
     public void completedProducer(AbstractTask task) {
         int producerTaskId = task.getId();
@@ -209,18 +205,6 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
         if (rdar.getAccess().getParameters().getMode().isWrite()) {
             updateLastWriter(null);
         }
-    }
-
-    @Override
-    public String toStringDetails() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("concurrentReaders = [");
-        for (AbstractTask t : this.concurrentReaders) {
-            sb.append(t.getId()).append(" ");
-        }
-        sb.append("], ");
-        sb.append("dataWriter = ").append(this.lastWriter != null ? this.lastWriter.getId() : "null");
-        return sb.toString();
     }
 
     @Override

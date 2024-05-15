@@ -38,10 +38,6 @@ public class StreamDataAccessesInfo extends DataAccessesInfo {
     private final List<AbstractTask> streamWriters = new ArrayList<>();
 
 
-    public StreamDataAccessesInfo(DataType dataType) {
-        super(dataType);
-    }
-
     @Override
     public AbstractTask getConstrainingProducer() {
         if (!streamWriters.isEmpty()) {
@@ -122,17 +118,6 @@ public class StreamDataAccessesInfo extends DataAccessesInfo {
         for (AbstractTask lastWriter : this.streamWriters) {
             app.getGH().mainAccessToData(lastWriter, EdgeType.STREAM_DEPENDENCY, accessedData);
         }
-    }
-
-    @Override
-    public String toStringDetails() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("streamWriters = [");
-        for (AbstractTask t : this.streamWriters) {
-            sb.append(t.getId()).append(" ");
-        }
-        sb.append("]");
-        return sb.toString();
     }
 
     @Override
