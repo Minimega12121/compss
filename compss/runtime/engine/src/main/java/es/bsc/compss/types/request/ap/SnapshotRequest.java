@@ -22,7 +22,7 @@ import es.bsc.compss.types.Application;
 import es.bsc.compss.types.tracing.TraceEvent;
 
 
-public class SnapshotRequest extends APRequest {
+public class SnapshotRequest implements APRequest {
 
     private final Application app;
 

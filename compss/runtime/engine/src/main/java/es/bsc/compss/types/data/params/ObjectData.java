@@ -16,7 +16,6 @@
  */
 package es.bsc.compss.types.data.params;
 
-import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.ObjectInfo;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
@@ -30,11 +29,9 @@ public class ObjectData extends DataParams {
     /**
      * Constructs a new DataParams for an object.
      *
-     * @param app Application accessing the object
      * @param code code identifying the object
      */
-    public ObjectData(Application app, int code) {
-        super(app);
+    public ObjectData(int code) {
         this.code = code;
     }
 
@@ -44,23 +41,19 @@ public class ObjectData extends DataParams {
     }
 
     @Override
-    protected DataInfo registerData() {
-        DataInfo oInfo = new ObjectInfo(this);
-        Application app = this.getApp();
-        app.registerObjectData(code, oInfo);
+    protected DataInfo registerData(DataOwner owner) {
+        DataInfo oInfo = new ObjectInfo(this, owner);
         return oInfo;
     }
 
     @Override
-    public DataInfo getRegisteredData() {
-        Application app = this.getApp();
-        return app.getObjectData(code);
+    public DataInfo getRegisteredData(DataOwner owner) {
+        return owner.getObjectData(code);
     }
 
     @Override
-    protected DataInfo unregisterData() throws ValueUnawareRuntimeException {
-        Application app = this.getApp();
-        return app.removeObjectData(code);
+    protected DataInfo unregisterData(DataOwner owner) throws ValueUnawareRuntimeException {
+        return owner.removeObjectData(code);
     }
 
     public final int getCode() {

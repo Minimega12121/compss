@@ -41,11 +41,11 @@ public class DirectoryMainAccess extends FileMainAccess<DirectoryData, Directory
      */
     public static final DirectoryMainAccess constructDMA(Application app, Direction dir, DataLocation loc) {
         DirectoryAccessParams dap = DirectoryAccessParams.constructDAP(app, dir, loc);
-        return new DirectoryMainAccess(dap);
+        return new DirectoryMainAccess(app, dap);
     }
 
-    private DirectoryMainAccess(DirectoryAccessParams p) {
-        super(p);
+    private DirectoryMainAccess(Application app, DirectoryAccessParams p) {
+        super(app, p);
     }
 
     @Override

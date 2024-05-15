@@ -42,7 +42,7 @@ import storage.StorageException;
 import storage.StorageItf;
 
 
-public class GetResultFilesRequest extends APRequest {
+public class GetResultFilesRequest implements APRequest {
 
     // Constants definition
     private static final String RES_FILE_TRANSFER_ERR = "Error transferring result files";

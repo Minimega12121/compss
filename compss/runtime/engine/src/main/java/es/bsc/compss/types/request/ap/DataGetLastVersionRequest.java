@@ -18,6 +18,7 @@ package es.bsc.compss.types.request.ap;
 
 import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.TaskDispatcher;
+import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.LogicalData;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.params.DataParams;
@@ -29,10 +30,10 @@ import java.util.concurrent.Semaphore;
 /**
  * The DataGetLastVersionRequest is a request for the last version of a file contained in a remote worker.
  */
-public class DataGetLastVersionRequest extends APRequest {
+public class DataGetLastVersionRequest implements APRequest {
 
     private final Semaphore sem;
-
+    private final Application app;
     private final DataParams data;
     private LogicalData response;
 
@@ -40,9 +41,11 @@ public class DataGetLastVersionRequest extends APRequest {
     /**
      * Constructs a new DataGetLastVersionRequest.
      *
+     * @param app application obtaining the last version of the data
      * @param data data whose last version is wanted to be obtained
      */
-    public DataGetLastVersionRequest(DataParams data) {
+    public DataGetLastVersionRequest(Application app, DataParams data) {
+        this.app = app;
         this.sem = new Semaphore(0);
         this.data = data;
     }
@@ -60,7 +63,7 @@ public class DataGetLastVersionRequest extends APRequest {
     @Override
     public void process(AccessProcessor ap, TaskDispatcher td) {
         this.response = null;
-        DataInfo dInfo = data.getRegisteredData();
+        DataInfo dInfo = data.getRegisteredData(this.app);
         if (dInfo != null) {
             this.response = dInfo.getCurrentDataVersion().getDataInstanceId().getData();
         }

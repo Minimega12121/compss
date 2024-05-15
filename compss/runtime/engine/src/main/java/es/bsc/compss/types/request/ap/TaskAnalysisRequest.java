@@ -32,7 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public class TaskAnalysisRequest extends APRequest {
+public class TaskAnalysisRequest implements APRequest {
 
     private static final Logger TIMER_LOGGER = LogManager.getLogger(Loggers.TIMER);
     private static final boolean IS_TIMER_COMPSS_ENABLED;
@@ -99,8 +99,7 @@ public class TaskAnalysisRequest extends APRequest {
         LOGGER.info("New " + description.getType().toString().toLowerCase() + " task: Name:" + description.getName()
             + "), ID = " + this.task.getId() + " APP = " + this.task.getApplication().getId());
 
-        Application app = this.task.getApplication();
-        app.newTask(this.task);
+        task.register();
     }
 
     @Override

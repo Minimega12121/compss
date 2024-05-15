@@ -17,7 +17,6 @@
 package es.bsc.compss.types.data.params;
 
 import es.bsc.compss.comm.Comm;
-import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.data.location.DataLocation;
@@ -36,13 +35,19 @@ public class FileData extends DataParams {
     /**
      * Constructs a new DataParams for a file.
      *
-     * @param app Application accessing the file
      * @param loc location of the file
      */
-    public FileData(Application app, DataLocation loc) {
-        super(app);
+    public FileData(DataLocation loc) {
         this.loc = loc;
         this.locKey = loc.getLocationKey();
+    }
+
+    public DataLocation getLocation() {
+        return this.loc;
+    }
+
+    public String getLocationKey() {
+        return this.locKey;
     }
 
     @Override
@@ -51,29 +56,21 @@ public class FileData extends DataParams {
     }
 
     @Override
-    protected DataInfo registerData() {
-        Application app = this.getApp();
-        DataInfo dInfo = new FileInfo(this);
-        app.registerFileData(this.locKey, dInfo);
+    protected DataInfo registerData(DataOwner owner) {
+        DataInfo dInfo = new FileInfo(this, owner);
         return dInfo;
     }
 
     @Override
-    public DataInfo getRegisteredData() {
-        Application app = this.getApp();
+    public DataInfo getRegisteredData(DataOwner owner) {
         String locationKey = loc.getLocationKey();
-        return app.getFileData(locationKey);
+        return owner.getFileData(locationKey);
     }
 
     @Override
-    protected DataInfo unregisterData() throws ValueUnawareRuntimeException {
-        Application app = this.getApp();
+    protected DataInfo unregisterData(DataOwner owner) throws ValueUnawareRuntimeException {
         String locationKey = loc.getLocationKey();
-        return app.removeFileData(locationKey);
-    }
-
-    public DataLocation getLocation() {
-        return this.loc;
+        return owner.removeFileData(locationKey);
     }
 
     @Override
@@ -82,5 +79,4 @@ public class FileData extends DataParams {
         File f = new File(filePath);
         FileOpsManager.deleteSync(f);
     }
-
 }

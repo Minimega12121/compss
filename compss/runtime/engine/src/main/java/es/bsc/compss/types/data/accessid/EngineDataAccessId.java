@@ -33,6 +33,8 @@ public interface EngineDataAccessId extends DataAccessId {
 
     EngineDataAccessId consolidateValidVersions();
 
+    String toDebugString();
+
 
     interface ReadingDataAccessId extends EngineDataAccessId, DataAccessId.ReadingDataAccessId {
 

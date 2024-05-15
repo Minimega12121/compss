@@ -126,4 +126,15 @@ public class RWAccessId extends EngineDataAccessIdImpl implements ReadingDataAcc
         return this;
     }
 
+    @Override
+    public String toDebugString() {
+        int dataId = this.getDataId();
+        StringBuilder sb = new StringBuilder("");
+        sb.append("Access:").append("\n");
+        sb.append("  * Type: RW").append("\n");
+        sb.append("  * Read Datum: d").append(dataId).append("v").append(this.getRVersionId()).append("\n");
+        sb.append("  * Write Datum: d").append(dataId).append("v").append(this.getWVersionId()).append("\n");
+        return sb.toString();
+    }
+
 }

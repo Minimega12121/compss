@@ -19,17 +19,16 @@ package es.bsc.compss.types.request.ap;
 import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.Application;
-import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.data.info.DataInfo;
-import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.types.tracing.TraceEvent;
 import java.util.concurrent.Semaphore;
 
 
-public class DeleteDataRequest extends APRequest {
+public class DeleteDataRequest implements APRequest {
 
+    private final Application app;
     private final DataParams data;
     private final Semaphore sem;
 
@@ -39,12 +38,14 @@ public class DeleteDataRequest extends APRequest {
 
     /**
      * Creates a new request to delete a file.
-     * 
+     *
+     * @param app application requesting the data deletion
      * @param data data to delete
      * @param applicationDelete Whether the deletion was requested by the user code of the application {@literal true},
      *            or automatically removed by the runtime {@literal false}.
      */
-    public DeleteDataRequest(DataParams data, boolean applicationDelete) {
+    public DeleteDataRequest(Application app, DataParams data, boolean applicationDelete) {
+        this.app = app;
         this.data = data;
         this.sem = new Semaphore(0);
         this.applicationDelete = applicationDelete;
@@ -57,37 +58,14 @@ public class DeleteDataRequest extends APRequest {
             // File Won't be read by any future task or from the main code.
             // Remove it from the dependency analysis and the files to be transferred back
             LOGGER.info("[DeleteDataRequest] Deleting Data in Task Analyser");
-            DataInfo dataInfo = data.delete();
+            DataInfo dataInfo = data.delete(this.app);
             int dataId = dataInfo.getDataId();
             LOGGER.info("Deleting data " + dataId);
 
             // Deleting checkpointed data that is obsolete, INOUT that has a newest version
             if (applicationDelete) {
-                Application app = data.getApp();
                 app.getCP().deletedData(dataInfo);
             }
-
-            DataAccessesInfo dai = DataAccessesInfo.remove(dataId);
-            if (dai != null) {
-                switch (dai.getDataType()) {
-                    case STREAM_T:
-                    case EXTERNAL_STREAM_T:
-                        // No data to delete
-                        break;
-                    case FILE_T:
-                        // Remove file data form the list of written files
-                        Application app = data.getApp();
-                        FileInfo fInfo = (FileInfo) data.getRegisteredData();
-                        app.removeWrittenFile(fInfo);
-                        break;
-                    default:
-                        // Nothing to do for other types
-                        break;
-                }
-            } else {
-                LOGGER.warn("Writters info for data " + dataId + " not found.");
-            }
-
         } catch (ValueUnawareRuntimeException vure) {
             unawareException = vure;
         }

@@ -17,6 +17,8 @@
 package es.bsc.compss.types.data.info;
 
 import es.bsc.compss.types.data.params.CollectionData;
+import es.bsc.compss.types.data.params.DataOwner;
+
 import java.util.concurrent.Semaphore;
 
 
@@ -25,15 +27,17 @@ import java.util.concurrent.Semaphore;
  *
  * @see DataInfo
  */
-public class CollectionInfo extends DataInfo<CollectionData> {
+public class CollectionInfo extends StandardDataInfo<CollectionData> {
 
     /**
      * Creates a new CollectionInfo instance for the given collection.
      *
      * @param data description of the collection related to the info
+     * @param owner owner of the CollectionInfo being created
      */
-    public CollectionInfo(CollectionData data) {
-        super(data);
+    public CollectionInfo(CollectionData data, DataOwner owner) {
+        super(data, owner);
+        owner.registerCollectionData(data.getCollectionId(), this);
     }
 
     /**

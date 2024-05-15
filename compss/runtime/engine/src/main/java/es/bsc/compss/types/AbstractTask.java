@@ -37,7 +37,7 @@ import org.apache.logging.log4j.Logger;
 public abstract class AbstractTask implements Comparable<AbstractTask> {
 
     // Logger
-    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
+    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
     protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     // Task fields
@@ -238,16 +238,6 @@ public abstract class AbstractTask implements Comparable<AbstractTask> {
      */
     public int getId() {
         return this.taskId;
-    }
-
-    /**
-     * Retuns whether the tas is still pending to execute or not.
-     *
-     * @return {@literal true} if the task may still be executed; @{literal false} otherwise
-     */
-    public boolean isPending() {
-        return this.status != TaskState.FINISHED && this.status != TaskState.CANCELED
-            && this.status != TaskState.FAILED;
     }
 
     /**

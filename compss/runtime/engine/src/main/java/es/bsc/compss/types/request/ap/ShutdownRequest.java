@@ -24,7 +24,7 @@ import es.bsc.compss.types.tracing.TraceEvent;
 import java.util.concurrent.Semaphore;
 
 
-public class ShutdownRequest extends APRequest {
+public class ShutdownRequest implements APRequest {
 
     private final Semaphore sem;
 

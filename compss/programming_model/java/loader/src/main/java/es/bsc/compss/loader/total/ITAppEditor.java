@@ -404,7 +404,6 @@ public class ITAppEditor extends ExprEditor {
         StringBuilder executeTask = new StringBuilder();
         executeTask.append(this.itApiVar).append(EXECUTE_TASK);
         executeTask.append(this.itAppIdVar).append(',');
-        executeTask.append("null").append(','); // TaskMonitor set to null
         // Common values
         boolean isPrioritary = Boolean.parseBoolean(Constants.IS_NOT_PRIORITARY_TASK);
         OnFailure onFailure = OnFailure.RETRY;

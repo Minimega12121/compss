@@ -21,7 +21,6 @@ import es.bsc.compss.COMPSsConstants.Lang;
 import es.bsc.compss.COMPSsDefaults;
 import es.bsc.compss.api.TaskMonitor;
 import es.bsc.compss.checkpoint.CheckpointManager;
-import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Application;
@@ -212,8 +211,8 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
             currentTask = new Task(app, lang, signature, isPrioritary, numNodes, isReduce, isReplicated, isDistributed,
                 hasTarget, numReturns, parameters, monitor, onFailure, timeOut);
         }
-        TaskMonitor registeredMonitor = currentTask.getTaskMonitor();
-        registeredMonitor.onCreation();
+
+        app.onTaskCreation(currentTask);
 
         LOGGER.debug("Requesting analysis of Task " + currentTask.getId());
         if (!this.requestQueue.offer(new TaskAnalysisRequest(currentTask))) {
@@ -243,8 +242,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
         Task currentTask = new Task(app, declareMethodFullyQualifiedName, priority, hasTarget, numReturns, parameters,
             monitor, onFailure, timeOut);
 
-        TaskMonitor registeredMonitor = currentTask.getTaskMonitor();
-        registeredMonitor.onCreation();
+        app.onTaskCreation(currentTask);
 
         LOGGER.debug("Requesting analysis of new HTTP Task " + currentTask.getId());
 
@@ -275,11 +273,11 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     public <T> T mainAccess(MainAccess<T, ?, ?> ma) throws ValueUnawareRuntimeException {
         AccessParams<?> ap = ma.getParameters();
         if (DEBUG) {
-            LOGGER.debug("Requesting main access to " + ap.getDataDescription());
+            LOGGER.debug("Requesting main access to " + ap.getDataDescription() + " from App " + ma.getApp());
         }
 
         // Tell the DIP that the application wants to access an object
-        EngineDataAccessId daId = registerDataAccess(ap);
+        EngineDataAccessId daId = registerDataAccess(ma);
         if (daId == null) {
             ErrorManager.warn("No version available. Returning null");
             return ma.getUnavailableValueResponse();
@@ -311,14 +309,15 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     }
 
     /**
-     * Returns the Identifier of the data corresponding to the last version of an dat.
+     * Returns the Identifier of the data corresponding to the last version of a data.
      *
+     * @param app application obtaining the last access for the data
      * @param data Description of the data being accessed.
      * @return data corresponding to the last version of the data.
      */
-    public LogicalData getDataLastVersion(DataParams data) {
+    public LogicalData getDataLastVersion(Application app, DataParams data) {
         // Ask for the object
-        DataGetLastVersionRequest odr = new DataGetLastVersionRequest(data);
+        DataGetLastVersionRequest odr = new DataGetLastVersionRequest(app, data);
         if (!this.requestQueue.offer(odr)) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "data version query");
         }
@@ -387,11 +386,12 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     /**
      * Returns whether the @{code data} has already been accessed or not.
      *
+     * @param app application accessing the value
      * @param data querying data
      * @return {@code true} if the data has been accessed, {@code false} otherwise.
      */
-    public boolean alreadyAccessed(DataParams data) {
-        AlreadyAccessedRequest request = new AlreadyAccessedRequest(data);
+    public boolean alreadyAccessed(Application app, DataParams data) {
+        AlreadyAccessedRequest request = new AlreadyAccessedRequest(app, data);
         if (!this.requestQueue.offer(request)) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "already accessed location");
         }
@@ -444,11 +444,11 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     /**
      * Registers a new data access and waits for it to be available.
      *
-     * @param access Access parameters.
+     * @param access Access done by the main.
      * @return The registered access Id.
      * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
      */
-    private EngineDataAccessId registerDataAccess(AccessParams access) throws ValueUnawareRuntimeException {
+    private EngineDataAccessId registerDataAccess(MainAccess access) throws ValueUnawareRuntimeException {
         RegisterDataAccessRequest request = new RegisterDataAccessRequest(access);
         if (!this.requestQueue.offer(request)) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "register data access");
@@ -532,17 +532,18 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     /**
      * Marks a location for deletion.
      *
+     * @param app application requesting the data removal
      * @param data data to be marked for deletion
      * @param enableReuse {@literal true}, if the application must be able to use the same data name for a new data
      * @param applicationDelete {@literal true}, if the application requested the data deletion; {@literal false}
      *            otherwise
      */
-    public void deleteData(DataParams data, boolean enableReuse, boolean applicationDelete) {
+    public void deleteData(Application app, DataParams data, boolean enableReuse, boolean applicationDelete) {
         LOGGER.debug("Marking data " + data.getDescription() + " for deletion");
         boolean delete = true;
         // No need to wait if data is noReuse
         if (enableReuse) {
-            WaitForDataReadyToDeleteRequest request = new WaitForDataReadyToDeleteRequest(data);
+            WaitForDataReadyToDeleteRequest request = new WaitForDataReadyToDeleteRequest(app, data);
             // Wait for data to be ready for deletion
             if (!this.requestQueue.offer(request)) {
                 ErrorManager.error(ERROR_QUEUE_OFFER + "wait for data ready to delete");
@@ -564,7 +565,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
 
         // Request to delete data
         LOGGER.debug("Sending delete request for " + data.getDescription());
-        DeleteDataRequest req = new DeleteDataRequest(data, applicationDelete);
+        DeleteDataRequest req = new DeleteDataRequest(app, data, applicationDelete);
         if (!this.requestQueue.offer(req)) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "mark for deletion");
         }
@@ -605,11 +606,12 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     /**
      * Registers a data value as available on remote locations.
      *
+     * @param app application accessing the value
      * @param accessedValue the value being accessed by the application
      * @param dataId name of the data associated to the object
      */
-    public void registerRemoteData(DataParams accessedValue, String dataId) {
-        RegisterRemoteDataRequest request = new RegisterRemoteDataRequest(accessedValue, dataId);
+    public void registerRemoteData(Application app, DataParams accessedValue, String dataId) {
+        RegisterRemoteDataRequest request = new RegisterRemoteDataRequest(app, accessedValue, dataId);
         if (!this.requestQueue.offer(request)) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "register data");
         }

@@ -720,7 +720,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
                         ErrorManager.fatal(ERROR_FILE_NAME, ioe);
                         return;
                     }
-                    dp = new FileData(app, loc);
+                    dp = new FileData(loc);
                 } catch (NullPointerException npe) {
                     LOGGER.error(ERROR_FILE_NAME, npe);
                     ErrorManager.fatal(ERROR_FILE_NAME, npe);
@@ -729,7 +729,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
             case OBJECT_T:
             case PSCO_T:
                 int hashcode = oReg.newObjectParameter(appId, stub);
-                dp = new ObjectData(app, hashcode);
+                dp = new ObjectData(hashcode);
                 break;
             case STREAM_T:
                 // int streamCode = oReg.newObjectParameter(stub);
@@ -769,7 +769,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
                 }
                 throw new UnsupportedOperationException("Not implemented yet.");
             case COLLECTION_T:
-                dp = new CollectionData(app, (String) stub);
+                dp = new CollectionData((String) stub);
                 break;
             case DICT_COLLECTION_T:
                 throw new UnsupportedOperationException("Not implemented yet.");
@@ -779,7 +779,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
                 break;
         }
         if (dp != null) {
-            ap.registerRemoteData(dp, data);
+            ap.registerRemoteData(app, dp, data);
         }
     }
 
@@ -797,20 +797,20 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         }
 
         Application app = Application.registerApplication(appId);
-        FileData fd = new FileData(app, sourceLocation);
-        return bindExistingVersionToData(fd, dataId);
+        FileData fd = new FileData(sourceLocation);
+        return bindExistingVersionToData(app, fd, dataId);
     }
 
     @Override
     public boolean bindExistingVersionToData(Long appId, Object o, Integer hashCode, String dataId) {
         Application app = Application.registerApplication(appId);
-        ObjectData od = new ObjectData(app, hashCode);
-        return bindExistingVersionToData(od, dataId);
+        ObjectData od = new ObjectData(hashCode);
+        return bindExistingVersionToData(app, od, dataId);
     }
 
-    private boolean bindExistingVersionToData(DataParams data, String dataId) {
+    private boolean bindExistingVersionToData(Application app, DataParams data, String dataId) {
         LOGGER.debug("Binding " + data.getDescription() + "'s last version to data " + dataId);
-        LogicalData lastVersion = ap.getDataLastVersion(data);
+        LogicalData lastVersion = ap.getDataLastVersion(app, data);
         if (lastVersion != null) {
             LogicalData src = Comm.getData(dataId);
             try {
@@ -851,7 +851,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
                 String intermediateTmpPath = renamedPath + ".tmp";
                 FileOpsManager.moveSync(new File(renamedPath), new File(intermediateTmpPath));
                 closeFile(app, fileName, Direction.INOUT);
-                ap.deleteData(new FileData(app, sourceLocation), true, false);
+                ap.deleteData(app, new FileData(sourceLocation), true, false);
                 // In the case of Java file can be stored in the Stream Registry
                 if (sReg != null) {
                     sReg.deleteTaskFile(appId, fileName);
@@ -898,7 +898,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
             FileOpsManager.moveDirSync(new File(renamedPath), new File(intermediateTmpPath));
             closeFile(app, dirName, Direction.IN);
 
-            ap.deleteData(new FileData(app, sourceLocation), true, false);
+            ap.deleteData(app, new FileData(sourceLocation), true, false);
             // In the case of Java file can be stored in the Stream Registry
             if (sReg != null) {
                 sReg.deleteTaskFile(appId, dirName);
@@ -998,8 +998,8 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         }
         if (loc != null) {
             Application app = Application.registerApplication(appId);
-            FileData fd = new FileData(app, loc);
-            return ap.alreadyAccessed(fd);
+            FileData fd = new FileData(loc);
+            return ap.alreadyAccessed(app, fd);
         } else {
             return false;
         }
@@ -1149,7 +1149,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         try {
             DataLocation loc = createLocation(ProtocolType.FILE_URI, fileName);
             Application app = Application.registerApplication(appId);
-            ap.deleteData(new FileData(app, loc), waitForData, applicationDelete);
+            ap.deleteData(app, new FileData(loc), waitForData, applicationDelete);
             // Java case where task files are stored in the registry
             if (sReg != null) {
                 sReg.deleteTaskFile(appId, fileName);
@@ -1176,7 +1176,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         Application app = Application.registerApplication(appId);
         // This will remove the object from the Object Registry and the Data Info Provider
         // eventually allowing the garbage collector to free it (better use of memory)
-        ap.deleteData(new ObjectData(app, hashcode), false, false);
+        ap.deleteData(app, new ObjectData(hashcode), false, false);
     }
 
     @Override
@@ -1197,7 +1197,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         // Parse the binding object name and translate the access mode
         BindingObject bo = BindingObject.generate(fileName);
         int hashCode = externalObjectHashcode(bo.getId());
-        ap.deleteData(new BindingObjectData(app, hashCode), false, false);
+        ap.deleteData(app, new BindingObjectData(hashCode), false, false);
         if (Tracer.isActivated()) {
             Tracer.emitEventEnd(TraceEvent.DELETE);
         }
@@ -1217,8 +1217,8 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         boolean isPrioritary, int numNodes, boolean isReduce, int reduceChunkSize, boolean isReplicated,
         boolean isDistributed, boolean hasTarget, Integer numReturns, int parameterCount, Object... parameters) {
 
-        return executeTask(appId, null, Lang.C, false, methodClass, methodName, null, OnFailure.valueOf(onFailure),
-            timeOut, isPrioritary, Constants.SINGLE_NODE, false, 0, isReplicated, isDistributed, hasTarget, numReturns,
+        return executeTask(appId, Lang.C, false, methodClass, methodName, null, OnFailure.valueOf(onFailure), timeOut,
+            isPrioritary, Constants.SINGLE_NODE, false, 0, isReplicated, isDistributed, hasTarget, numReturns,
             parameterCount, parameters);
     }
 
@@ -1228,39 +1228,37 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         int numNodes, boolean isReduce, int reduceChunkSize, boolean isReplicated, boolean isDistributed,
         boolean hasTarget, Integer numReturns, int parameterCount, Object... parameters) {
 
-        return executeTask(appId, null, Lang.PYTHON, true, null, null, signature, OnFailure.valueOf(onFailure), timeOut,
+        return executeTask(appId, Lang.PYTHON, true, null, null, signature, OnFailure.valueOf(onFailure), timeOut,
             isPrioritary, numNodes, isReduce, reduceChunkSize, isReplicated, isDistributed, hasTarget, numReturns,
             parameterCount, parameters);
     }
 
     // Java - Loader
     @Override
-    public int executeTask(Long appId, TaskMonitor monitor, Lang lang, String methodClass, String methodName,
-        boolean isPrioritary, int numNodes, boolean isReduce, int reduceChunkSize, boolean isReplicated,
-        boolean isDistributed, boolean hasTarget, int parameterCount, OnFailure onFailure, int timeOut,
-        Object... parameters) {
+    public int executeTask(Long appId, Lang lang, String methodClass, String methodName, boolean isPrioritary,
+        int numNodes, boolean isReduce, int reduceChunkSize, boolean isReplicated, boolean isDistributed,
+        boolean hasTarget, int parameterCount, OnFailure onFailure, int timeOut, Object... parameters) {
 
-        return executeTask(appId, monitor, lang, false, methodClass, methodName, null, onFailure, timeOut, isPrioritary,
+        return executeTask(appId, lang, false, methodClass, methodName, null, onFailure, timeOut, isPrioritary,
             numNodes, isReduce, reduceChunkSize, isReplicated, isDistributed, hasTarget, null, parameterCount,
             parameters);
     }
 
     // Services
     @Override
-    public int executeTask(Long appId, TaskMonitor monitor, String namespace, String service, String port,
-        String operation, boolean isPrioritary, int numNodes, boolean isReduce, int reduceChunkSize,
-        boolean isReplicated, boolean isDistributed, boolean hasTarget, int parameterCount, OnFailure onFailure,
-        int timeOut, Object... parameters) {
+    public int executeTask(Long appId, String namespace, String service, String port, String operation,
+        boolean isPrioritary, int numNodes, boolean isReduce, int reduceChunkSize, boolean isReplicated,
+        boolean isDistributed, boolean hasTarget, int parameterCount, OnFailure onFailure, int timeOut,
+        Object... parameters) {
         throw new UnsupportedOperationException();
     }
 
     // HTTP
     // This function is called dynamically by Javassist (you will not find direct calls in the Java project)
     @Override
-    public int executeTask(Long appId, TaskMonitor monitor, String declareMethodFullyQualifiedName,
-        boolean isPrioritary, int numNodes, boolean isReduce, int reduceChunkSize, boolean isReplicated,
-        boolean isDistributed, boolean hasTarget, int parameterCount, OnFailure onFailure, int timeOut,
-        Object... parameters) {
+    public int executeTask(Long appId, String declareMethodFullyQualifiedName, boolean isPrioritary, int numNodes,
+        boolean isReduce, int reduceChunkSize, boolean isReplicated, boolean isDistributed, boolean hasTarget,
+        int parameterCount, OnFailure onFailure, int timeOut, Object... parameters) {
 
         if (Tracer.isActivated()) {
             Tracer.emitEvent(TraceEvent.TASK);
@@ -1279,7 +1277,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         }
 
         Application app = Application.registerApplication(appId);
-        monitor = app.getTaskMonitor();
+        TaskMonitor monitor = app.getTaskMonitor();
         // Process the parameters
         List<Parameter> pars = processParameters(app, parameterCount, parameters, monitor);
         boolean hasReturn = hasReturn(pars);
@@ -1305,7 +1303,6 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
      * Internal execute task to make API options only as a wrapper.
      *
      * @param appId Application Id.
-     * @param monitor Task monitor.
      * @param lang Task language
      * @param hasSignature indicates whether the signature parameter is valid or must be constructed from the methodName
      *            and methodClass parameters.
@@ -1326,10 +1323,10 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
      * @param parameters Parameter values.
      * @return The task id.
      */
-    public int executeTask(Long appId, TaskMonitor monitor, Lang lang, boolean hasSignature, String methodClass,
-        String methodName, String signature, OnFailure onFailure, int timeOut, boolean isPrioritary, int numNodes,
-        boolean isReduce, int reduceChunkSize, boolean isReplicated, boolean isDistributed, boolean hasTarget,
-        Integer numReturns, int parameterCount, Object... parameters) {
+    public int executeTask(Long appId, Lang lang, boolean hasSignature, String methodClass, String methodName,
+        String signature, OnFailure onFailure, int timeOut, boolean isPrioritary, int numNodes, boolean isReduce,
+        int reduceChunkSize, boolean isReplicated, boolean isDistributed, boolean hasTarget, Integer numReturns,
+        int parameterCount, Object... parameters) {
         // Tracing flag for task creation
         if (Tracer.isActivated()) {
             Tracer.emitEvent(TraceEvent.TASK);
@@ -1348,8 +1345,7 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         }
 
         Application app = Application.registerApplication(appId);
-        app.checkThrottle();
-        monitor = app.getTaskMonitor();
+        TaskMonitor monitor = app.getTaskMonitor();
 
         // Process the parameters
         List<Parameter> pars = processParameters(app, parameterCount, parameters, monitor);
@@ -1904,14 +1900,14 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
         switch (p.getType()) {
             case DIRECTORY_T:
             case FILE_T:
-                ap.deleteData(((FileParameter<?, ?>) p).getAccess().getData(), false, false);
+                ap.deleteData(app, ((FileParameter<?, ?>) p).getAccess().getData(), false, false);
                 // Java case where task files are stored in the registry
                 if (sReg != null) {
                     sReg.deleteTaskFile(app.getId(), ((FileParameter) p).getOriginalName());
                 }
                 break;
             case BINDING_OBJECT_T:
-                ap.deleteData(((BindingObjectParameter) p).getAccess().getData(), false, false);
+                ap.deleteData(app, ((BindingObjectParameter) p).getAccess().getData(), false, false);
                 break;
             case OBJECT_T:
                 ObjectParameter op = (ObjectParameter) p;

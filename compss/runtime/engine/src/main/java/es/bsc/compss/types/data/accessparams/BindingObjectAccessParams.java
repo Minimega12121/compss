@@ -48,7 +48,7 @@ public class BindingObjectAccessParams extends ObjectAccessParams<BindingObject,
     }
 
     private BindingObjectAccessParams(Application app, Direction dir, BindingObject bo, int hashCode) {
-        super(new BindingObjectData(app, hashCode), dir, bo);
+        super(app, new BindingObjectData(hashCode), dir, bo);
     }
 
     /**

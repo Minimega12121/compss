@@ -57,11 +57,11 @@ public class ObjectMainAccess<V extends Object, D extends ObjectData, P extends 
     public static final <T extends Object> ObjectMainAccess<T, ObjectData, ObjectAccessParams<T, ObjectData>>
         constructOMA(Application app, Direction dir, T value, int code) {
         ObjectAccessParams<T, ObjectData> oap = ObjectAccessParams.constructObjectAP(app, dir, value, code);
-        return new ObjectMainAccess<>(oap);
+        return new ObjectMainAccess<>(app, oap);
     }
 
-    protected ObjectMainAccess(P params) {
-        super(params);
+    protected ObjectMainAccess(Application app, P params) {
+        super(app, params);
     }
 
     @Override

@@ -29,8 +29,6 @@ import org.apache.logging.log4j.Logger;
 
 public class CheckpointDataVersion {
 
-    private static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
-
     // DataVersion needed to be saved
     private final DataVersion dataVersion;
 

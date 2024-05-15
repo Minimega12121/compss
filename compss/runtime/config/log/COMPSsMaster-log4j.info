@@ -119,16 +119,6 @@
       <AppenderRef ref="COMPSsRuntimeLog"/>
     </Logger>
 
-    <!-- RUNTIME TASK PROCESSING SUBCOMPONENTS -->
-    <!-- es.bsc.compss.Components.TaskProcessor.TaskAnalyser: DEFAULT = INFO -->
-    <Logger name="es.bsc.compss.Components.TaskProcessor.TaskAnalyser" additivity="FALSE" level="info">
-      <AppenderRef ref="COMPSsRuntimeLog"/>
-    </Logger>
-    <!-- es.bsc.compss.Components.TaskProcessor.DataInfoProvider: DEFAULT = INFO -->
-    <Logger name="es.bsc.compss.Components.TaskProcessor.DataInfoProvider" additivity="FALSE" level="info">
-      <AppenderRef ref="COMPSsRuntimeLog"/>
-    </Logger>
-
     <!-- RUNTIME TASK DISPATCHER SUBCOMPONENTS -->
     <!-- es.bsc.compss.Components.TaskDispatcher.FileTransferManager: DEFAULT = INFO -->
     <Logger name="es.bsc.compss.Components.TaskDispatcher.TaskScheduler" additivity="FALSE" level="info">

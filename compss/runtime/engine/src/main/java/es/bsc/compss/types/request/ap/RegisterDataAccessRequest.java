@@ -20,21 +20,17 @@ import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.TaskListener;
-import es.bsc.compss.types.accesses.DataAccessesInfo;
-import es.bsc.compss.types.data.EngineDataInstanceId;
+import es.bsc.compss.types.data.access.MainAccess;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
-import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
-import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
-import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import es.bsc.compss.types.tracing.TraceEvent;
 
 import java.util.concurrent.Semaphore;
 
 
-public class RegisterDataAccessRequest extends APRequest implements TaskListener {
+public class RegisterDataAccessRequest implements APRequest, TaskListener {
 
-    private final AccessParams accessParams;
+    private final MainAccess access;
     private EngineDataAccessId accessId;
 
     private int pendingOperation = 0;
@@ -46,10 +42,10 @@ public class RegisterDataAccessRequest extends APRequest implements TaskListener
     /**
      * Creates a new request to register a data access.
      *
-     * @param access AccessParams to register.
+     * @param access description of the access done by the main
      */
-    public RegisterDataAccessRequest(AccessParams access) {
-        this.accessParams = access;
+    public RegisterDataAccessRequest(MainAccess access) {
+        this.access = access;
         this.sem = new Semaphore(0);
     }
 
@@ -58,17 +54,8 @@ public class RegisterDataAccessRequest extends APRequest implements TaskListener
      *
      * @return The associated access parameters.
      */
-    public AccessParams getAccessParams() {
-        return this.accessParams;
-    }
-
-    /**
-     * Returns the associated access mode to the data.
-     *
-     * @return The associated access mode to the data.
-     */
-    public AccessParams.AccessMode getTaskAccessMode() {
-        return this.accessParams.getMode();
+    public MainAccess getAccess() {
+        return this.access;
     }
 
     /**
@@ -83,41 +70,7 @@ public class RegisterDataAccessRequest extends APRequest implements TaskListener
     @Override
     public void process(AccessProcessor ap, TaskDispatcher td) {
         try {
-            if (DEBUG) {
-                LOGGER.debug("Registering access " + this.accessParams.toString() + " from main code");
-            }
-            this.accessParams.checkAccessValidity();
-            this.accessId = this.accessParams.register();
-            if (this.accessId == null) {
-                if (DEBUG) {
-                    LOGGER.debug("Accessing a canceled data from main code. Returning null");
-                }
-            } else {
-                if (DEBUG) {
-                    LOGGER.debug("Registered access to data " + this.accessId.getDataId() + " from main code");
-                }
-
-                if (this.accessId.isRead()) {
-                    EngineDataAccessId.ReadingDataAccessId rdaId = (ReadingDataAccessId) this.accessId;
-                    EngineDataInstanceId di = rdaId.getReadDataInstance();
-                    Application app = this.accessParams.getApp();
-                    app.getCP().mainAccess(di);
-
-                    int dataId = this.accessId.getDataId();
-                    // Retrieve writers information
-                    DataAccessesInfo dai = DataAccessesInfo.get(dataId);
-                    if (dai != null) {
-                        EngineDataInstanceId depInstance;
-                        if (this.accessId.isWrite()) {
-                            depInstance = ((WritingDataAccessId) this.accessId).getWrittenDataInstance();
-                        } else {
-                            depInstance = di;
-                        }
-                        dai.mainAccess(this, depInstance);
-                    }
-                }
-            }
-
+            this.accessId = this.access.register(this);
         } catch (ValueUnawareRuntimeException e) {
             this.unawareException = e;
         }
@@ -129,7 +82,7 @@ public class RegisterDataAccessRequest extends APRequest implements TaskListener
 
     /**
      * Waits for the value's producing tasks to complete releasing and recovering the resources if needed.
-     * 
+     *
      * @throws ValueUnawareRuntimeException the runtime is not aware of the last value of the accessed data
      */
     public void waitForCompletion() throws ValueUnawareRuntimeException {
@@ -137,7 +90,7 @@ public class RegisterDataAccessRequest extends APRequest implements TaskListener
         sem.acquireUninterruptibly();
 
         boolean stalled = false;
-        Application app = this.accessParams.getApp();
+        Application app = this.access.getApp();
         synchronized (this) {
             LOGGER.info("App " + app.getId() + " waits for data to be produced");
             if (!released) {

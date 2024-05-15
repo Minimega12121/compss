@@ -25,7 +25,7 @@ import es.bsc.compss.types.tracing.TraceEvent;
 import java.util.List;
 
 
-public class UnblockResultFilesRequest extends APRequest {
+public class UnblockResultFilesRequest implements APRequest {
 
     private final List<ResultFile> resultFiles;
 

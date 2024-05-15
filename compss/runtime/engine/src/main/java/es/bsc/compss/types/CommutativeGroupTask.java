@@ -23,7 +23,6 @@ import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
-import es.bsc.compss.types.parameter.impl.Parameter;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -35,7 +34,7 @@ import org.apache.logging.log4j.Logger;
 public class CommutativeGroupTask extends AbstractTask {
 
     // Logger
-    private static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
+    private static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
     private static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     private static int commGroupTaskId = -1;
@@ -70,6 +69,7 @@ public class CommutativeGroupTask extends AbstractTask {
         this.accesses = new LinkedList<>();
         this.comId = comId;
         this.actions = new MutexGroup();
+        this.getApplication().onCommutativeGroupCreation(this);
     }
 
     /**
@@ -94,7 +94,10 @@ public class CommutativeGroupTask extends AbstractTask {
      * Closes the group.
      */
     public void close() {
-        this.closed = true;
+        if (!this.isClosed()) {
+            this.closed = true;
+            this.getApplication().onCommutativeGroupClosure(this);
+        }
     }
 
     /**
@@ -113,6 +116,7 @@ public class CommutativeGroupTask extends AbstractTask {
      */
     public void addCommutativeTask(Task task) {
         this.commutativeTasks.add(task);
+        this.getApplication().onTaskBelongsToCommutativeGroup(task, this);
     }
 
     /**

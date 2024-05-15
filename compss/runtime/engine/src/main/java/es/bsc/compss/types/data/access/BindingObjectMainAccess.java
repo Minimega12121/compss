@@ -52,11 +52,11 @@ public class BindingObjectMainAccess
     public static final BindingObjectMainAccess constructBOMA(Application app, Direction dir, BindingObject bo,
         int hashCode) {
         BindingObjectAccessParams boap = BindingObjectAccessParams.constructBOAP(app, dir, bo, hashCode);
-        return new BindingObjectMainAccess(boap);
+        return new BindingObjectMainAccess(app, boap);
     }
 
-    protected BindingObjectMainAccess(BindingObjectAccessParams params) {
-        super(params);
+    protected BindingObjectMainAccess(Application app, BindingObjectAccessParams params) {
+        super(app, params);
     }
 
     /**

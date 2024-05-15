@@ -40,12 +40,12 @@ public class DirectoryAccessParams extends FileAccessParams<DirectoryData> {
      * @return new FileAccessParams instance
      */
     public static final DirectoryAccessParams constructDAP(Application app, Direction dir, DataLocation loc) {
-        DirectoryData dd = new DirectoryData(app, loc);
-        return new DirectoryAccessParams(dd, dir);
+        DirectoryData dd = new DirectoryData(loc);
+        return new DirectoryAccessParams(app, dd, dir);
     }
 
-    private DirectoryAccessParams(DirectoryData data, Direction dir) {
-        super(data, dir);
+    private DirectoryAccessParams(Application app, DirectoryData data, Direction dir) {
+        super(app, data, dir);
     }
 
 }

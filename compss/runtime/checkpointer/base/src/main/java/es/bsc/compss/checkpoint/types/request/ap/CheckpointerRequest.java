@@ -27,7 +27,7 @@ import es.bsc.compss.util.Tracer;
 import es.bsc.compss.worker.COMPSsException;
 
 
-public abstract class CheckpointerRequest extends APRequest {
+public abstract class CheckpointerRequest implements APRequest {
 
     private final CheckpointRecord cp;
 

@@ -23,12 +23,12 @@ import es.bsc.compss.api.impl.DoNothingApplicationMonitor;
 import es.bsc.compss.checkpoint.CheckpointManager;
 import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.log.Loggers;
-import es.bsc.compss.types.accesses.DataAccessesInfo;
+import es.bsc.compss.types.data.info.CollectionInfo;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.FileInfo;
+import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.request.ap.BarrierGroupRequest;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
-import es.bsc.compss.util.ErrorManager;
 
 import java.security.SecureRandom;
 import java.util.HashSet;
@@ -45,7 +45,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public class Application {
+public class Application implements ApplicationTaskMonitor, DataOwner {
 
     private static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
 
@@ -59,7 +59,18 @@ public class Application {
     private static CheckpointManager CP;
 
     private static final int DEFAULT_THROTTLE_WAIT_TASK_COUNT = Integer.MAX_VALUE;
-    private static final int DEFAULT_THROTTLE_INTERVAL = 10;
+    private static final Semaphore THROTTLE;
+
+    static {
+        String maxTasks = System.getenv(COMPSsConstants.COMPSS_THROTTLE_MAX_TASKS);
+        int throttleThreshold;
+        if (maxTasks != null && !maxTasks.isEmpty()) {
+            throttleThreshold = Integer.parseInt(maxTasks);
+        } else {
+            throttleThreshold = DEFAULT_THROTTLE_WAIT_TASK_COUNT;
+        }
+        THROTTLE = new Semaphore(throttleThreshold);
+    }
 
     /*
      * Application definition
@@ -81,10 +92,6 @@ public class Application {
      */
     // Task count
     private int totalTaskCount;
-    private int throttleTaskCount;
-    private int throttleWaitTaskCount;
-    private int throttleReleaseTaskCount;
-    private Semaphore throttle = null;
 
     /*
      * Application's task groups
@@ -98,14 +105,11 @@ public class Application {
      * Application's Data
      */
     // Map: filename:host:path -> file identifier
-    private final TreeMap<String, DataInfo> nameToData;
+    private final TreeMap<String, FileInfo> nameToData;
     // Map: hash code -> object identifier
     private final TreeMap<Integer, DataInfo> codeToData;
     // Map: collectionName -> collection identifier
-    private final TreeMap<String, DataInfo> collectionToData;
-
-    // Set of written data ids (for result files)
-    private Set<FileInfo> writtenFileData;
+    private final TreeMap<String, CollectionInfo> collectionToData;
 
 
     public static void setCP(CheckpointManager cp) {
@@ -231,36 +235,6 @@ public class Application {
         this.nameToData = new TreeMap<>();
         this.codeToData = new TreeMap<>();
         this.collectionToData = new TreeMap<>();
-        this.writtenFileData = new HashSet<>();
-        setThrottleValues();
-    }
-
-    private void setThrottleValues() {
-        this.throttleTaskCount = 0;
-        String maxTasks = System.getenv(COMPSsConstants.COMPSS_THROTTLE_MAX_TASKS);
-        if (maxTasks != null && !maxTasks.isEmpty()) {
-            this.throttleWaitTaskCount = Integer.parseInt(maxTasks);
-        } else {
-            this.throttleWaitTaskCount = DEFAULT_THROTTLE_WAIT_TASK_COUNT;
-        }
-        String interval = System.getenv(COMPSsConstants.COMPSS_THROTTLE_INTERVAL);
-        if (interval != null && !interval.isEmpty()) {
-            this.throttleReleaseTaskCount = this.throttleWaitTaskCount - Integer.parseInt(interval);
-        } else {
-            this.throttleReleaseTaskCount = this.throttleWaitTaskCount - DEFAULT_THROTTLE_INTERVAL;
-        }
-
-    }
-
-    /**
-     * Check if throttle is exceeded and wait until throttle is correct.
-     */
-    public void checkThrottle() {
-        if (this.throttleTaskCount > this.throttleWaitTaskCount) {
-            ErrorManager.warn("Application " + this.id + "blocked by throttle...");
-            this.throttle = new Semaphore(0);
-            this.throttle.acquireUninterruptibly();
-        }
     }
 
     public Long getId() {
@@ -301,7 +275,7 @@ public class Application {
     }
 
     /**
-     * Removes and returns the peek of the TaskGroups stack.
+     * Removes the peek of the TaskGroups stack.
      */
     public final void closeCurrentTaskGroup() {
         popGroup();
@@ -350,32 +324,46 @@ public class Application {
      * ----------------------------------- EXECUTION MANAGEMENT -----------------------------------
      */
 
-    /**
-     * Registers the existence of a new task for the application and registers it into all the currently open groups.
-     *
-     * @param task task to be added to the application's task groups
-     */
-    public void newTask(Task task) {
-        synchronized (this) {
-            this.throttleTaskCount++;
-        }
+    @Override
+    public void onTaskCreation(Task t) {
+        // Check if throttle is exceeded and wait until throttle is correct.
+        THROTTLE.acquireUninterruptibly();
         this.totalTaskCount++;
+        getTaskMonitor().onCreation();
+    }
+
+    @Override
+    public void onTaskAnalysisStart(Task task) {
         // Add task to the groups
         for (TaskGroup group : this.getCurrentGroups()) {
             task.addTaskGroup(group);
             group.addTask(task);
         }
         this.GH.startTaskAnalysis(task);
+    }
 
-        // Check scheduling enforcing data
-        int constrainingParam = -1;
-
-        // Process parameters
-        boolean taskHasEdge = task.register(constrainingParam);
+    @Override
+    public void onTaskAnalysisEnd(Task task, boolean taskHasEdge) {
         this.GH.endTaskAnalysis(task, taskHasEdge);
 
         // Prepare checkpointer for task
         this.CP.newTask(task);
+    }
+
+    @Override
+    public void onCommutativeGroupCreation(CommutativeGroupTask g) {
+        this.GH.createCommutativeGroup(g);
+    }
+
+    @Override
+    public void onTaskBelongsToCommutativeGroup(Task t, CommutativeGroupTask g) {
+        this.GH.taskBelongsToCommutativeGroup(t, g);
+
+    }
+
+    @Override
+    public void onCommutativeGroupClosure(CommutativeGroupTask g) {
+        this.GH.closeCommutativeGroup(g);
     }
 
     /**
@@ -385,13 +373,7 @@ public class Application {
      * @param task finished task to be removed
      */
     public void endTask(Task task) {
-        synchronized (this) {
-            this.throttleTaskCount--;
-            if (this.throttleTaskCount < this.throttleReleaseTaskCount && throttle != null) {
-                throttle.release();
-                throttle = null;
-            }
-        }
+        THROTTLE.release();
         for (TaskGroup group : task.getTaskGroupList()) {
             group.removeTask(task);
             LOGGER.debug("Group " + group.getName() + " released task " + task.getId());
@@ -452,7 +434,7 @@ public class Application {
      */
     public final void reachesBarrier(Barrier barrier) {
         doBarrier(barrier);
-        this.GH.barrier(DataAccessesInfo.getAll());
+        this.GH.barrier(this.nameToData, this.codeToData, this.collectionToData);
     }
 
     /**
@@ -474,109 +456,63 @@ public class Application {
      * ----------------------------------- DATA MANAGEMENT -----------------------------------
      */
 
-    /**
-     * Stores the relation between a file and the corresponding dataInfo.
-     *
-     * @param locationKey file location
-     * @param di data registered by the application
-     */
-    public void registerFileData(String locationKey, DataInfo di) {
+    @Override
+    public void registerFileData(String locationKey, FileInfo di) {
         this.nameToData.put(locationKey, di);
     }
 
-    /**
-     * Returns the Data related to a file.
-     *
-     * @param locationKey file location
-     * @return data related to the file
-     */
-    public DataInfo getFileData(String locationKey) {
+    @Override
+    public FileInfo getFileData(String locationKey) {
         return this.nameToData.get(locationKey);
     }
 
-    /**
-     * Removes any data association related to file location.
-     *
-     * @param locationKey file location
-     * @return data Id related to the file
-     * @throws ValueUnawareRuntimeException the application is not aware of the data
-     */
-    public DataInfo removeFileData(String locationKey) throws ValueUnawareRuntimeException {
-        DataInfo di = this.nameToData.remove(locationKey);
-        return removeData(di);
+    @Override
+    public FileInfo removeFileData(String locationKey) throws ValueUnawareRuntimeException {
+        FileInfo di = this.nameToData.remove(locationKey);
+        removeData(di);
+        return di;
     }
 
-    /**
-     * Stores the relation between an object and the corresponding dataInfo.
-     *
-     * @param code hashcode of the object
-     * @param di data registered by the application
-     */
+    @Override
     public void registerObjectData(int code, DataInfo di) {
         this.codeToData.put(code, di);
     }
 
-    /**
-     * Returns the Data related to an object.
-     *
-     * @param code hashcode of the object
-     * @return data related to the object
-     */
+    @Override
     public DataInfo getObjectData(int code) {
         return this.codeToData.get(code);
     }
 
-    /**
-     * Removes any data association related to an object.
-     *
-     * @param code hashcode of the object
-     * @return data Id related to the object
-     * @throws ValueUnawareRuntimeException the application is not aware of the data
-     */
+    @Override
     public DataInfo removeObjectData(int code) throws ValueUnawareRuntimeException {
         DataInfo di = this.codeToData.remove(code);
-        return removeData(di);
+        removeData(di);
+        return di;
     }
 
-    /**
-     * Stores the relation between a collection and the corresponding dataInfo.
-     *
-     * @param collectionId Id of the collection
-     * @param di data registered by the application
-     */
-    public void registerCollectionData(String collectionId, DataInfo di) {
+    @Override
+    public void registerCollectionData(String collectionId, CollectionInfo di) {
         this.collectionToData.put(collectionId, di);
     }
 
-    /**
-     * Returns the Data related to a collection.
-     *
-     * @param collectionId Id of the collection
-     * @return data related to the file
-     */
-    public DataInfo getCollectionData(String collectionId) {
+    @Override
+    public CollectionInfo getCollectionData(String collectionId) {
         return this.collectionToData.get(collectionId);
     }
 
-    /**
-     * Removes any data association related to a collection.
-     *
-     * @param collectionId Id of the collection
-     * @return data Id related to the file
-     * @throws ValueUnawareRuntimeException the application is not aware of the data
-     */
-    public DataInfo removeCollectionData(String collectionId) throws ValueUnawareRuntimeException {
-        DataInfo di = this.collectionToData.remove(collectionId);
-        return removeData(di);
+    @Override
+    public CollectionInfo removeCollectionData(String collectionId) throws ValueUnawareRuntimeException {
+        CollectionInfo di = this.collectionToData.remove(collectionId);
+        removeData(di);
+        return di;
     }
 
-    private DataInfo removeData(DataInfo dataInfo) throws ValueUnawareRuntimeException {
+    private void removeData(DataInfo dataInfo) throws ValueUnawareRuntimeException {
         if (dataInfo == null) {
             throw new ValueUnawareRuntimeException();
         }
         // We delete the data associated with all the versions of the same object
         dataInfo.delete();
-        return dataInfo;
     }
 
     /**
@@ -597,32 +533,18 @@ public class Application {
     }
 
     /**
-     * Adds a data as an output file of the task.
-     *
-     * @param fInfo data to be registered as a file output.
-     */
-    public void addWrittenFile(FileInfo fInfo) {
-        this.writtenFileData.add(fInfo);
-    }
-
-    /**
-     * REmoves a data as an output file of the task.
-     *
-     * @param fInfo data to be unregistered as a file output.
-     */
-    public void removeWrittenFile(FileInfo fInfo) {
-        if (this.writtenFileData.remove(fInfo)) {
-            LOGGER.info(" Removed data " + fInfo.getDataId() + " from written files");
-        }
-    }
-
-    /**
      * Returns a set with all the FileIds written by the application.
      *
      * @return set with all the DataIds corresponding to files written by the application.
      */
     public Set<FileInfo> getWrittenFiles() {
-        return this.writtenFileData;
+        Set<FileInfo> wfiles = new HashSet<>();
+        for (DataInfo di : this.nameToData.values()) {
+            if (di.getCurrentDataVersion().getDataInstanceId().getVersionId() > 1) {
+                wfiles.add((FileInfo) di);
+            }
+        }
+        return wfiles;
     }
 
     public void setTimerTask(WallClockTimerTask wcTimerTask) {
@@ -642,4 +564,5 @@ public class Application {
     public TaskMonitor getTaskMonitor() {
         return this.runner.getTaskMonitor();
     }
+
 }

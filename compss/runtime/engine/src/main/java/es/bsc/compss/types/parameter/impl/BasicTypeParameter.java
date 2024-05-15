@@ -22,6 +22,7 @@ import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.Direction;
 import es.bsc.compss.types.annotations.parameter.StdIOStream;
 import es.bsc.compss.types.data.accessparams.AccessParams;
+import es.bsc.compss.types.data.info.DataInfo;
 
 
 public class BasicTypeParameter extends Parameter implements es.bsc.compss.types.parameter.BasicTypeParameter {
@@ -109,8 +110,9 @@ public class BasicTypeParameter extends Parameter implements es.bsc.compss.types
     }
 
     @Override
-    public void remove() {
+    public DataInfo removeData() {
         // Nothing to do
+        return null;
     }
 
 }

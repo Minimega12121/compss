@@ -19,9 +19,11 @@ package es.bsc.compss.components.monitor.impl;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.CommutativeGroupTask;
 import es.bsc.compss.types.Task;
-import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.info.CollectionInfo;
+import es.bsc.compss.types.data.info.DataInfo;
+import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.request.ap.BarrierGroupRequest;
 
 import java.io.BufferedWriter;
@@ -47,17 +49,22 @@ public class NoGraph implements GraphHandler {
     }
 
     @Override
-    public final void closeCommutativeTasksGroup(CommutativeGroupTask group) {
-        // Do nothing
-    }
-
-    @Override
     public final void startTaskAnalysis(Task currentTask) {
         // Do nothing
     }
 
     @Override
+    public final void createCommutativeGroup(CommutativeGroupTask g) {
+        // Do nothing
+    }
+
+    @Override
     public final void taskBelongsToCommutativeGroup(Task task, CommutativeGroupTask group) {
+        // Do nothing
+    }
+
+    @Override
+    public final void closeCommutativeGroup(CommutativeGroupTask group) {
         // Do nothing
     }
 
@@ -97,7 +104,8 @@ public class NoGraph implements GraphHandler {
     }
 
     @Override
-    public final void barrier(Map<Integer, DataAccessesInfo> accessesInfo) {
+    public void barrier(Map<String, FileInfo> files, Map<Integer, DataInfo> objects,
+        Map<String, CollectionInfo> collections) {
         // Do nothing
     }
 

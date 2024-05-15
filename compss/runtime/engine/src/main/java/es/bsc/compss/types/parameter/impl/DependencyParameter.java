@@ -21,21 +21,16 @@ import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.Task;
-import es.bsc.compss.types.TaskState;
-import es.bsc.compss.types.accesses.DataAccessesInfo;
 import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.Direction;
-import es.bsc.compss.types.annotations.parameter.OnFailure;
 import es.bsc.compss.types.annotations.parameter.StdIOStream;
 
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
 import es.bsc.compss.types.data.info.DataInfo;
-import es.bsc.compss.types.data.info.FileInfo;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import storage.StubItf;
 
 
 public abstract class DependencyParameter<T extends AccessParams> extends Parameter
@@ -47,7 +42,7 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
     private static final long serialVersionUID = 1L;
 
     // Loggers
-    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TA_COMP);
+    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
     protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     private final T access;
@@ -181,12 +176,10 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
     }
 
     @Override
-    public void remove() {
-        try {
-            this.getAccess().getData().delete();
-        } catch (ValueUnawareRuntimeException e) {
-            // If not existing, the parameter was already removed. No need to do anything
-        }
+    public DataInfo removeData() throws ValueUnawareRuntimeException {
+        AccessParams access = this.getAccess();
+        Application app = access.getApp();
+        return access.getData().delete(app);
     }
 
     private boolean addDependencies(Task currentTask, boolean isConstraining, DependencyParameter dp) {
@@ -194,41 +187,41 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
         boolean hasParamEdge = false;
         EngineDataAccessId daId = dp.getDataAccessId();
         int dataId = daId.getDataId();
-        DataAccessesInfo dai = DataAccessesInfo.get(dataId);
+        DataInfo di = dp.getDataAccessId().getAccessedDataInfo();
         switch (dp.getAccess().getMode()) {
             case R:
-                hasParamEdge = checkInputDependency(currentTask, dp, false, dataId, dai, isConstraining);
+                hasParamEdge = checkInputDependency(currentTask, dp, false, dataId, di, isConstraining);
                 break;
             case RW:
-                hasParamEdge = checkInputDependency(currentTask, dp, false, dataId, dai, isConstraining);
-                registerOutputValues(currentTask, dp, false, dai);
+                hasParamEdge = checkInputDependency(currentTask, dp, false, dataId, di, isConstraining);
+                registerOutputValues(currentTask, dp, false, di);
                 break;
             case W:
                 // Register output values
-                registerOutputValues(currentTask, dp, false, dai);
+                registerOutputValues(currentTask, dp, false, di);
                 break;
             case C:
-                hasParamEdge = checkInputDependency(currentTask, dp, true, dataId, dai, isConstraining);
-                registerOutputValues(currentTask, dp, true, dai);
+                hasParamEdge = checkInputDependency(currentTask, dp, true, dataId, di, isConstraining);
+                registerOutputValues(currentTask, dp, true, di);
                 break;
             case CV:
-                hasParamEdge = checkInputDependency(currentTask, dp, false, dataId, dai, isConstraining);
-                registerOutputValues(currentTask, dp, false, dai);
+                hasParamEdge = checkInputDependency(currentTask, dp, false, dataId, di, isConstraining);
+                registerOutputValues(currentTask, dp, false, di);
                 break;
         }
         return hasParamEdge;
     }
 
     private boolean checkInputDependency(Task currentTask, DependencyParameter dp, boolean isConcurrent, int dataId,
-        DataAccessesInfo dai, boolean isConstraining) {
+        DataInfo di, boolean isConstraining) {
         if (DEBUG) {
             LOGGER.debug("Checking READ dependency for datum " + dataId + " and task " + currentTask.getId());
         }
         boolean hasEdge = false;
-        if (dai != null) {
-            hasEdge = dai.readValue(currentTask, dp, isConcurrent);
+        if (di != null) {
+            hasEdge = di.readValue(currentTask, dp, isConcurrent);
             if (isConstraining) {
-                AbstractTask lastWriter = dai.getConstrainingProducer();
+                AbstractTask lastWriter = di.getProducer();
                 currentTask.setEnforcingTask((Task) lastWriter);
             }
         } else {
@@ -247,35 +240,17 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
      * @param currentTask Task.
      * @param dp Dependency Parameter.
      * @param isConcurrent data access was done in concurrent mode
-     * @param dai AccessInfo related to the data being accessed
+     * @param di AccessInfo related to the data being accessed
      */
-    private void registerOutputValues(Task currentTask, DependencyParameter dp, boolean isConcurrent,
-        DataAccessesInfo dai) {
+    private void registerOutputValues(Task currentTask, DependencyParameter dp, boolean isConcurrent, DataInfo di) {
         int currentTaskId = currentTask.getId();
         int dataId = dp.getDataAccessId().getDataId();
-        Application app = currentTask.getApplication();
 
         if (DEBUG) {
             LOGGER.debug("Checking WRITE dependency for datum " + dataId + " and task " + currentTaskId);
         }
 
-        if (dai == null) {
-            dai = DataAccessesInfo.createAccessInfo(dataId, dp.getType());
-        }
-        dai.writeValue(currentTask, dp, isConcurrent);
-
-        // Update file and PSCO lists
-        switch (dp.getType()) {
-            case DIRECTORY_T:
-            case FILE_T:
-                FileInfo fInfo = (FileInfo) dp.getAccess().getDataInfo();
-                app.addWrittenFile(fInfo);
-                break;
-            default:
-                // Nothing to do with basic types
-                // Objects are not checked, their version will be only get if the main accesses them
-                break;
-        }
+        di.writeValue(currentTask, dp, isConcurrent);
 
         if (DEBUG) {
             LOGGER.debug("New writer for datum " + dataId + " is task " + currentTaskId);
@@ -291,23 +266,19 @@ public abstract class DependencyParameter<T extends AccessParams> extends Parame
         }
         int dataId = dAccId.getDataId();
 
-        DataType type = this.getType();
-        if (type != DataType.DIRECTORY_T || type != DataType.STREAM_T || type != DataType.EXTERNAL_STREAM_T) {
-            if (DEBUG) {
-                int currentTaskId = task.getId();
-                LOGGER.debug("Removing writters info for datum " + dataId + " and task " + currentTaskId);
-            }
-            DataAccessesInfo dai = DataAccessesInfo.get(dataId);
-            if (dai != null) {
-                switch (this.getDirection()) {
-                    case OUT:
-                    case INOUT:
-                        dai.completedProducer(task);
-                        break;
-                    default:
-                        break;
-                }
-            }
+        if (DEBUG) {
+            int currentTaskId = task.getId();
+            LOGGER.debug("Removing writters info for datum " + dataId + " and task " + currentTaskId);
+        }
+
+        switch (this.getDirection()) {
+            case OUT:
+            case INOUT:
+                DataInfo di = dAccId.getAccessedDataInfo();
+                di.completedProducer(task);
+                break;
+            default:
+                break;
         }
 
         if (DEBUG) {

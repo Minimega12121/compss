@@ -26,7 +26,7 @@ import java.util.concurrent.Semaphore;
 /**
  * The TasksStateRequests class represents a request to obtain the progress of all the applications that are running.
  */
-public class TasksStateRequest extends APRequest {
+public class TasksStateRequest implements APRequest {
 
     private final Semaphore sem;
     private String response;

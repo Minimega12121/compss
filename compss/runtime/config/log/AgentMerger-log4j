@@ -110,16 +110,7 @@
       <AppenderRef ref="TraceMerge"/>
     </Logger>
 
-    <!-- RUNTIME TASK PROCESSING SUBCOMPONENTS -->
-    <!-- es.bsc.compss.Components.TaskProcessor.TaskAnalyser: DEFAULT = DEBUG -->
-    <Logger name="es.bsc.compss.Components.TaskProcessor.TaskAnalyser" additivity="FALSE" level="debug">
-      <AppenderRef ref="TraceMerge"/>
-    </Logger>
-    <!-- es.bsc.compss.Components.TaskProcessor.DataInfoProvider: DEFAULT = DEBUG -->
-    <Logger name="es.bsc.compss.Components.TaskProcessor.DataInfoProvider" additivity="FALSE" level="debug">
-      <AppenderRef ref="TraceMerge"/>
-    </Logger>
-
+       
     <!-- RUNTIME TASK DISPATCHER SUBCOMPONENTS -->
     <!-- es.bsc.compss.Components.TaskDispatcher.FileTransferManager: DEFAULT = DEBUG -->
     <Logger name="es.bsc.compss.Components.TaskDispatcher.TaskScheduler" additivity="FALSE" level="debug">

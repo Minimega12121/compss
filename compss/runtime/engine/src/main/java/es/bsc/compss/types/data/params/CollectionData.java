@@ -16,7 +16,6 @@
  */
 package es.bsc.compss.types.data.params;
 
-import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.info.CollectionInfo;
 import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
@@ -30,11 +29,9 @@ public class CollectionData extends DataParams {
     /**
      * Constructs a new DataParams for a collection.
      *
-     * @param app Application accessing the collection
      * @param collectionId Id of the collection
      */
-    public CollectionData(Application app, String collectionId) {
-        super(app);
+    public CollectionData(String collectionId) {
         this.collectionId = collectionId;
     }
 
@@ -44,23 +41,20 @@ public class CollectionData extends DataParams {
     }
 
     @Override
-    protected DataInfo registerData() {
-        DataInfo cInfo = new CollectionInfo(this);
-        Application app = this.getApp();
-        app.registerCollectionData(this.collectionId, cInfo);
+    protected DataInfo registerData(DataOwner owner) {
+        DataInfo cInfo = new CollectionInfo(this, owner);
         return cInfo;
     }
 
     @Override
-    public DataInfo getRegisteredData() {
-        Application app = this.getApp();
-        return app.getCollectionData(this.collectionId);
+    public DataInfo getRegisteredData(DataOwner owner) {
+        ;
+        return owner.getCollectionData(this.collectionId);
     }
 
     @Override
-    protected DataInfo unregisterData() throws ValueUnawareRuntimeException {
-        Application app = this.getApp();
-        return app.removeCollectionData(this.collectionId);
+    protected DataInfo unregisterData(DataOwner owner) throws ValueUnawareRuntimeException {
+        return owner.removeCollectionData(this.collectionId);
     }
 
     public String getCollectionId() {

@@ -17,6 +17,8 @@
 package es.bsc.compss.types.data.info;
 
 import es.bsc.compss.log.Loggers;
+import es.bsc.compss.types.AbstractTask;
+import es.bsc.compss.types.Task;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.ReadingDataAccessId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId.WritingDataAccessId;
@@ -24,13 +26,17 @@ import es.bsc.compss.types.data.accessid.RAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
 import es.bsc.compss.types.data.accessid.WAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams.AccessMode;
+import es.bsc.compss.types.data.params.DataOwner;
 import es.bsc.compss.types.data.params.DataParams;
+import es.bsc.compss.types.parameter.impl.DependencyParameter;
+import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
 import es.bsc.compss.types.request.exceptions.NonExistingValueException;
-import es.bsc.compss.util.ErrorManager;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,8 +49,8 @@ public abstract class DataInfo<T extends DataParams> {
     private static final int FIRST_VERSION_ID = 1;
 
     // Component logger
-    private static final Logger LOGGER = LogManager.getLogger(Loggers.DIP_COMP);
-    private static final boolean DEBUG = LOGGER.isDebugEnabled();
+    protected static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
+    protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
     protected static int nextDataId = FIRST_FILE_ID;
 
@@ -52,6 +58,7 @@ public abstract class DataInfo<T extends DataParams> {
     protected final int dataId;
     // Generating application
     protected final T params;
+    protected final DataOwner owner;
 
     // Current version
     protected DataVersion currentVersion;
@@ -73,10 +80,12 @@ public abstract class DataInfo<T extends DataParams> {
      * Creates a new DataInfo instance with and registers a new LogicalData.
      *
      * @param data description of the data related to the info
+     * @param owner owner of the data being created
      */
-    public DataInfo(T data) {
+    public DataInfo(T data, DataOwner owner) {
         this.dataId = nextDataId++;
         this.params = data;
+        this.owner = owner;
         this.versions = new TreeMap<>();
         this.currentVersionId = FIRST_VERSION_ID;
         this.currentVersion = new DataVersion(dataId, 1, null);
@@ -103,6 +112,15 @@ public abstract class DataInfo<T extends DataParams> {
      */
     public final T getParams() {
         return params;
+    }
+
+    /**
+     * Returns the owner of the data.
+     *
+     * @return owner of the data
+     */
+    public DataOwner getOwner() {
+        return owner;
     }
 
     /**
@@ -162,85 +180,7 @@ public abstract class DataInfo<T extends DataParams> {
      * @param mode access mode of the operation performed on the data
      * @return description of the access performed
      */
-    public final EngineDataAccessId willAccess(AccessMode mode) {
-        EngineDataAccessId daId = null;
-        switch (mode) {
-            case C:
-            case R:
-                this.willBeRead();
-                daId = new RAccessId(this, this.currentVersion);
-                if (DEBUG) {
-                    StringBuilder sb = new StringBuilder("");
-                    sb.append("Access:").append("\n");
-                    sb.append("  * Type: R").append("\n");
-                    sb.append("  * Read Datum: d").append(daId.getDataId()).append("v")
-                        .append(((RAccessId) daId).getRVersionId()).append("\n");
-                    LOGGER.debug(sb.toString());
-                }
-                break;
-
-            case W:
-                this.willBeWritten();
-                daId = new WAccessId(this, this.currentVersion);
-                if (DEBUG) {
-                    StringBuilder sb = new StringBuilder("");
-                    sb.append("Access:").append("\n");
-                    sb.append("  * Type: W").append("\n");
-                    sb.append("  * Write Datum: d").append(daId.getDataId()).append("v")
-                        .append(((WAccessId) daId).getWVersionId()).append("\n");
-                    LOGGER.debug(sb.toString());
-                }
-                break;
-
-            case CV:
-            case RW:
-                this.willBeRead();
-                DataVersion readInstance = this.currentVersion;
-                this.willBeWritten();
-                DataVersion writtenInstance = this.currentVersion;
-                if (readInstance != null) {
-                    daId = new RWAccessId(this, readInstance, writtenInstance);
-                    if (DEBUG) {
-                        StringBuilder sb = new StringBuilder("");
-                        sb.append("Access:").append("\n");
-                        sb.append("  * Type: RW").append("\n");
-                        sb.append("  * Read Datum: d").append(daId.getDataId()).append("v")
-                            .append(((RWAccessId) daId).getRVersionId()).append("\n");
-                        sb.append("  * Write Datum: d").append(daId.getDataId()).append("v")
-                            .append(((RWAccessId) daId).getWVersionId()).append("\n");
-                        LOGGER.debug(sb.toString());
-                    }
-                } else {
-                    ErrorManager.warn("Previous instance for data" + this.dataId + " is null.");
-                }
-                break;
-        }
-        return daId;
-    }
-
-    /**
-     * Marks the data to be read.
-     */
-    private void willBeRead() {
-        this.currentVersion.versionUsed();
-        this.currentVersion.willBeRead();
-    }
-
-    /**
-     * Marks the data to be written.
-     */
-    protected void willBeWritten() {
-        this.currentVersionId++;
-        DataVersion validPred = currentVersion;
-        if (validPred.hasBeenCancelled()) {
-            validPred = validPred.getPreviousValidPredecessor();
-        }
-        DataVersion newVersion = new DataVersion(this.dataId, this.currentVersionId, validPred);
-        newVersion.willBeWritten();
-        this.versions.put(this.currentVersionId, newVersion);
-        this.currentVersion = newVersion;
-        this.currentVersion.versionUsed();
-    }
+    public abstract EngineDataAccessId willAccess(AccessMode mode);
 
     /**
      * Tries to remove the given version {@code versionId}.
@@ -460,4 +400,51 @@ public abstract class DataInfo<T extends DataParams> {
         return this.currentVersion.isToDelete();
     }
 
+    /**
+     * Registers a task reading the data value.
+     *
+     * @param t task reading the value
+     * @param dp parameter corresponding to the data value
+     * @param isConcurrent {@literal true} if the reading was due to a concuerrent access; {@literal false} otherwise.
+     * @return {@literal true}, if an edge has been printed; {@literal false}, otherwise.
+     */
+    public abstract boolean readValue(Task t, DependencyParameter dp, boolean isConcurrent);
+
+    /**
+     * Registers a task writting on the data value.
+     *
+     * @param t task writting the value
+     * @param dp parameter corresponding to the data value
+     * @param isConcurrent {@literal true} if the writting was due to a concuerrent access; {@literal false} otherwise.
+     */
+    public abstract void writeValue(Task t, DependencyParameter dp, boolean isConcurrent);
+
+    /**
+     * Registers an access from the application main code to the value.
+     *
+     * @param rdar Request to access the data value
+     * @param access data access description with instances
+     */
+    public abstract void mainAccess(RegisterDataAccessRequest rdar, EngineDataAccessId access);
+
+    /**
+     * Registers a data producer as completed.
+     *
+     * @param task Data Producer
+     */
+    public abstract void completedProducer(AbstractTask task);
+
+    /**
+     * Obtains the task/task group producing the data.
+     * 
+     * @return the task/task group producing the data
+     */
+    public abstract AbstractTask getProducer();
+
+    /**
+     * Returns the last Tasks producing the value.
+     *
+     * @return last tasks generating the value.
+     */
+    public abstract List<AbstractTask> getDataWriters();
 }

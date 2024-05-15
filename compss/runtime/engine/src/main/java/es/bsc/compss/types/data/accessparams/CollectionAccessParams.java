@@ -46,7 +46,7 @@ public class CollectionAccessParams extends AccessParams<CollectionData> {
     }
 
     private CollectionAccessParams(Application app, Direction dir, String collectionId) {
-        super(new CollectionData(app, collectionId), dir);
+        super(app, new CollectionData(collectionId), dir);
     }
 
     @Override

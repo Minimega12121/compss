@@ -434,10 +434,15 @@ public class Task extends AbstractTask {
 
     /**
      * Registers the data accesses and dependencies of the task.
-     * 
-     * @return {@literal true}, if the task has requested an edge in the graph; {@literal false}, otherwise.
      */
-    public boolean register(int constrainingParam) {
+    public final void register() {
+        this.getApplication().onTaskAnalysisStart(this);
+        boolean taskHasEdge = registerTask();
+        this.getApplication().onTaskAnalysisEnd(this, taskHasEdge);
+    }
+
+    protected boolean registerTask() {
+        int constrainingParam = -1;
         boolean taskHasEdge = false;
         int paramIdx = 0;
         for (Parameter param : this.getParameters()) {

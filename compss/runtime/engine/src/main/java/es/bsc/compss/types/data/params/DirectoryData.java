@@ -16,7 +16,6 @@
  */
 package es.bsc.compss.types.data.params;
 
-import es.bsc.compss.types.Application;
 import es.bsc.compss.types.data.location.DataLocation;
 
 
@@ -25,11 +24,10 @@ public class DirectoryData extends FileData {
     /**
      * Constructs a new DataParams for a directory.
      *
-     * @param app Application accessing the directory
      * @param loc location of the directory
      */
-    public DirectoryData(Application app, DataLocation loc) {
-        super(app, loc);
+    public DirectoryData(DataLocation loc) {
+        super(loc);
     }
 
     @Override

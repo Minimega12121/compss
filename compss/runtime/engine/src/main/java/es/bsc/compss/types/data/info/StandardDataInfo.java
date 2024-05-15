@@ -14,53 +14,111 @@
  *  limitations under the License.
  *
  */
-package es.bsc.compss.types.accesses;
+package es.bsc.compss.types.data.info;
 
 import es.bsc.compss.components.monitor.impl.EdgeType;
-import es.bsc.compss.components.monitor.impl.GraphHandler;
 import es.bsc.compss.types.AbstractTask;
 import es.bsc.compss.types.Application;
 import es.bsc.compss.types.CommutativeGroupTask;
 import es.bsc.compss.types.CommutativeIdentifier;
 import es.bsc.compss.types.Task;
-import es.bsc.compss.types.annotations.parameter.DataType;
 import es.bsc.compss.types.annotations.parameter.Direction;
 import es.bsc.compss.types.data.EngineDataInstanceId;
 import es.bsc.compss.types.data.accessid.EngineDataAccessId;
+import es.bsc.compss.types.data.accessid.RAccessId;
 import es.bsc.compss.types.data.accessid.RWAccessId;
+import es.bsc.compss.types.data.accessid.WAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
+import es.bsc.compss.types.data.params.DataOwner;
+import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.parameter.impl.DependencyParameter;
 import es.bsc.compss.types.request.ap.RegisterDataAccessRequest;
+import es.bsc.compss.util.ErrorManager;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 
-/**
- * Class handling all the accesses related to a standard data value.
- */
-public class StandardDataAccessesInfo extends DataAccessesInfo {
+public abstract class StandardDataInfo<T extends DataParams> extends DataInfo<T> {
 
     private AbstractTask lastWriter;
 
     private final List<Task> concurrentReaders = new ArrayList<>();
 
 
-    public StandardDataAccessesInfo(DataType dataType) {
-        super(dataType);
+    public StandardDataInfo(T data, DataOwner owner) {
+        super(data, owner);
+    }
+
+    @Override
+    public final EngineDataAccessId willAccess(AccessParams.AccessMode mode) {
+        EngineDataAccessId daId = null;
+        switch (mode) {
+            case C:
+            case R:
+                this.willBeRead();
+                daId = new RAccessId(this, this.currentVersion);
+                break;
+
+            case W:
+                this.willBeWritten();
+                daId = new WAccessId(this, this.currentVersion);
+                break;
+
+            case CV:
+            case RW:
+                this.willBeRead();
+                DataVersion readInstance = this.currentVersion;
+                this.willBeWritten();
+                DataVersion writtenInstance = this.currentVersion;
+                if (readInstance != null) {
+                    daId = new RWAccessId(this, readInstance, writtenInstance);
+                } else {
+                    ErrorManager.warn("Previous instance for data" + this.dataId + " is null.");
+                }
+                break;
+        }
+        if (DEBUG && daId != null) {
+            LOGGER.debug(daId.toDebugString());
+        }
+        return daId;
+    }
+
+    /**
+     * Marks the data to be read.
+     */
+    private void willBeRead() {
+        this.currentVersion.versionUsed();
+        this.currentVersion.willBeRead();
+    }
+
+    /**
+     * Marks the data to be written.
+     */
+    protected void willBeWritten() {
+        this.currentVersionId++;
+        DataVersion validPred = currentVersion;
+        if (validPred.hasBeenCancelled()) {
+            validPred = validPred.getPreviousValidPredecessor();
+        }
+        DataVersion newVersion = new DataVersion(this.dataId, this.currentVersionId, validPred);
+        newVersion.willBeWritten();
+        this.versions.put(this.currentVersionId, newVersion);
+        this.currentVersion = newVersion;
+        this.currentVersion.versionUsed();
     }
 
     @Override
     public void completedProducer(AbstractTask task) {
         int producerTaskId = task.getId();
         if (lastWriter != null && lastWriter.getId() == producerTaskId) {
-            Application app = task.getApplication();
-            updateLastWriter(null, app.getGH());
+            updateLastWriter(null);
         }
     }
 
     @Override
-    public AbstractTask getConstrainingProducer() {
+    public AbstractTask getProducer() {
         return this.lastWriter;
     }
 
@@ -98,7 +156,7 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
                         return hasEdge;
                     }
                 }
-                closeCommutativeTasksGroup(group, app.getGH());
+                group.close();
             }
 
             // Add dependency
@@ -140,11 +198,10 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
     @Override
     public void writeValue(Task t, DependencyParameter dp, boolean isConcurrent) {
         if (isConcurrent) {
-            this.concurrentReaders.add((Task) t);
+            this.concurrentReaders.add(t);
         } else {
             int dataId = dp.getDataAccessId().getDataId();
             LOGGER.info("Setting writer for data " + dataId);
-            Application app = t.getApplication();
             if (dp.getDirection() == Direction.COMMUTATIVE) {
                 Integer coreId = t.getTaskDescription().getCoreElement().getCoreId();
                 CommutativeIdentifier comId = new CommutativeIdentifier(coreId, dataId);
@@ -161,6 +218,7 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
 
                 EngineDataAccessId daId = dp.getDataAccessId();
                 if (group == null) {
+                    Application app = t.getApplication();
                     group = new CommutativeGroupTask(app, comId);
                     group.setGroupPredecessor(lastWriter, (RWAccessId) daId);
                 }
@@ -169,67 +227,48 @@ public class StandardDataAccessesInfo extends DataAccessesInfo {
                 group.addDataDependency(t, dp);
                 t.setCommutativeGroup(group, daId);
                 dp.setDataAccessId(group.getAccessPlaceHolder());
-                app.getGH().taskBelongsToCommutativeGroup(t, group);
-                updateLastWriter(group, app.getGH());
+                updateLastWriter(group);
             } else {
-                updateLastWriter(t, app.getGH());
+                updateLastWriter(t);
             }
             this.concurrentReaders.clear();
         }
     }
 
-    private void updateLastWriter(AbstractTask newWriter, GraphHandler gh) {
+    private void updateLastWriter(AbstractTask newWriter) {
         if (lastWriter != newWriter) {
             if (lastWriter instanceof CommutativeGroupTask) {
                 CommutativeGroupTask prevGroup = (CommutativeGroupTask) lastWriter;
-                closeCommutativeTasksGroup(prevGroup, gh);
+                prevGroup.close();
             }
         }
         this.lastWriter = newWriter;
     }
 
-    private void closeCommutativeTasksGroup(CommutativeGroupTask group, GraphHandler gh) {
-        if (!group.isClosed()) {
-            group.close();
-            gh.closeCommutativeTasksGroup(group);
-        }
-    }
-
     @Override
-    public void mainAccess(RegisterDataAccessRequest rdar, EngineDataInstanceId accessedData) {
-        Application app = rdar.getAccessParams().getApp();
+    public void mainAccess(RegisterDataAccessRequest rdar, EngineDataAccessId access) {
+        EngineDataInstanceId accessedData;
+        if (access.isWrite()) {
+            accessedData = ((EngineDataAccessId.WritingDataAccessId) access).getWrittenDataInstance();
+        } else {
+            accessedData = ((EngineDataAccessId.ReadingDataAccessId) access).getReadDataInstance();
+        }
+        Application app = rdar.getAccess().getApp();
         if (lastWriter != null) {
             app.getGH().mainAccessToData(lastWriter, EdgeType.DATA_DEPENDENCY, accessedData);
-            // Release task if possible. Otherwise add to waiting
-            if (lastWriter.isPending()) {
-                lastWriter.addListener(rdar);
-                rdar.addPendingOperation();
-                if (rdar.getTaskAccessMode() == AccessParams.AccessMode.RW) {
-                    updateLastWriter(null, app.getGH());
-                }
-            }
+            lastWriter.addListener(rdar);
+            rdar.addPendingOperation();
         }
-
         for (AbstractTask task : this.concurrentReaders) {
             app.getGH().mainAccessToData(task, EdgeType.DATA_DEPENDENCY, accessedData);
-            if (task != null && task.isPending()) {
-                task.addListener(rdar);
-                rdar.addPendingOperation();
-            }
+            task.addListener(rdar);
+            rdar.addPendingOperation();
         }
         this.concurrentReaders.clear();
-    }
 
-    @Override
-    public String toStringDetails() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("concurrentReaders = [");
-        for (AbstractTask t : this.concurrentReaders) {
-            sb.append(t.getId()).append(" ");
+        if (rdar.getAccess().getParameters().getMode().isWrite()) {
+            updateLastWriter(null);
         }
-        sb.append("], ");
-        sb.append("dataWriter = ").append(this.lastWriter != null ? this.lastWriter.getId() : "null");
-        return sb.toString();
     }
 
     @Override
