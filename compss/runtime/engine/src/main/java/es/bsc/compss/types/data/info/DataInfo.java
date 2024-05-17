@@ -52,7 +52,7 @@ public abstract class DataInfo<T extends DataParams> {
     protected static final Logger LOGGER = LogManager.getLogger(Loggers.TP_COMP);
     protected static final boolean DEBUG = LOGGER.isDebugEnabled();
 
-    protected static int nextDataId = FIRST_FILE_ID;
+    private static int nextDataId = FIRST_FILE_ID;
 
     // Data identifier
     protected final int dataId;
@@ -63,17 +63,17 @@ public abstract class DataInfo<T extends DataParams> {
     // Current version
     protected DataVersion currentVersion;
     // Data and version identifier management
-    protected int currentVersionId;
+    private int currentVersionId;
 
     // Versions of the datum
     // Map: version identifier -> version
-    protected TreeMap<Integer, DataVersion> versions;
+    private TreeMap<Integer, DataVersion> versions;
 
-    protected int deletionBlocks;
-    protected final LinkedList<DataVersion> pendingDeletions;
-    protected final LinkedList<Integer> canceledVersions;
+    private int deletionBlocks;
+    private final LinkedList<DataVersion> pendingDeletions;
+    private final LinkedList<Integer> canceledVersions;
 
-    protected boolean deleted;
+    private boolean deleted;
 
 
     /**
@@ -133,6 +133,20 @@ public abstract class DataInfo<T extends DataParams> {
     }
 
     /**
+     * Registers a new version for the data.
+     */
+    protected void newVersion() {
+        this.currentVersionId++;
+        DataVersion validPred = currentVersion;
+        if (validPred.hasBeenCancelled()) {
+            validPred = validPred.getPreviousValidPredecessor();
+        }
+        DataVersion newVersion = new DataVersion(this.dataId, this.currentVersionId, validPred);
+        this.versions.put(this.currentVersionId, newVersion);
+        this.currentVersion = newVersion;
+    }
+
+    /**
      * Returns the current data version.
      *
      * @return The current data version.
@@ -172,6 +186,22 @@ public abstract class DataInfo<T extends DataParams> {
             LOGGER.warn("Current instance for data" + this.dataId + " is null.");
         }
         return daId;
+    }
+
+    /*
+     * Registers a future lecture of the current version of the data.
+     */
+    protected void currentVersionWillBeRead() {
+        this.currentVersion.willBeRead();
+        this.currentVersion.versionUsed();
+    }
+
+    /*
+     * Registers a future writing of the current version of the data.
+     */
+    protected void currentVersionWillBeWritten() {
+        this.currentVersion.willBeWritten();
+        this.currentVersion.versionUsed();
     }
 
     /**
