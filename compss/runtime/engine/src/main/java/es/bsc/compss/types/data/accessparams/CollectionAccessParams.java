@@ -67,11 +67,6 @@ public class CollectionAccessParams extends AccessParams<CollectionData> {
     }
 
     @Override
-    public boolean resultRemainOnMain() {
-        return false;
-    }
-
-    @Override
     protected void externalRegister() {
         // Do nothing. No need to register the access anywhere.
     }

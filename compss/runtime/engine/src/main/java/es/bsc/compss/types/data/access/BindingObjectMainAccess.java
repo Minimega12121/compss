@@ -59,6 +59,11 @@ public class BindingObjectMainAccess
         super(app, params);
     }
 
+    @Override
+    public boolean resultRemainOnMain() {
+        return false;
+    }
+
     /**
      * Fetches the last version of the object.
      *

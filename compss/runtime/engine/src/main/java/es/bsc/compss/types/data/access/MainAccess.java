@@ -73,6 +73,13 @@ public abstract class MainAccess<V extends Object, D extends DataParams, P exten
     }
 
     /**
+     * Returns whether the result of the access should be marked as remaining on the Main process memory.
+     *
+     * @return {@literal true} if the result is to be marked; {@literal false} otherwise.
+     */
+    protected abstract boolean resultRemainOnMain();
+
+    /**
      * Returns the value expected to be returned when there is no available version for the data.
      *
      * @return Returns the value expected to be returned when there is no available version for the data.
@@ -140,6 +147,23 @@ public abstract class MainAccess<V extends Object, D extends DataParams, P exten
             ErrorManager.error(DataLocation.ERROR_INVALID_LOCATION + " " + targetURI, ioe);
         }
         return targetLocation;
+    }
+
+    /**
+     * Marks the access from the main as finished.
+     *
+     * @param generatedData data resulting from the access
+     */
+    public void finish(EngineDataInstanceId generatedData) {
+        if (generatedData != null && this.resultRemainOnMain()) {
+            generatedData.getVersion().valueOnMain();
+        }
+        EngineDataAccessId daid = this.parameters.getLastRegisteredAccess();
+        if (daid == null) {
+            LOGGER.warn(this.parameters.getDataDescription() + " has not been accessed before");
+            return;
+        }
+        daid.commit();
     }
 
 }

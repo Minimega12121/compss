@@ -65,6 +65,11 @@ public class ObjectMainAccess<V extends Object, D extends ObjectData, P extends 
     }
 
     @Override
+    public boolean resultRemainOnMain() {
+        return true;
+    }
+
+    @Override
     public V getUnavailableValueResponse() {
         return null;
     }

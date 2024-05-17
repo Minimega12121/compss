@@ -19,25 +19,28 @@ package es.bsc.compss.types.request.ap;
 import es.bsc.compss.components.impl.AccessProcessor;
 import es.bsc.compss.components.impl.TaskDispatcher;
 import es.bsc.compss.types.data.EngineDataInstanceId;
+import es.bsc.compss.types.data.access.MainAccess;
+import es.bsc.compss.types.data.accessid.EngineDataAccessId;
 import es.bsc.compss.types.data.accessparams.AccessParams;
+import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.request.exceptions.ShutdownException;
 import es.bsc.compss.types.tracing.TraceEvent;
 
 
 public class FinishDataAccessRequest implements APRequest {
 
-    private final AccessParams access;
+    private final MainAccess access;
     private final EngineDataInstanceId generatedData;
 
 
     /**
      * Creates a new finish FileAccess request.
      * 
-     * @param ap Associated AccessParams.
+     * @param ma Associated AccessParams.
      * @param generatedData Associated AccessParams.
      */
-    public FinishDataAccessRequest(AccessParams ap, EngineDataInstanceId generatedData) {
-        this.access = ap;
+    public FinishDataAccessRequest(MainAccess ma, EngineDataInstanceId generatedData) {
+        this.access = ma;
         this.generatedData = generatedData;
     }
 

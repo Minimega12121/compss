@@ -70,9 +70,4 @@ public class ExternalPSCObjectAccessParams extends ObjectAccessParams<String, Ex
         }
     }
 
-    @Override
-    public boolean resultRemainOnMain() {
-        return false;
-    }
-
 }

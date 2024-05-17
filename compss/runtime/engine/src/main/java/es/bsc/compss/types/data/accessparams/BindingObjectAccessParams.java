@@ -71,9 +71,4 @@ public class BindingObjectAccessParams extends ObjectAccessParams<BindingObject,
         }
     }
 
-    @Override
-    public boolean resultRemainOnMain() {
-        return false;
-    }
-
 }

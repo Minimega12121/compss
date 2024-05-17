@@ -50,6 +50,11 @@ public class ExternalPSCObjectMainAccess
         super(app, params);
     }
 
+    @Override
+    public boolean resultRemainOnMain() {
+        return false;
+    }
+
     /**
      * Fetches the last version of the object.
      *
@@ -67,4 +72,5 @@ public class ExternalPSCObjectMainAccess
     public boolean isAccessFinishedOnRegistration() {
         return false;
     }
+
 }
