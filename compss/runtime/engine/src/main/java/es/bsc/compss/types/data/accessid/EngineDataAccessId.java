@@ -23,20 +23,9 @@ import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
 
 
-public interface EngineDataAccessId extends DataAccessId {
+public abstract class EngineDataAccessId implements DataAccessId {
 
-    DataInfo getAccessedDataInfo();
-
-    void commit();
-
-    void cancel(boolean keepModified);
-
-    EngineDataAccessId consolidateValidVersions();
-
-    String toDebugString();
-
-
-    interface ReadingDataAccessId extends EngineDataAccessId, DataAccessId.ReadingDataAccessId {
+    public interface ReadingDataAccessId extends DataAccessId.ReadingDataAccessId {
 
         @Override
         EngineDataInstanceId getReadDataInstance();
@@ -49,7 +38,7 @@ public interface EngineDataAccessId extends DataAccessId {
         DataVersion getReadDataVersion();
     }
 
-    interface WritingDataAccessId extends EngineDataAccessId, DataAccessId.WritingDataAccessId {
+    public interface WritingDataAccessId extends DataAccessId.WritingDataAccessId {
 
         @Override
         EngineDataInstanceId getWrittenDataInstance();
@@ -61,4 +50,41 @@ public interface EngineDataAccessId extends DataAccessId {
          */
         DataVersion getWrittenDataVersion();
     }
+
+
+    private DataInfo data;
+
+
+    protected EngineDataAccessId() {
+        // To enact placeholder RW access for commutative accesses.
+    }
+
+    protected EngineDataAccessId(DataInfo data) {
+        this.data = data;
+    }
+
+    public DataInfo getAccessedDataInfo() {
+        return this.data;
+    }
+
+    public int getDataId() {
+        return this.data.getDataId();
+    }
+
+    public final void commit() {
+        this.data.committedAccess(this);
+    }
+
+    public final void cancel(boolean keepModified) {
+        this.data.cancelledAccess(this, keepModified);
+    }
+
+    /**
+     * Returns a new DataAccess where the no-longer-valid versions are replaced by valid ones.
+     *
+     * @return new DataAccess with valid versions.
+     */
+    public abstract EngineDataAccessId consolidateValidVersions();
+
+    public abstract String toDebugString();
 }

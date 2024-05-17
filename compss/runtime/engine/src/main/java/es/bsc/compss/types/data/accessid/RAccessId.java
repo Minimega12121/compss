@@ -22,7 +22,7 @@ import es.bsc.compss.types.data.info.DataInfo;
 import es.bsc.compss.types.data.info.DataVersion;
 
 
-public class RAccessId extends EngineDataAccessIdImpl implements ReadingDataAccessId {
+public class RAccessId extends EngineDataAccessId implements ReadingDataAccessId {
 
     /**
      * Serializable objects Version UID are 1L in all Runtime.
