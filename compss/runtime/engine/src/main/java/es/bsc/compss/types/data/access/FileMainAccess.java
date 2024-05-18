@@ -158,4 +158,8 @@ public class FileMainAccess<D extends FileData, P extends FileAccessParams<D>> e
         return false;
     }
 
+    @Override
+    public boolean resultRemainOnMain() {
+        return false;
+    }
 }

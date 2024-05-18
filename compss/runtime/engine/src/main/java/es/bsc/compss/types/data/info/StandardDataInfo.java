@@ -57,20 +57,22 @@ public abstract class StandardDataInfo<T extends DataParams> extends DataInfo<T>
         switch (mode) {
             case C:
             case R:
-                this.willBeRead();
+                this.currentVersionWillBeRead();
                 daId = new RAccessId(this, this.currentVersion);
                 break;
 
             case W:
-                this.willBeWritten();
+                newVersion();
+                this.currentVersionWillBeWritten();
                 daId = new WAccessId(this, this.currentVersion);
                 break;
 
             case CV:
             case RW:
-                this.willBeRead();
+                this.currentVersionWillBeRead();
                 DataVersion readInstance = this.currentVersion;
-                this.willBeWritten();
+                newVersion();
+                this.currentVersionWillBeWritten();
                 DataVersion writtenInstance = this.currentVersion;
                 if (readInstance != null) {
                     daId = new RWAccessId(this, readInstance, writtenInstance);
@@ -85,30 +87,6 @@ public abstract class StandardDataInfo<T extends DataParams> extends DataInfo<T>
         return daId;
     }
 
-    /**
-     * Marks the data to be read.
-     */
-    private void willBeRead() {
-        this.currentVersion.versionUsed();
-        this.currentVersion.willBeRead();
-    }
-
-    /**
-     * Marks the data to be written.
-     */
-    protected void willBeWritten() {
-        this.currentVersionId++;
-        DataVersion validPred = currentVersion;
-        if (validPred.hasBeenCancelled()) {
-            validPred = validPred.getPreviousValidPredecessor();
-        }
-        DataVersion newVersion = new DataVersion(this.dataId, this.currentVersionId, validPred);
-        newVersion.willBeWritten();
-        this.versions.put(this.currentVersionId, newVersion);
-        this.currentVersion = newVersion;
-        this.currentVersion.versionUsed();
-    }
-
     @Override
     public void completedProducer(AbstractTask task) {
         int producerTaskId = task.getId();
@@ -118,7 +96,7 @@ public abstract class StandardDataInfo<T extends DataParams> extends DataInfo<T>
     }
 
     @Override
-    public AbstractTask getProducer() {
+    public AbstractTask getLastVersionProducer() {
         return this.lastWriter;
     }
 
@@ -127,7 +105,7 @@ public abstract class StandardDataInfo<T extends DataParams> extends DataInfo<T>
         if (this.concurrentReaders.isEmpty() || isConcurrent) {
             return readDependency(task, dp);
         } else {
-            return concurrentDependency(task, dp);
+            return dependsFromConcurrent(task, dp);
         }
     }
 
@@ -173,7 +151,7 @@ public abstract class StandardDataInfo<T extends DataParams> extends DataInfo<T>
         return hasEdge;
     }
 
-    private boolean concurrentDependency(Task task, DependencyParameter dp) {
+    private boolean dependsFromConcurrent(Task task, DependencyParameter dp) {
         int dataId = dp.getDataAccessId().getDataId();
         if (!this.concurrentReaders.contains(task)) {
             if (DEBUG) {

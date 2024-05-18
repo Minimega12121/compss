@@ -290,7 +290,7 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
                 if (daId.isWrite()) {
                     wId = ((WritingDataAccessId) daId).getWrittenDataInstance();
                 }
-                finishDataAccess(ap, wId);
+                finishDataAccess(ma, wId);
 
             }
             return oUpdated;
@@ -300,10 +300,10 @@ public class AccessProcessor implements Runnable, CheckpointManager.User {
     /**
      * Marks an access to a data as finished.
      *
-     * @param ap Access parameters.
+     * @param ma Access parameters.
      */
-    public void finishDataAccess(AccessParams ap, EngineDataInstanceId generatedDaId) {
-        if (!this.requestQueue.offer(new FinishDataAccessRequest(ap, generatedDaId))) {
+    public void finishDataAccess(MainAccess ma, EngineDataInstanceId generatedDaId) {
+        if (!this.requestQueue.offer(new FinishDataAccessRequest(ma, generatedDaId))) {
             ErrorManager.error(ERROR_QUEUE_OFFER + "finishing data access");
         }
     }

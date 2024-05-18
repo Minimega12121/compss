@@ -67,14 +67,13 @@ public class StreamInfo extends DataInfo<StreamData> {
         EngineDataAccessId daId;
         switch (mode) {
             case R:
-                this.currentVersion.versionUsed();
-                this.currentVersion.willBeRead();
+                this.currentVersionWillBeRead();
+
                 daId = new RAccessId(this, this.currentVersion);
                 break;
 
             case W:
-                this.currentVersion.willBeWritten();
-                this.currentVersion.versionUsed();
+                this.currentVersionWillBeWritten();
                 daId = new WAccessId(this, this.currentVersion);
                 break;
             default: // cases C, CV, RW
@@ -93,7 +92,7 @@ public class StreamInfo extends DataInfo<StreamData> {
     }
 
     @Override
-    public AbstractTask getProducer() {
+    public AbstractTask getLastVersionProducer() {
         if (!streamWriters.isEmpty()) {
             return streamWriters.get(0);
         }
@@ -112,13 +111,9 @@ public class StreamInfo extends DataInfo<StreamData> {
             if (DEBUG) {
                 StringBuilder sb = new StringBuilder();
                 if (streamWriters.size() > 1) {
-                    sb.append("Last writers for stream datum ");
-                    sb.append(dataId);
-                    sb.append(" are tasks ");
+                    sb.append("Last writers for stream datum ").append(dataId).append(" are tasks ");
                 } else {
-                    sb.append("Last writer for stream datum ");
-                    sb.append(dataId);
-                    sb.append(" is task ");
+                    sb.append("Last writer for stream datum ").append(dataId).append(" is task ");
                 }
                 for (AbstractTask lastWriter : streamWriters) {
                     sb.append(lastWriter.getId());
@@ -134,7 +129,6 @@ public class StreamInfo extends DataInfo<StreamData> {
                     LOGGER.debug(
                         "Adding stream dependency between task " + lastWriter.getId() + " and task " + task.getId());
                 }
-
                 // Add dependency
                 task.addStreamDataDependency(lastWriter);
             }

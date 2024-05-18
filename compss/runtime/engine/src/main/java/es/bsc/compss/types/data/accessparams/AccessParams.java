@@ -27,6 +27,7 @@ import es.bsc.compss.types.data.params.DataParams;
 import es.bsc.compss.types.request.exceptions.ValueUnawareRuntimeException;
 
 import java.io.Serializable;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -117,7 +118,7 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
 
     /**
      * Returns the application accessing the value.
-     * 
+     *
      * @return application accessing the value.
      */
     public Application getApp() {
@@ -126,7 +127,7 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
 
     /**
      * Returns the data being accessed.
-     * 
+     *
      * @return data being accessed
      */
     public D getData() {
@@ -140,10 +141,6 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
      */
     public final AccessMode getMode() {
         return this.mode;
-    }
-
-    public DataInfo getDataInfo() {
-        return data.getRegisteredData(this.app);
     }
 
     public final String getDataDescription() {
@@ -177,9 +174,9 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
                 LOGGER.debug("Another access to " + this.getDataDescription());
             }
         }
+        this.externalRegister();
 
         EngineDataAccessId daId = dInfo.willAccess(this.mode);
-        this.externalRegister();
         return daId;
     }
 
@@ -191,33 +188,17 @@ public abstract class AccessParams<D extends DataParams> implements Serializable
     protected abstract void externalRegister();
 
     /**
-     * Marks the access from the main as finished.
-     *
-     * @param generatedData data resulting from the access
+     * Obtains the last registed access for the given data.
+     * 
+     * @return last registed access for the given data.
      */
-    public void finish(EngineDataInstanceId generatedData) {
-        if (generatedData != null && this.resultRemainOnMain()) {
-            generatedData.getVersion().valueOnMain();
-        }
+    public final EngineDataAccessId getLastRegisteredAccess() {
         DataInfo dInfo = this.data.getRegisteredData(this.app);
         // First access to this file
         if (dInfo == null) {
             LOGGER.warn(this.getDataDescription() + " has not been accessed before");
-            return;
+            return null;
         }
-        EngineDataAccessId daid = dInfo.getLastAccess(this.mode);
-        if (daid == null) {
-            LOGGER.warn(this.getDataDescription() + " has not been accessed before");
-            return;
-        }
-        daid.commit();
+        return dInfo.getLastAccess(this.mode);
     }
-
-    /**
-     * Returns whether the result of the access should be marked as remaining on the Main process memory.
-     * 
-     * @return {@literal true} if the result is to be marked; {@literal false} otherwise.
-     */
-    public abstract boolean resultRemainOnMain();
-
 }

@@ -38,45 +38,38 @@ public interface DataAccessId extends Serializable {
      * 
      * @return The data Id.
      */
-    public abstract int getDataId();
+    int getDataId();
 
     /**
      * Returns the data direction.
      * 
      * @return The data direction.
      */
-    public abstract Direction getDirection();
+    Direction getDirection();
 
     /**
      * Returns whether the data access will read or not.
      * 
      * @return {@code true} if the data access will read, {@code false} otherwise.
      */
-    public abstract boolean isRead();
+    boolean isRead();
 
     /**
      * Returns whether the data access will write or not.
      * 
      * @return {@code true} if the data access will write, {@code false} otherwise.
      */
-    public abstract boolean isWrite();
+    boolean isWrite();
 
     /**
      * Returns whether the source data must be preserved or not.
      * 
      * @return {@code true} if the source data must be preserved, {@code false} otherwise.
      */
-    public abstract boolean isPreserveSourceData();
-
-    /**
-     * Returns a new DataAccess where the no-longer-valid versions are replaced by valid ones.
-     * 
-     * @return new DataAccess with valid versions.
-     */
-    public abstract DataAccessId consolidateValidVersions();
+    boolean isPreserveSourceData();
 
 
-    public static interface ReadingDataAccessId extends DataAccessId {
+    interface ReadingDataAccessId extends DataAccessId {
 
         /**
          * Returns the read data instance.
@@ -93,7 +86,7 @@ public interface DataAccessId extends Serializable {
         public int getRVersionId();
     }
 
-    public static interface WritingDataAccessId extends DataAccessId {
+    interface WritingDataAccessId extends DataAccessId {
 
         /**
          * Returns the written data instance.
