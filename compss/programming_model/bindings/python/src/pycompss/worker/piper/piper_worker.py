@@ -80,11 +80,13 @@ def shutdown_handler(
             proc.terminate()
     if CACHE and CACHE_PROCESS.is_alive():  # noqa
         CACHE_PROCESS.terminate()  # noqa
-    sys.stderr.write("[shutdown_handler] Received SIGTERM\n")
+    sys.stderr.write("[shutdown_handler] piper_worker.py Received SIGTERM\n")
     sys.stderr.write(f"SIGNAL: {signal}\n")
     sys.stderr.write(f"FRAME: %{str(frame)}\n")
     traceback.print_stack(frame)
     if EARING:
+        sys.stderr.write("[shutdown_handler] piper_worker.py Stopping EAR\n")
+        sys.stderr.flush()
         import ear
 
         ear.finalize()
@@ -202,7 +204,7 @@ def compss_persistent_worker(
             )
         process_name = "".join(("Process-", str(exec_id)))
         # set name for ear
-        os.environ["SLURM_JOB_NAME"] = "python_executor_" + str(i)
+        os.environ["EAR_APP_NAME"] = "python_executor_" + str(i)
         pid, queue = create_executor_process(
             exec_id, process_name, conf, config.pipes[i]
         )
@@ -404,6 +406,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # Enable EAR accounting for subsequent processes
+    if "EAR_DISABLE_NODE_METRICS" in os.environ:
+        del os.environ["EAR_DISABLE_NODE_METRICS"]
     # Initialize multiprocessing
     initialize_multiprocessing()
     # Then start the main function

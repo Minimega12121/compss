@@ -105,12 +105,13 @@ def shutdown_handler(
     :return: None
     :raises PyCOMPSsException: Received signal.
     """
-    sys.stderr.write("[shutdown_handler] Received SIGTERM\n")
+    sys.stderr.write("[shutdown_handler] executor.py Received SIGTERM\n")
     sys.stderr.write(f"SIGNAL: {signal}\n")
     sys.stderr.write(f"FRAME: %{str(frame)}\n")
     traceback.print_stack(frame)
     if EARING:
-        sys.stderr.write("[shutdown_handler] Stopping EAR\n")
+        sys.stderr.write("[shutdown_handler] executor.py Stopping EAR\n")
+        sys.stderr.flush()
         import ear
 
         ear.finalize()
@@ -400,8 +401,6 @@ def executor(
         # Load ear if necessary
         if conf.ear:
             EARING = True
-            # Enable accounting
-            del os.environ["EAR_DISABLE_NODE_METRICS"]
             # Initialize ear
             if __debug__:
                 logger.debug(
@@ -982,6 +981,7 @@ def bind_cpus(cpus: str, process_name: str, logger: logging.Logger) -> bool:
     :param logger: Logger.
     :return: True if success, False otherwise.
     """
+    import traceback
     with EventInsideWorker(TRACING_WORKER.bind_cpus_event):
         if __debug__:
             logger.debug(
@@ -997,7 +997,7 @@ def bind_cpus(cpus: str, process_name: str, logger: logging.Logger) -> bool:
                 dlb_affinity.setaffinity(cpus_map, os.getpid())
             else:
                 process_affinity.setaffinity(cpus_map)
-        except Exception:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             if __debug__:
                 logger.error(
                     "%s[%s] WARNING: could not assign affinity %s",
@@ -1005,6 +1005,8 @@ def bind_cpus(cpus: str, process_name: str, logger: logging.Logger) -> bool:
                     str(process_name),
                     str(cpus_map),
                 )
+                logger.error(traceback.print_exc())
+                logger.error(str(e))
             return False
         # Export only if success
         os.environ["COMPSS_BINDED_CPUS"] = cpus

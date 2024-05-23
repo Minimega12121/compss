@@ -2152,7 +2152,7 @@ launch() {
           # it will not be considered for power accounting, so it will be unset only in the executors)
           export EAR_DISABLE_NODE_METRICS=true
           # Provide a name for EAR to identify the main worker process
-          export SLURM_JOB_NAME="persistent_worker_starter.sh"
+          export EAR_APP_NAME="persistent_worker_starter.sh"
           # Launch worker with ear
           if [ "${ear_flags}" = true ]; then
             mkdir -p ${specific_log_dir}/energy

@@ -64,7 +64,7 @@
 
   export LD_PRELOAD=${LD_PRELOAD}:${AFTER_EXTRAE_LD_PRELOAD}
   # Provide a name for EAR to identify the main worker process
-  export SLURM_JOB_NAME="persistent_worker_starter(${hostName})"
+  export EAR_APP_NAME="piper_worker(${hostName})"
 
   $cmd ${paramsToCOMPSsWorker} 1>"${logDir}/worker_${hostName}.out" 2>"${logDir}/worker_${hostName}.err"
 
