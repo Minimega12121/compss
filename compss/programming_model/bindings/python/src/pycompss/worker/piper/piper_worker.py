@@ -22,7 +22,6 @@ PyCOMPSs Worker - Piper - Multiprocessing worker.
 
 This file contains the multiprocessing piper worker code.
 """
-
 import os
 import signal
 import sys
@@ -37,6 +36,7 @@ from pycompss.util.process.manager import Queue  # just typing
 from pycompss.util.process.manager import create_process
 from pycompss.util.process.manager import initialize_multiprocessing
 from pycompss.util.process.manager import new_queue
+from pycompss.util.process.manager import new_event
 from pycompss.util.tracing.helpers import dummy_context
 from pycompss.util.tracing.helpers import EventWorker
 from pycompss.util.tracing.helpers import trace_multiprocessing_worker
@@ -55,8 +55,8 @@ from pycompss.worker.piper.commons.utils import PiperWorkerConfiguration
 from pycompss.worker.piper.commons.utils_logger import load_loggers
 
 # Persistent worker global variables
-# PROCESSES = IN_PIPE -> PROCESS
-PROCESSES = {}  # type: typing.Dict[str, Process]
+# PROCESSES = IN_PIPE -> (PROCESS, EVENT)
+PROCESSES = {}  # type: typing.Dict[str, typing.Tuple[Process, typing.Any]]
 CACHE = None
 CACHE_PROCESS = None
 SUBHEADER = "[piper_worker.py]"
@@ -75,21 +75,50 @@ def shutdown_handler(
     :param frame: Frame.
     :return: None
     """
-    for proc in PROCESSES.values():
-        if proc.is_alive():
-            proc.terminate()
-    if CACHE and CACHE_PROCESS.is_alive():  # noqa
-        CACHE_PROCESS.terminate()  # noqa
-    sys.stderr.write("[shutdown_handler] piper_worker.py Received SIGTERM\n")
+    process_id = os.getpid()
+    process_name = os.environ["EAR_APP_NAME"]
+    sys.stderr.write(
+        f"[shutdown_handler] piper_worker.py Received SIGTERM - "
+        f"PID: {process_id} PROCESS NAME: {process_name}\n"
+    )
     sys.stderr.write(f"SIGNAL: {signal}\n")
     sys.stderr.write(f"FRAME: %{str(frame)}\n")
     traceback.print_stack(frame)
+    sys.stderr.write(
+        "[shutdown_handler] piper_worker.py SIGTERM - "
+        "Checking executor processes.\n"
+    )
+    for proc, event in PROCESSES.values():
+        if proc.is_alive():
+            sys.stderr.write(
+                f"[shutdown_handler] Process id: {proc.pid} "
+                f"is alive, terminating. \n"
+            )
+            # proc.terminate()  # Too hard
+            event.set()
+        else:
+            sys.stderr.write(
+                f"[shutdown_handler] Process id: {proc.pid} "
+                f"is not alive.\n"
+            )
+    if CACHE and CACHE_PROCESS.is_alive():  # noqa
+        sys.stderr.write(
+            f"[shutdown_handler] Cache Process id: "
+            f"{CACHE_PROCESS.pid} is alive, terminating.\n"
+        )
+        CACHE_PROCESS.terminate()
     if EARING:
-        sys.stderr.write("[shutdown_handler] piper_worker.py Stopping EAR\n")
+        sys.stderr.write(
+            f"[shutdown_handler] Stopping EAR - "
+            f"PID: {process_id} PROCESS NAME: {process_name}\n"
+        )
         sys.stderr.flush()
         import ear
 
         ear.finalize()
+    sys.stderr.write(
+        "[shutdown_handler] piper_worker.py SIGTERM - " "Flushing\n"
+    )
     sys.stderr.flush()
     sys.stdout.flush()
 
@@ -240,7 +269,7 @@ def compss_persistent_worker(
             elif line[0] == TAGS.query_executor_id:
                 in_pipe = line[1]
                 out_pipe = line[2]
-                query_proc = PROCESSES[in_pipe]
+                query_proc, _ = PROCESSES[in_pipe]
                 query_pid = query_proc.pid
                 control_pipe.write(
                     " ".join(
@@ -255,7 +284,7 @@ def compss_persistent_worker(
 
             elif line[0] == TAGS.cancel_task:
                 in_pipe = line[1]
-                cancel_proc = PROCESSES[in_pipe]
+                cancel_proc, _ = PROCESSES[in_pipe]
                 cancel_pid = cancel_proc.pid
                 if cancel_pid is None:
                     alive = False
@@ -275,16 +304,26 @@ def compss_persistent_worker(
             elif line[0] == TAGS.remove_executor:
                 in_pipe = line[1]
                 out_pipe = line[2]
-                proc = PROCESSES.pop(in_pipe, None)
+                proc, event = PROCESSES.pop(in_pipe, (None, new_event()))
                 if proc:
                     if proc.is_alive():
                         logger.warning(
-                            "%s%s Forcing terminate on : %s",
+                            "%s%s Forcing terminate on: %s (pid: %s)",
                             HEADER,
                             SUBHEADER,
                             proc.name,
+                            proc.pid,
                         )
-                        proc.terminate()
+                        # proc.terminate()  # Too hard
+                        event.set()
+                    else:
+                        logger.warning(
+                            "%s%s Could not force terminate on: %s (pid: %s)",
+                            HEADER,
+                            SUBHEADER,
+                            proc.name,
+                            proc.pid,
+                        )
                     proc.join()
                 control_pipe.write(
                     " ".join((TAGS.removed_executor, out_pipe, in_pipe))
@@ -297,7 +336,7 @@ def compss_persistent_worker(
                 alive = False
 
     # Wait for all threads
-    for proc in PROCESSES.values():
+    for proc, _ in PROCESSES.values():
         proc.join()
 
     # Check if there is any exception message from the threads
@@ -351,12 +390,18 @@ def compss_persistent_worker(
         if __debug__:
             logger.debug("%s%s Stopping EAR", HEADER, SUBHEADER)
         ear.finalize()
+        EARING = False
 
     if __debug__:
         logger.debug("%s%s Finished", HEADER, SUBHEADER)
 
     control_pipe.write(TAGS.quit)
     control_pipe.close()
+
+    if EARING:
+        # Raise SIGTERM to main interpreter so that EAR is noticed of its
+        # finalization.
+        signal.raise_signal(signal.SIGTERM)
 
 
 def create_executor_process(
@@ -371,12 +416,13 @@ def create_executor_process(
     :return: Process identifier and queue used by the process.
     """
     queue = new_queue()
+    event = new_event()
     process = create_process(
         target=executor,
-        args=(queue, executor_id, executor_name, pipe, conf),
+        args=(queue, event, executor_id, executor_name, pipe, conf),
         prepend_lock=True,
     )
-    PROCESSES[pipe.input_pipe] = process
+    PROCESSES[pipe.input_pipe] = (process, event)
     process.start()
     return int(str(process.pid)), queue
 

@@ -306,7 +306,13 @@ def compss_persistent_executor(
         cache_profiler,
     )
     executor(
-        None, None, executor_id, executor_name, config.pipes[RANK - 1], conf
+        None,
+        None,
+        None,
+        executor_id,
+        executor_name,
+        config.pipes[RANK - 1],
+        conf,
     )
 
     if persistent_storage:
