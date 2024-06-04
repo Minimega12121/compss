@@ -28,8 +28,9 @@
   user=compss
   endpoint=amdlogin1.bsc.es
   modules_folder="/apps/modules/modulefiles/tools/COMPSs/"
+  install_folder="/apps/COMPSs/"
   # Call generic script
-  ./deploy_tag_to_SC "${version}" ${buildFolder} ${buildScript} ${user} ${endpoint} "${modules_folder}"
+  ./deploy_tag_to_SC "${version}" ${buildFolder} ${buildScript} ${user} ${endpoint} "${modules_folder}" "${install_folder}"
 
   # END
   exit 0

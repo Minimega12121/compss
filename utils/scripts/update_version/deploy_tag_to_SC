@@ -24,6 +24,7 @@
     SCuser=$4
     SCendpoint=$5
     modules_folder=$6
+    install_folder=$7
   }
 
   install() {
@@ -32,7 +33,7 @@
     #mvn -U clean install
 
     cd "${buildersDir}"
-    ./"${buildScript}" "${SCuser}" "/home/bsc19/${SCuser}/tmpCOMPSs/" "/apps/COMPSs/$version"
+    ./"${buildScript}" "${SCuser}" "/home/genu/${SCuser}/tmpCOMPSs/" "${install_folder}/$version"
 
     cd "${SCRIPT_DIR}"
   }
