@@ -48,8 +48,8 @@
         <json.version>20180813</json.version>
 
         <!-- Jaxb version -->
-        <jaxb.version>2.3.3</jaxb.version>
-        <jaxws.version>2.3.3</jaxws.version>
+        <jaxb.version>4.0.2</jaxb.version>
+        <jaxws.version>4.0.2</jaxws.version>
         <cxf.version>3.4.4</cxf.version>
         <cxf.api.version>2.7.18</cxf.api.version>
 
