@@ -121,6 +121,9 @@ public enum TraceEvent {
     STOP_STORAGE_WORKER(8, TraceEventType.BINDING_INSIDE_WORKER, "Stop storage at worker"), //
     INIT_STORAGE_WORKER_PROCESS(9, TraceEventType.BINDING_INSIDE_WORKER, "Init storage at worker process"), //
     STOP_STORAGE_WORKER_PROCESS(10, TraceEventType.BINDING_INSIDE_WORKER, "Stop storage at worker process"), //
+    LOAD_EAR(11, TraceEventType.BINDING_INSIDE_WORKER, "Load EAR at worker"), //
+    FINALIZE_EAR(12, TraceEventType.BINDING_INSIDE_WORKER, "Finalize EAR at worker"), //
+    PRELOAD_IMPORT(13, TraceEventType.BINDING_INSIDE_WORKER, "Preload imports"), //
 
     // Python Events Inside Tasks
     CPU_BINDING_PYTHON(1, TraceEventType.BINDING_INSIDE_TASKS, "CPU binding"), //
@@ -154,6 +157,8 @@ public enum TraceEvent {
     RETRIEVE_OBJECT_FROM_GPU_CACHE(29, TraceEventType.BINDING_INSIDE_TASKS, "Get object from GPU cache"), //
     INSERT_OBJECT_INTO_GPU_CACHE(30, TraceEventType.BINDING_INSIDE_TASKS, "Put object in GPU cache"), //
     CLEANUP_TASK(31, TraceEventType.BINDING_INSIDE_TASKS, "Cleanup Task"), //
+    EXECUTOR_LOAD_EAR(32, TraceEventType.BINDING_INSIDE_TASKS, "Import EAR"), //
+    EXECUTOR_FINALIZE_EAR(33, TraceEventType.BINDING_INSIDE_TASKS, "Finalize EAR"), //
 
     // Python Events Inside Tasks
     CACHE_MSG_RECEIVE(1, TraceEventType.BINDING_WORKER_CACHE, "Receive message"), //

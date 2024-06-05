@@ -22,10 +22,13 @@ PyCOMPSs Worker - Piper - Multiprocessing worker.
 
 This file contains the multiprocessing piper worker code.
 """
+import logging
 import os
+import pkgutil
 import signal
 import sys
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 
 # Used only for typing
 from multiprocessing import Process  # noqa: F401
@@ -61,6 +64,7 @@ CACHE = None
 CACHE_PROCESS = None
 SUBHEADER = "[piper_worker.py]"
 EARING = False
+PRELOAD_PYTHON_LIBRARIES_EVNAME = "PRELOAD_PYTHON_LIBRARIES"
 
 
 def shutdown_handler(
@@ -159,11 +163,18 @@ def compss_persistent_worker(
         logger.debug("%s%s wake up", HEADER, SUBHEADER)
         config.print_on_logger(logger)
 
+    if PRELOAD_PYTHON_LIBRARIES_EVNAME in os.environ:
+        if __debug__:
+            logger.debug("%s%s Preloading imports", HEADER, SUBHEADER)
+        with EventWorker(TRACING_WORKER.preload_import_event):
+            preload_imports(logger)
+
     if config.ear:
         EARING = True
         if __debug__:
             logger.debug("%s%s Loading EAR", HEADER, SUBHEADER)
-        import ear
+        with EventWorker(TRACING_WORKER.load_ear_event):
+            import ear
 
     if persistent_storage:
         # Initialize storage
@@ -389,7 +400,8 @@ def compss_persistent_worker(
     if EARING:
         if __debug__:
             logger.debug("%s%s Stopping EAR", HEADER, SUBHEADER)
-        ear.finalize()
+        with EventWorker(TRACING_WORKER.finalize_ear_event):
+            ear.finalize()
         EARING = False
 
     if __debug__:
@@ -425,6 +437,111 @@ def create_executor_process(
     PROCESSES[pipe.input_pipe] = (process, event)
     process.start()
     return int(str(process.pid)), queue
+
+
+def __load_import(library: str) -> None:
+    """Import the given library as string.
+
+    :param library: Library name to be imported.
+    :return: None
+    """
+    try:
+        __import__(library)
+    except Exception as e:
+        if __debug__:
+            print(f"WARNING: Pre-load import {library} failed: {e}")
+        pass
+
+
+def preload_imports(logger: logging.Logger) -> None:
+    """Resolve imports provided by an environment variable.
+
+    This resolving is performed in parallel using threading, so that the
+    imports are done in the main worker process and inherited by the
+    executor processes to avoid that each of them has to do them
+    sequentially.
+
+    :param logger: Logger.
+    :return: None
+    """
+    preimports = os.environ[PRELOAD_PYTHON_LIBRARIES_EVNAME]
+    show_memory = False
+    if __debug__:
+        try:
+            import psutil
+
+            process = psutil.Process(os.getpid())
+            used_memory = process.memory_info().rss / (1024 * 1024)
+            logger.debug(
+                "%s%s - Memory used before imports: %s",
+                HEADER,
+                SUBHEADER,
+                str(used_memory),
+            )
+            show_memory = True
+        except ImportError:
+            logger.debug(
+                "%s%s - Could not calculate used memory."
+                "Install psutil if you want to check it.",
+                HEADER,
+                SUBHEADER,
+                str(),
+            )
+    # Get the library names
+    imports = []
+    if preimports == "ALL":
+        # If the variable contains ALL, will import all possible packages
+        # Read all installed packages
+        for module_info in pkgutil.iter_modules():
+            name = module_info.name
+            if isinstance(name, str):
+                if (
+                    not name.startswith("lib")
+                    and "mpi" not in name
+                    and name not in ["setup", "__init__"]
+                ):
+                    imports.append(name.strip())
+    elif ";" in preimports:
+        # If the variable specifies explicitly a semicolon separated list of
+        # packages to be pre imported.
+        for name in preimports.split(";"):
+            if name:
+                imports.append(name.strip())
+    else:
+        # Read the whole file
+        with open(preimports) as f:
+            lines = f.readlines()
+        # Filter comments and any line that does not contain the import word
+        full_imports = []
+        for line in lines:
+            if "import" in line and not line.startswith("#"):
+                full_imports.append(line)
+        for i in full_imports:
+            lib = i.split(" ")[1].strip()
+            imports.append(lib)
+    if __debug__:
+        logger.debug(
+            "%s%s - Libraries pre-imported: %s",
+            HEADER,
+            SUBHEADER,
+            str(len(imports)),
+        )
+        if show_memory:
+            used_memory_after = process.memory_info().rss / (1024 * 1024)
+            logger.debug(
+                "%s%s - Memory used after imports: %s",
+                HEADER,
+                SUBHEADER,
+                str(used_memory_after),
+            )
+            amount = used_memory_after - used_memory
+            logger.debug(
+                "%s%s - Memory increase: %s", HEADER, SUBHEADER, str(amount)
+            )
+    # Import the libraries using the max amount of cores
+    pool = ThreadPoolExecutor()
+    pool.map(__load_import, imports)
+    pool.shutdown(wait=True)
 
 
 ############################

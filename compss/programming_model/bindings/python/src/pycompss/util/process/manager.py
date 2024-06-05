@@ -29,7 +29,6 @@ from multiprocessing import Manager
 from multiprocessing.managers import SyncManager  # Used only for typing
 from multiprocessing import Process  # Used only for typing
 from multiprocessing import Queue  # Used only for typing
-from multiprocessing import Event  # Used only for typing
 
 from pycompss.util.typing_helper import typing
 
@@ -95,7 +94,7 @@ def new_queue() -> Queue:
 def new_event() -> typing.Any:
     """Instantiate a new event.
 
-    :return: New queue
+    :return: New event
     """
     return multiprocessing.Event()
 

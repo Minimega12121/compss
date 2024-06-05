@@ -414,8 +414,8 @@ def executor(
                     HEADER,
                     str(process_name),
                 )
-            import ear
-
+            with EventWorker(TRACING_WORKER.executor_load_ear_event):
+                import ear
             EARING = True
 
         # Connect to Shared memory manager
@@ -500,23 +500,24 @@ def executor(
         sys.stdout.flush()
         sys.stderr.flush()
         if EARING:
-            elapsed_time = time.time() - start_time
-            if __debug__:
-                logger.debug(
-                    "%s[%s] Stopping EAR (elapsed %s)",
-                    HEADER,
-                    str(process_name),
-                    str(elapsed_time),
-                )
-            if elapsed_time < EAR_INITIALIZATION:
-                logger.debug(
-                    "%s[%s] Waiting to finalize EAR: %s seconds",
-                    HEADER,
-                    str(process_name),
-                    str(elapsed_time),
-                )
-                time.sleep(elapsed_time)
-            ear.finalize()
+            with EventWorker(TRACING_WORKER.executor_finalize_ear_event):
+                elapsed_time = time.time() - start_time
+                if __debug__:
+                    logger.debug(
+                        "%s[%s] Stopping EAR (elapsed %s)",
+                        HEADER,
+                        str(process_name),
+                        str(elapsed_time),
+                    )
+                if elapsed_time < EAR_INITIALIZATION:
+                    logger.debug(
+                        "%s[%s] Waiting to finalize EAR: %s seconds",
+                        HEADER,
+                        str(process_name),
+                        str(elapsed_time),
+                    )
+                    time.sleep(elapsed_time)
+                ear.finalize()
             EARING = False
             if __debug__:
                 logger.debug(
@@ -954,7 +955,7 @@ def process_task(
                 storage_logger.addHandler(handler)
             i += 1
 
-        with EventInsideWorker(TRACING_WORKER.cleanup_task):
+        with EventInsideWorker(TRACING_WORKER.cleanup_task_event):
             gc.collect()
 
         if __debug__:

@@ -61,6 +61,18 @@ class TypesEventsWorker:
         "retrieve_object_from_cache_event",
         "insert_object_into_cache_event",
         "remove_object_from_cache_event",
+        "wait_on_event",
+        "worker_task_instantiation",
+        "cache_hit_event",
+        "cache_miss_event",
+        "check_access_gpu_event",
+        "cache_hit_gpu_event",
+        "cache_miss_gpu_event",
+        "retrieve_object_from_gpu_cache_event",
+        "insert_object_into_gpu_cache_event",
+        "cleanup_task_event",
+        "executor_load_ear_event",
+        "executor_finalize_ear_event",
         "inside_tasks_cpu_affinity_type",
         "inside_tasks_cpu_count_type",
         "inside_tasks_gpu_affinity_type",
@@ -75,18 +87,11 @@ class TypesEventsWorker:
         "finish_storage_at_worker_event",
         "init_worker_postfork_event",
         "finish_worker_postfork_event",
-        "worker_task_instantiation",
+        "load_ear_event",
+        "finalize_ear_event",
+        "preload_import_event",
         "serialization_cache_size_type",
         "deserialization_cache_size_type",
-        "wait_on_event",
-        "cache_hit_event",
-        "cache_miss_event",
-        "check_access_gpu_event",
-        "cache_hit_gpu_event",
-        "cache_miss_gpu_event",
-        "retrieve_object_from_gpu_cache_event",
-        "insert_object_into_gpu_cache_event",
-        "cleanup_task",
     )
 
     def __init__(self) -> None:
@@ -138,7 +143,9 @@ class TypesEventsWorker:
         self.cache_miss_gpu_event = 28
         self.retrieve_object_from_gpu_cache_event = 29
         self.insert_object_into_gpu_cache_event = 30
-        self.cleanup_task = 31
+        self.cleanup_task_event = 31
+        self.executor_load_ear_event = 32
+        self.executor_finalize_ear_event = 33
 
         # Task affinity events:
         self.inside_tasks_cpu_affinity_type = 9000150
@@ -157,6 +164,9 @@ class TypesEventsWorker:
         self.finish_storage_at_worker_event = 8  # finishStorageAtWorker
         self.init_worker_postfork_event = 9  # initWorkerPostFork
         self.finish_worker_postfork_event = 10  # finishWorkerPostFork
+        self.load_ear_event = 11
+        self.finalize_ear_event = 12
+        self.preload_import_event = 13
         # Other worker events:
         self.serialization_cache_size_type = 9000602
         self.deserialization_cache_size_type = 9000603
