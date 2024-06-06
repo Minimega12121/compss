@@ -27,6 +27,9 @@ harvested by EAR.
 import argparse
 import csv
 import glob
+import os
+import subprocess
+import sys
 import typing
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,6 +37,25 @@ import numpy as np
 
 class GenEnergyException(Exception):
     """Generate energy exception."""
+
+
+def run_command(cmd: str) -> None:
+    """"Execute the given command.
+
+    :param cmd: String with the command to be executed.
+    :return: The process return code.
+    """
+    with subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
+    ) as proc:
+        out, err = proc.communicate()
+    out_message = out.decode().strip()
+    err_message = err.decode().strip()
+    if out_message:
+        print(out_message)
+    if err_message:
+        sys.stderr.write(f"{err_message}\n")
+    return proc.returncode
 
 
 def get_lists_of_files():
@@ -383,6 +405,14 @@ def main() -> None:
     if args.all_figures:
         generate_average_cpufreq(header, content, "average_cpufreq.png")
         generate_average_cpi(header, content, "average_cpi.png")
+
+    # Fourth, if in MN5, try to generate the ear traces
+    if "BSC_MACHINE" in os.environ and os.environ["BSC_MACHINE"] == "mn5":
+        job_id = str(content[0][1])
+        command = f"module load ear; module use /gpfs/projects/bsc19/ePyCOMPSs/LIBRARIES; module load ear-job-analytics; module load python/3.9.16; export PYTHONPATH=/gpfs/projects/bsc19/ePyCOMPSs/LIBRARIES/python3.9/site-packages:PYTHONPATH; ear-job-analytics --format ear2prv -j {job_id} --input loops.csv"
+        print("Generating EAR trace:")
+        print(f"- Command: {command}")
+        run_command(command)
 
 
 if __name__ == "__main__":
