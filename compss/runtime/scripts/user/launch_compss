@@ -2148,20 +2148,60 @@ launch() {
         fi
 
         if [ "${ear}" = true ]; then
+          # Disable EAR accounting for main process (if this variable is set, the processes that contain
+          # it will not be considered for power accounting, so it will be unset only in the executors)
+          export EAR_DISABLE_NODE_METRICS=true
+          # Provide a name for EAR to identify the main worker process
+          export EAR_APP_NAME="persistent_worker_starter.sh"
           # Launch worker with ear
+          EAR_REPORT_PATH="${specific_log_dir}/energy"
+          EAR_REPORT_PREFIX="ear"
           if [ "${ear_flags}" = true ]; then
-            mkdir -p ${specific_log_dir}/energy
-            PRE_CMD="$EAR_INSTALL_PATH/bin/erun \"--ear=on --ear-user-db=${specific_log_dir}/energy/ear \""
+            mkdir -p ${EAR_REPORT_PATH}
+            if [ -z "${EAR_LITE}"  ]; then
+              # EAR_LITE not defined: we rely in srun (ear plugin in slurm)
+              PRE_CMD="--ear=on --ear-user-db=${EAR_REPORT_PATH}/${EAR_REPORT_PREFIX} "
+            else
+              # EAR_LITE is defined: so use erun
+              PRE_CMD="$EAR_INSTALL_PATH/bin/erun \"--ear=on --ear-user-db=${EAR_REPORT_PATH}/${EAR_REPORT_PREFIX} \""
+            fi
           else
-            PRE_CMD="$EAR_INSTALL_PATH/bin/erun ${ear_flags}"
+            if [ -z "${EAR_LITE}"  ]; then
+              PRE_CMD="${ear_flags}"
+            else
+              PRE_CMD="$EAR_INSTALL_PATH/bin/erun ${ear_flags}"
+            fi
           fi
           POST_CMD=
           WCMD="/bin/bash $WCMD"
 
           if [ "${log_level}" != "off" ]; then
-            echo "[LAUNCH_COMPSS] Launching worker in master (with ear) with id $hostid and command: ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} --program=\"$WCMD\" ${POST_CMD}"
+            if [ -z "${EAR_LITE}"  ]; then
+              echo "[LAUNCH_COMPSS] Launching worker in master (with ear) with id $hostid and command: ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} $WCMD ${POST_CMD}"
+            else
+              echo "[LAUNCH_COMPSS] Launching worker in master (with ear) with id $hostid and command: ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} --program=\"$WCMD\" ${POST_CMD}"
+            fi
+            echo "[LAUNCH_COMPSS] Enabling EAR debug:"
+            if [ -z "${HACK_EARL_VERBOSE}"  ]; then
+              export HACK_EARL_VERBOSE=2
+              echo "[LAUNCH_COMPSS] - Using default debug HACK_EARL_VERBOSE=${HACK_EARL_VERBOSE}"
+            else
+              echo "[LAUNCH_COMPSS] - Using overriden HACK_EARL_VERBOSE=${HACK_EARL_VERBOSE}"
+            fi
+            if [ -z "${HACK_PROCS_VERB_FILES}"  ]; then
+              export HACK_PROCS_VERB_FILES=1
+              echo "[LAUNCH_COMPSS] - Using default debug HACK_PROCS_VERB_FILES=${HACK_PROCS_VERB_FILES}"
+            else
+              echo "[LAUNCH_COMPSS] - Using overriden HACK_PROCS_VERB_FILES=${HACK_PROCS_VERB_FILES}"
+            fi
+            export EARL_VERBOSE_PATH="${EAR_REPORT_PATH}/ear_logs/"
+            mkdir -p ${EARL_VERBOSE_PATH}
           fi
-          ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} --program="$WCMD" ${POST_CMD} &
+          if [ -z "${EAR_LITE}"  ]; then
+            ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} $WCMD ${POST_CMD} &
+          else
+            ${LAUNCH_CMD} ${AUXILIAR_LAUNCH_PARAMS}${LAUNCH_EXTRA_FLAGS}${LAUNCH_PARAMS}${LAUNCH_SEPARATOR}${master_node} ${PRE_CMD} --program="$WCMD" ${POST_CMD} &
+          fi
         else
           # Launch normal worker
           if [ "${log_level}" != "off" ]; then

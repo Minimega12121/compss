@@ -27,6 +27,9 @@ harvested by EAR.
 import argparse
 import csv
 import glob
+import os
+import subprocess
+import sys
 import typing
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,6 +37,25 @@ import numpy as np
 
 class GenEnergyException(Exception):
     """Generate energy exception."""
+
+
+def run_command(cmd: str) -> None:
+    """"Execute the given command.
+
+    :param cmd: String with the command to be executed.
+    :return: The process return code.
+    """
+    with subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
+    ) as proc:
+        out, err = proc.communicate()
+    out_message = out.decode().strip()
+    err_message = err.decode().strip()
+    if out_message:
+        print(out_message)
+    if err_message:
+        sys.stderr.write(f"{err_message}\n")
+    return proc.returncode
 
 
 def get_lists_of_files():
@@ -66,7 +88,7 @@ def load_csv(file_name: str) -> ([], []):
     return header, content
 
 
-def merge_files(files, result_file):
+def merge_files(files, result_file, file_tag):
     """Merge all given files.
 
     Takes the first one with its header,
@@ -74,6 +96,7 @@ def merge_files(files, result_file):
 
     :param files: List of file paths to merge.
     :param result_file: Name of the resulting file.
+    :param file_tag: File identifier (for header replacement purposes).
     :return: None
     """
     # Load all contents
@@ -82,6 +105,27 @@ def merge_files(files, result_file):
     for file_name in files:
         header, content = load_csv(file_name)
         if first:
+            # ###################################
+            # Update header - TODO: make sure this is kept across EAR versions
+            if file_tag == "app":
+                for i, v in enumerate(header):
+                    if v == "JOBID":
+                        header[i] = "id"
+                    if v == "APPID":
+                        header[i] = "step_id"
+                    if v == "JOBNAME":
+                        header[i] = "app_id"
+                    if v == "START_TIME":
+                        header[i] = "start_time"
+                    if v == "END_TIME":
+                        header[i] = "end_time"
+            if file_tag == "loops":
+                for i, v in enumerate(header):
+                    if v == "STEPID":
+                        header[i] = "STEPID_SLURM"
+                    if v == "APPID":
+                        header[i] = "STEPID"
+            # ###################################
             result_contents.append(";".join(header))
             first = False
         for row in content:
@@ -102,7 +146,7 @@ def generate_average_power(header: [], content: [], result_file: str) -> None:
     """
     print("- Generating average power plot.")
     group_by = "NODENAME"
-    label_x = "JOBNAME"
+    label_x = "app_id" # "JOBNAME"
     label_y = "DC_NODE_POWER_W"
     xlabel = "Worker node"
     ylabel = "Watts (W)"
@@ -122,9 +166,7 @@ def generate_average_power(header: [], content: [], result_file: str) -> None:
     )
 
 
-def generate_average_cpufreq(
-    header: [], content: [], result_file: str
-) -> None:
+def generate_average_cpufreq(header: [], content: [], result_file: str) -> None:
     """Generate the average cpufreq plot (per node).
 
     :param header: List of elements in header.
@@ -134,7 +176,7 @@ def generate_average_cpufreq(
     """
     print("- Generating average CPU frequency plot.")
     group_by = "NODENAME"
-    label_x = "JOBNAME"
+    label_x = "app_id"  # "JOBNAME"
     label_y = "AVG_CPUFREQ_KHZ"
     xlabel = "Worker node"
     ylabel = "Khz"
@@ -153,9 +195,7 @@ def generate_average_cpufreq(
     )
 
 
-def generate_accumulated_energy(
-    header: [], content: [], result_file: str
-) -> None:
+def generate_accumulated_energy(header: [], content: [], result_file: str) -> None:
     """Generate the accumulated energy plot (per node).
 
     :param header: List of elements in header.
@@ -165,7 +205,7 @@ def generate_accumulated_energy(
     """
     print("- Generating accumulated energy plot.")
     group_by = "NODENAME"
-    label_x = "JOBNAME"
+    label_x = "app_id"  # "JOBNAME"
     label_y = ["TIME_SEC", "*", "DC_NODE_POWER_W"]
     xlabel = "Worker node"
     ylabel = "Joules (J)"
@@ -181,7 +221,7 @@ def generate_accumulated_energy(
         xlabel,
         ylabel,
         title,
-        True
+        True,
     )
 
 
@@ -195,7 +235,7 @@ def generate_average_cpi(header: [], content: [], result_file: str) -> None:
     """
     print("- Generating average CPI plot.")
     group_by = "NODENAME"
-    label_x = "JOBNAME"
+    label_x = "app_id"  # "JOBNAME"
     label_y = "CPI"
     xlabel = "Worker node"
     ylabel = ""
@@ -250,9 +290,7 @@ def common_average_plot(  # pylint: disable=R0912,R0913,R0914,R0915
         # the label_y is a list with [field, operator, field]
         operator = True
     else:
-        raise GenEnergyException(
-            "Unexpected label_y type. Must be str or list."
-        )
+        raise GenEnergyException("Unexpected label_y type. Must be str or list.")
     data_group = []
     data_x = []
     data_y = []
@@ -300,9 +338,7 @@ def common_average_plot(  # pylint: disable=R0912,R0913,R0914,R0915
         edgecolor="white",
         linewidth=0.7,
     )
-    a_x.bar_label(
-        a_x.containers[0], label_type="edge", color="purple", fontsize=7
-    )
+    a_x.bar_label(a_x.containers[0], label_type="edge", color="purple", fontsize=7)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
@@ -355,20 +391,28 @@ def main() -> None:
         return
 
     # Second, merge all files in a single file
-    app_file_name = "app.csv"
+    app_file_name = "out_jobs.loops.csv"
     print(f"- Joining app files... {app_file_name}")
-    merge_files(app, app_file_name)
+    merge_files(app, app_file_name, "app")
     loops_file_name = "loops.csv"
     print(f"- Joining loop files... {loops_file_name}")
-    merge_files(loops, loops_file_name)
+    merge_files(loops, loops_file_name, "loops")
 
     # Third, load the merged files and generate the required plots
-    header, content = load_csv("app.csv")
+    header, content = load_csv(app_file_name)
     generate_average_power(header, content, "average_power.png")
     generate_accumulated_energy(header, content, "accumulated_energy.png")
     if args.all_figures:
         generate_average_cpufreq(header, content, "average_cpufreq.png")
         generate_average_cpi(header, content, "average_cpi.png")
+
+    # Fourth, if in MN5, try to generate the ear traces
+    if "BSC_MACHINE" in os.environ and os.environ["BSC_MACHINE"] == "mn5":
+        job_id = str(content[0][1])
+        command = f"module load ear; module use /gpfs/projects/bsc19/ePyCOMPSs/LIBRARIES; module load ear-job-analytics; module load python/3.9.16; export PYTHONPATH=/gpfs/projects/bsc19/ePyCOMPSs/LIBRARIES/python3.9/site-packages:PYTHONPATH; ear-job-analytics --format ear2prv -j {job_id} --input loops.csv"
+        print("Generating EAR trace:")
+        print(f"- Command: {command}")
+        run_command(command)
 
 
 if __name__ == "__main__":

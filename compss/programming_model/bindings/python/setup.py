@@ -111,7 +111,7 @@ if EAR_HOME is not None:
         "ear",
         include_dirs=[os.path.join(EAR_HOME, "include")],
         library_dirs=[os.path.join(EAR_HOME, "lib")],
-        libraries=["ear"],
+        libraries=["earld_dummy"],
         extra_compile_args=["-std=c++11"],
         # extra_compile_args=["-fPIC %s" % (" ".join(GCC_DEBUG_FLAGS.split("\n")))],
         sources=["src/pycompss/ext/ear.c"],

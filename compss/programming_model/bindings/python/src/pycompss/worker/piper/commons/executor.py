@@ -90,6 +90,11 @@ if int(os.getenv("COMPSS_WITH_DLB", 0)) >= 1:
 
 
 HEADER = "*[PYTHON EXECUTOR] "
+EARING = False
+if "EAR_INITIALIZATION_TIME" in os.environ:
+    EAR_INITIALIZATION = int(os.environ["EAR_INITIALIZATION_TIME"])
+else:
+    EAR_INITIALIZATION = 40  # seconds minimum before doing any finalize.
 
 
 def shutdown_handler(
@@ -104,9 +109,16 @@ def shutdown_handler(
     :return: None
     :raises PyCOMPSsException: Received signal.
     """
-    sys.stderr.write("[shutdown_handler] Received SIGTERM\n")
-    sys.stderr.write("SIGNAL: %d\n" % signal)
-    sys.stderr.write("FRAME: %s\n" % str(frame))
+    process_id = os.getpid()
+    process_name = os.environ["EAR_APP_NAME"]
+    sys.stderr.write(
+        f"[shutdown_handler] executor.py Received SIGTERM - "
+        f"PID: {process_id} "
+        f"PROCESS NAME: {process_name} "
+        f"TIMESTAMP: {time.time()}\n"
+    )
+    sys.stderr.write(f"SIGNAL: {signal}\n")
+    sys.stderr.write(f"FRAME: %{str(frame)}\n")
     traceback.print_stack(frame)
     sys.stderr.flush()
     sys.stdout.flush()
@@ -267,6 +279,7 @@ class ExecutorConf:
 def executor(
     lock: typing.Any,
     queue: typing.Union[None, Queue],
+    event: typing.Any,
     process_id: int,
     process_name: str,
     pipe: Pipe,
@@ -289,6 +302,9 @@ def executor(
     :param conf: Executor configuration.
     :return: None.
     """
+    global EARING
+    start_time = time.time()
+
     try:
         # First thing to do is to emit the process identifier event
         emit_manual_event_explicit(
@@ -390,19 +406,17 @@ def executor(
                 raise general_exception from general_exception
 
         # Load ear if necessary
-        earing = False
         if conf.ear:
-            earing = True
-
-        if earing:
-            # Initialize streaming
+            # Initialize ear
             if __debug__:
                 logger.debug(
                     "%s[%s] Loading ear",
                     HEADER,
                     str(process_name),
                 )
-            import ear
+            with EventWorker(TRACING_WORKER.executor_load_ear_event):
+                import ear
+            EARING = True
 
         # Connect to Shared memory manager
         if conf.in_cache_queue and conf.out_cache_queue:
@@ -416,7 +430,7 @@ def executor(
             logger.debug("%s[%s] Starting process", HEADER, str(process_name))
 
         # MAIN EXECUTOR LOOP
-        while alive:
+        while alive and not event.is_set():
             # Runtime -> pipe - Read command from pipe
             command = COMPSs.read_pipes()
             if command != "":
@@ -446,6 +460,14 @@ def executor(
                     conf.cache_ids,
                     conf.cache_profiler,
                 )
+        if __debug__:
+            logger.debug(
+                "%s[%s] Ending process (alive: %s - event: %s)",
+                HEADER,
+                str(process_name),
+                str(alive),
+                str(event.is_set()),
+            )
         # Stop storage
         if storage_conf != "null":
             try:
@@ -477,16 +499,40 @@ def executor(
 
         sys.stdout.flush()
         sys.stderr.flush()
-        if earing:
-            logger.debug("%s[%s] Stopping EAR", HEADER, str(process_name))
-            # Only needed in multiprocessing subprocesses
-            ear.finalize()
+        if EARING:
+            with EventWorker(TRACING_WORKER.executor_finalize_ear_event):
+                elapsed_time = time.time() - start_time
+                if __debug__:
+                    logger.debug(
+                        "%s[%s] Stopping EAR (elapsed %s)",
+                        HEADER,
+                        str(process_name),
+                        str(elapsed_time),
+                    )
+                if elapsed_time < EAR_INITIALIZATION:
+                    logger.debug(
+                        "%s[%s] Waiting to finalize EAR: %s seconds",
+                        HEADER,
+                        str(process_name),
+                        str(elapsed_time),
+                    )
+                    time.sleep(elapsed_time)
+                ear.finalize()
+            EARING = False
+            if __debug__:
+                logger.debug(
+                    "%s[%s] Stopped EAR at %s",
+                    HEADER,
+                    str(process_name),
+                    str(time.time()),
+                )
         if __debug__:
             logger.debug("%s[%s] Exiting process ", HEADER, str(process_name))
         # Send quit message back to the runtime
         pipe.write(TAGS.quit)
         pipe.close()
     except Exception as general_exception:  # pylint: disable=broad-except
+        sys.stderr.write("\nGENERAL EXCEPTION:\n")
         sys.stderr.write(f"\n{str(general_exception)}\n")
         sys.stderr.flush()
         raise general_exception from general_exception
@@ -909,7 +955,7 @@ def process_task(
                 storage_logger.addHandler(handler)
             i += 1
 
-        with EventInsideWorker(TRACING_WORKER.cleanup_task):
+        with EventInsideWorker(TRACING_WORKER.cleanup_task_event):
             gc.collect()
 
         if __debug__:
@@ -975,6 +1021,8 @@ def bind_cpus(cpus: str, process_name: str, logger: logging.Logger) -> bool:
     :param logger: Logger.
     :return: True if success, False otherwise.
     """
+    import traceback
+
     with EventInsideWorker(TRACING_WORKER.bind_cpus_event):
         if __debug__:
             logger.debug(
@@ -990,7 +1038,7 @@ def bind_cpus(cpus: str, process_name: str, logger: logging.Logger) -> bool:
                 dlb_affinity.setaffinity(cpus_map, os.getpid())
             else:
                 process_affinity.setaffinity(cpus_map)
-        except Exception:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             if __debug__:
                 logger.error(
                     "%s[%s] WARNING: could not assign affinity %s",
@@ -998,6 +1046,8 @@ def bind_cpus(cpus: str, process_name: str, logger: logging.Logger) -> bool:
                     str(process_name),
                     str(cpus_map),
                 )
+                traceback.print_exc()
+                logger.error(str(e))
             return False
         # Export only if success
         os.environ["COMPSS_BINDED_CPUS"] = cpus

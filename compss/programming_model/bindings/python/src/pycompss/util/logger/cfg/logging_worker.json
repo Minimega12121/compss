@@ -41,7 +41,7 @@
       "formatter": "medium",
       "filename": "binding_worker.out",
       "maxBytes": 10485760,
-      "backupCount": 20,
+      "backupCount": 99,
       "encoding": "utf8",
       "delay": "true"
     },
@@ -51,7 +51,7 @@
       "formatter": "medium",
       "filename": "binding_worker.err",
       "maxBytes": 10485760,
-      "backupCount": 20,
+      "backupCount": 99,
       "encoding": "utf8",
       "delay": "true"
     }

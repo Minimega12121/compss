@@ -22,10 +22,10 @@ PyCOMPSs Worker - Piper - Multiprocessing worker.
 
 This file contains the multiprocessing piper worker code.
 """
-
 import os
 import signal
 import sys
+import traceback
 
 # Used only for typing
 from multiprocessing import Process  # noqa: F401
@@ -36,6 +36,9 @@ from pycompss.util.process.manager import Queue  # just typing
 from pycompss.util.process.manager import create_process
 from pycompss.util.process.manager import initialize_multiprocessing
 from pycompss.util.process.manager import new_queue
+from pycompss.util.process.manager import new_event
+from pycompss.util.process.preloader import preimports
+from pycompss.util.process.preloader import preload_imports
 from pycompss.util.tracing.helpers import dummy_context
 from pycompss.util.tracing.helpers import EventWorker
 from pycompss.util.tracing.helpers import trace_multiprocessing_worker
@@ -54,10 +57,12 @@ from pycompss.worker.piper.commons.utils import PiperWorkerConfiguration
 from pycompss.worker.piper.commons.utils_logger import load_loggers
 
 # Persistent worker global variables
-# PROCESSES = IN_PIPE -> PROCESS
-PROCESSES = {}  # type: typing.Dict[str, Process]
+# PROCESSES = IN_PIPE -> (PROCESS, EVENT)
+PROCESSES = {}  # type: typing.Dict[str, typing.Tuple[Process, typing.Any]]
 CACHE = None
 CACHE_PROCESS = None
+SUBHEADER = "[piper_worker.py]"
+EARING = False
 
 
 def shutdown_handler(
@@ -72,11 +77,52 @@ def shutdown_handler(
     :param frame: Frame.
     :return: None
     """
-    for proc in PROCESSES.values():
+    process_id = os.getpid()
+    process_name = os.environ["EAR_APP_NAME"]
+    sys.stderr.write(
+        f"[shutdown_handler] piper_worker.py Received SIGTERM - "
+        f"PID: {process_id} PROCESS NAME: {process_name}\n"
+    )
+    sys.stderr.write(f"SIGNAL: {signal}\n")
+    sys.stderr.write(f"FRAME: %{str(frame)}\n")
+    traceback.print_stack(frame)
+    sys.stderr.write(
+        "[shutdown_handler] piper_worker.py SIGTERM - "
+        "Checking executor processes.\n"
+    )
+    for proc, event in PROCESSES.values():
         if proc.is_alive():
-            proc.terminate()
+            sys.stderr.write(
+                f"[shutdown_handler] Process id: {proc.pid} "
+                f"is alive, terminating. \n"
+            )
+            # proc.terminate()  # Too hard
+            event.set()
+        else:
+            sys.stderr.write(
+                f"[shutdown_handler] Process id: {proc.pid} "
+                f"is not alive.\n"
+            )
     if CACHE and CACHE_PROCESS.is_alive():  # noqa
-        CACHE_PROCESS.terminate()  # noqa
+        sys.stderr.write(
+            f"[shutdown_handler] Cache Process id: "
+            f"{CACHE_PROCESS.pid} is alive, terminating.\n"
+        )
+        CACHE_PROCESS.terminate()
+    if EARING:
+        sys.stderr.write(
+            f"[shutdown_handler] Stopping EAR - "
+            f"PID: {process_id} PROCESS NAME: {process_name}\n"
+        )
+        sys.stderr.flush()
+        import ear
+
+        ear.finalize()
+    sys.stderr.write(
+        "[shutdown_handler] piper_worker.py SIGTERM - " "Flushing\n"
+    )
+    sys.stderr.flush()
+    sys.stdout.flush()
 
 
 ######################
@@ -97,6 +143,7 @@ def compss_persistent_worker(
     """
     global CACHE
     global CACHE_PROCESS
+    global EARING
 
     # Catch SIGTERM sent by bindings_piper
     signal.signal(signal.SIGTERM, shutdown_handler)
@@ -111,12 +158,25 @@ def compss_persistent_worker(
     )
 
     if __debug__:
-        logger.debug("%s[piper_worker.py] wake up", HEADER)
+        logger.debug("%s%s wake up", HEADER, SUBHEADER)
         config.print_on_logger(logger)
+
+    if preimports():
+        if __debug__:
+            logger.debug("%s%s Preloading imports", HEADER, SUBHEADER)
+        with EventWorker(TRACING_WORKER.preload_import_event):
+            preload_imports(logger, HEADER, SUBHEADER)
+
+    if config.ear:
+        EARING = True
+        if __debug__:
+            logger.debug("%s%s Loading EAR", HEADER, SUBHEADER)
+        with EventWorker(TRACING_WORKER.load_ear_event):
+            import ear
 
     if persistent_storage:
         # Initialize storage
-        logger.debug("%sStarting persistent storage", HEADER)
+        logger.debug("%s%s Starting persistent storage", HEADER, SUBHEADER)
         with EventWorker(TRACING_WORKER.init_storage_at_worker_event):
             from storage.api import (  # pylint: disable=E0401, C0415
                 # disable=import-error, import-outside-toplevel
@@ -177,10 +237,12 @@ def compss_persistent_worker(
     for i in range(0, config.tasks_x_node):
         exec_id = config.exec_ids[i]
         if __debug__:
-            logger.debug("%sLaunching process %s", HEADER, str(exec_id))
+            logger.debug(
+                "%s%s Launching process %s", HEADER, SUBHEADER, str(exec_id)
+            )
         process_name = "".join(("Process-", str(exec_id)))
         # set name for ear
-        os.environ["SLURM_JOB_NAME"] = "python_executor_" + str(i)
+        os.environ["EAR_APP_NAME"] = "python_executor_" + str(i)
         pid, queue = create_executor_process(
             exec_id, process_name, conf, config.pipes[i]
         )
@@ -216,7 +278,7 @@ def compss_persistent_worker(
             elif line[0] == TAGS.query_executor_id:
                 in_pipe = line[1]
                 out_pipe = line[2]
-                query_proc = PROCESSES[in_pipe]
+                query_proc, _ = PROCESSES[in_pipe]
                 query_pid = query_proc.pid
                 control_pipe.write(
                     " ".join(
@@ -231,7 +293,7 @@ def compss_persistent_worker(
 
             elif line[0] == TAGS.cancel_task:
                 in_pipe = line[1]
-                cancel_proc = PROCESSES[in_pipe]
+                cancel_proc, _ = PROCESSES[in_pipe]
                 cancel_pid = cancel_proc.pid
                 if cancel_pid is None:
                     alive = False
@@ -240,8 +302,9 @@ def compss_persistent_worker(
                     cancel_pid_int = int(cancel_pid)
                 if __debug__:
                     logger.debug(
-                        "%sSignaling process with PID %s to cancel a task",
+                        "%s%s Signaling process with PID %s to cancel a task",
                         HEADER,
+                        SUBHEADER,
                         str(cancel_pid),
                     )
                 # Cancellation produced by COMPSs
@@ -250,13 +313,26 @@ def compss_persistent_worker(
             elif line[0] == TAGS.remove_executor:
                 in_pipe = line[1]
                 out_pipe = line[2]
-                proc = PROCESSES.pop(in_pipe, None)
+                proc, event = PROCESSES.pop(in_pipe, (None, new_event()))
                 if proc:
                     if proc.is_alive():
                         logger.warning(
-                            "%sForcing terminate on : %s", HEADER, proc.name
+                            "%s%s Forcing terminate on: %s (pid: %s)",
+                            HEADER,
+                            SUBHEADER,
+                            proc.name,
+                            proc.pid,
                         )
-                        proc.terminate()
+                        # proc.terminate()  # Too hard
+                        event.set()
+                    else:
+                        logger.warning(
+                            "%s%s Could not force terminate on: %s (pid: %s)",
+                            HEADER,
+                            SUBHEADER,
+                            proc.name,
+                            proc.pid,
+                        )
                     proc.join()
                 control_pipe.write(
                     " ".join((TAGS.removed_executor, out_pipe, in_pipe))
@@ -269,21 +345,27 @@ def compss_persistent_worker(
                 alive = False
 
     # Wait for all threads
-    for proc in PROCESSES.values():
+    for proc, _ in PROCESSES.values():
         proc.join()
 
     # Check if there is any exception message from the threads
     for i in range(0, config.tasks_x_node):
         if not queues[i].empty():
             logger.error(
-                "%sException in threads queue: %s",
+                "%s%s Exception in threads queue: %s",
                 HEADER,
+                SUBHEADER,
                 str(queues[i].get()),
             )
 
     # Check if there is any exception from the messages
     for msg in error_msgs:
-        logger.error("%sException in piper worker message: %s", HEADER, msg)
+        logger.error(
+            "%s%s Exception in piper worker message: %s",
+            HEADER,
+            SUBHEADER,
+            msg,
+        )
 
     for queue in queues:
         queue.close()
@@ -304,7 +386,7 @@ def compss_persistent_worker(
     if persistent_storage:
         # Finish storage
         if __debug__:
-            logger.debug("%sStopping persistent storage", HEADER)
+            logger.debug("%s%s Stopping persistent storage", HEADER, SUBHEADER)
         with EventWorker(TRACING_WORKER.finish_storage_at_worker_event):
             from storage.api import (  # pylint: disable=E0401, C0415
                 # disable=import-error, import-outside-toplevel
@@ -313,11 +395,23 @@ def compss_persistent_worker(
 
             finishStorageAtWorker()
 
+    if EARING:
+        if __debug__:
+            logger.debug("%s%s Stopping EAR", HEADER, SUBHEADER)
+        with EventWorker(TRACING_WORKER.finalize_ear_event):
+            ear.finalize()
+        EARING = False
+
     if __debug__:
-        logger.debug("%sFinished", HEADER)
+        logger.debug("%s%s Finished", HEADER, SUBHEADER)
 
     control_pipe.write(TAGS.quit)
     control_pipe.close()
+
+    if EARING:
+        # Raise SIGTERM to main interpreter so that EAR is noticed of its
+        # finalization.
+        signal.raise_signal(signal.SIGTERM)
 
 
 def create_executor_process(
@@ -332,12 +426,13 @@ def create_executor_process(
     :return: Process identifier and queue used by the process.
     """
     queue = new_queue()
+    event = new_event()
     process = create_process(
         target=executor,
-        args=(queue, executor_id, executor_name, pipe, conf),
+        args=(queue, event, executor_id, executor_name, pipe, conf),
         prepend_lock=True,
     )
-    PROCESSES[pipe.input_pipe] = process
+    PROCESSES[pipe.input_pipe] = (process, event)
     process.start()
     return int(str(process.pid)), queue
 
@@ -367,6 +462,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # Enable EAR accounting for subsequent processes
+    if "EAR_DISABLE_NODE_METRICS" in os.environ:
+        del os.environ["EAR_DISABLE_NODE_METRICS"]
     # Initialize multiprocessing
     initialize_multiprocessing()
     # Then start the main function

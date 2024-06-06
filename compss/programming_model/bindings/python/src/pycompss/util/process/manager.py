@@ -91,6 +91,14 @@ def new_queue() -> Queue:
     return multiprocessing.Queue()
 
 
+def new_event() -> typing.Any:
+    """Instantiate a new event.
+
+    :return: New event
+    """
+    return multiprocessing.Event()
+
+
 def new_manager() -> SyncManager:
     """Instantiate a new empty multiprocessing manager.
 
