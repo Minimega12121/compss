@@ -67,6 +67,8 @@ from pycompss.util.logger.helpers import clean_log_configs
 from pycompss.util.logger.helpers import init_logging
 from pycompss.util.logger.remittent import LOG_REMITTENT
 from pycompss.util.process.manager import initialize_multiprocessing
+from pycompss.util.process.preloader import preimports
+from pycompss.util.process.preloader import preload_imports
 from pycompss.util.storages.persistent import master_init_storage
 from pycompss.util.storages.persistent import master_stop_storage
 
@@ -261,6 +263,12 @@ def compss_main() -> None:
     # Setup tmp path
     binding_tmp_path = get_tmp_path()  # master.workingDir
     GLOBALS.set_temporary_directory(binding_tmp_path)
+
+    # Pre-load imports
+    if preimports():
+        if __debug__:
+            logger.debug("Preloading imports")
+        preload_imports(logger, "", "")
 
     # Get JVM options
     # jvm_opts = os.environ["JVM_OPTIONS_FILE"]
