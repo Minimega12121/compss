@@ -19,7 +19,7 @@ package es.bsc.compss.agent.rest.types.messages;
 import es.bsc.compss.agent.rest.types.RESTResult;
 import es.bsc.compss.agent.rest.types.TaskProfile;
 import es.bsc.compss.types.job.JobEndStatus;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 
 /**

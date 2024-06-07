@@ -52,11 +52,12 @@ import es.bsc.compss.types.project.jaxb.SoftwareListType;
 import es.bsc.compss.types.project.jaxb.StorageType;
 import es.bsc.compss.types.project.jaxb.SubmissionSystemType;
 
+import jakarta.xml.bind.JAXBElement;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
 import org.apache.logging.log4j.Logger;

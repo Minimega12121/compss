@@ -41,6 +41,8 @@ import es.bsc.compss.types.resources.jaxb.ResourcesNIOAdaptorProperties;
 import es.bsc.compss.types.resources.jaxb.ServiceType;
 import es.bsc.compss.types.resources.jaxb.SharedDiskType;
 
+import jakarta.xml.bind.JAXBException;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -50,7 +52,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBException;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 

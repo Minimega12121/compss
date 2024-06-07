@@ -56,14 +56,14 @@
         <streaming.version>1.2-25</streaming.version>
 
         <!-- Log4j version -->
-        <log4j.version>2.16.0</log4j.version>
+        <log4j.version>2.22.0</log4j.version>
 
         <!-- JUNIT -->
         <junit.version>4.13</junit.version>
         <junit.rules.version>1.16.1</junit.rules.version>
 
         <!-- Apache commons versions -->
-        <apache-commons-configuration.version>1.10</apache-commons-configuration.version>
+        <apache-commons-configuration.version>2.10.1</apache-commons-configuration.version>
         <apache-commons-io.version>2.6</apache-commons-io.version>
 
         <!-- Javassist -->
@@ -83,7 +83,7 @@
         <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
         <maven-war-plugin.version>3.2.3</maven-war-plugin.version>
         <tomcat7-maven-plugin.version>2.1</tomcat7-maven-plugin.version>
-        <maven-jaxb2-plugin.version>0.14.0</maven-jaxb2-plugin.version>
+        <maven-jaxb2-plugin.version>4.0.0</maven-jaxb2-plugin.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
 
         <!-- Project encoding -->
@@ -189,8 +189,8 @@
 
             <!-- Apache Commons -->
             <dependency>
-                <groupId>commons-configuration</groupId>
-                <artifactId>commons-configuration</artifactId>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-configuration2</artifactId>
                 <version>${apache-commons-configuration.version}</version>
             </dependency>
             <dependency>

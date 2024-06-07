@@ -16,7 +16,7 @@
  */
 package es.bsc.compss.agent.rest.types;
 
-import javax.xml.bind.annotation.XmlTransient;
+import jakarta.xml.bind.annotation.XmlTransient;
 
 
 /**

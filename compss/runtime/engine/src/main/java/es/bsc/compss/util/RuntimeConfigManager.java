@@ -24,8 +24,11 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.io.FileHandler;
 
 
 /**
@@ -43,7 +46,10 @@ public class RuntimeConfigManager {
      * @throws ConfigurationException Exception when parsing the configuration file.
      */
     public RuntimeConfigManager(String pathToConfigFile) throws ConfigurationException {
-        this.config = new PropertiesConfiguration(pathToConfigFile);
+        FileBasedConfigurationBuilder<PropertiesConfiguration> builder =
+            new FileBasedConfigurationBuilder<PropertiesConfiguration>(PropertiesConfiguration.class)
+                .configure(new Parameters().properties().setFileName(pathToConfigFile));
+        this.config = builder.getConfiguration();
     }
 
     /**
@@ -53,7 +59,10 @@ public class RuntimeConfigManager {
      * @throws ConfigurationException Exception when parsing the configuration file.
      */
     public RuntimeConfigManager(URL pathToConfigFile) throws ConfigurationException {
-        this.config = new PropertiesConfiguration(pathToConfigFile);
+        FileBasedConfigurationBuilder<PropertiesConfiguration> builder =
+            new FileBasedConfigurationBuilder<PropertiesConfiguration>(PropertiesConfiguration.class)
+                .configure(new Parameters().properties().setURL(pathToConfigFile));
+        this.config = builder.getConfiguration();
     }
 
     /**
@@ -63,8 +72,12 @@ public class RuntimeConfigManager {
      * @throws ConfigurationException Exception when parsing the configuration file.
      */
     public RuntimeConfigManager(InputStream stream) throws ConfigurationException {
-        config = new PropertiesConfiguration();
-        config.load(stream);
+        FileBasedConfigurationBuilder<PropertiesConfiguration> builder =
+            new FileBasedConfigurationBuilder<PropertiesConfiguration>(PropertiesConfiguration.class)
+                .configure(new Parameters().properties());
+        this.config = builder.getConfiguration();
+        FileHandler handler = new FileHandler(this.config);
+        handler.load(stream);
     }
 
     /**
@@ -74,7 +87,10 @@ public class RuntimeConfigManager {
      * @throws ConfigurationException Exception when parsing the configuration file.
      */
     public RuntimeConfigManager(File file) throws ConfigurationException {
-        config = new PropertiesConfiguration(file);
+        FileBasedConfigurationBuilder<PropertiesConfiguration> builder =
+            new FileBasedConfigurationBuilder<PropertiesConfiguration>(PropertiesConfiguration.class)
+                .configure(new Parameters().properties().setFile(file));
+        this.config = builder.getConfiguration();
     }
 
     /**
@@ -686,7 +702,8 @@ public class RuntimeConfigManager {
      * @throws ConfigurationException Exception when configuration cannot be saved.
      */
     public void save() throws ConfigurationException {
-        this.config.save();
+        FileHandler handler = new FileHandler(this.config);
+        handler.save();
     }
 
     /**

@@ -21,9 +21,9 @@ import es.bsc.compss.agent.rest.types.NIOAdaptorResource;
 import es.bsc.compss.agent.rest.types.RESTResource;
 import es.bsc.compss.agent.types.Resource;
 import es.bsc.compss.types.resources.MethodResourceDescription;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElements;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 
 /**

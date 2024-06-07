@@ -40,8 +40,8 @@
 
 		<!-- Classes to handle the JVM environment -->
 		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-configuration2</artifactId>
 		</dependency>
 
 		<!-- Log4j -->

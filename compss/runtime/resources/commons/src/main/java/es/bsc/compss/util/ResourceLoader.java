@@ -47,7 +47,6 @@ import es.bsc.compss.types.project.jaxb.OSType;
 import es.bsc.compss.types.project.jaxb.PackageType;
 import es.bsc.compss.types.project.jaxb.PriceType;
 import es.bsc.compss.types.project.jaxb.ProcessorType;
-import es.bsc.compss.types.project.jaxb.ServiceType;
 import es.bsc.compss.types.project.jaxb.SoftwareListType;
 import es.bsc.compss.types.project.jaxb.StorageType;
 import es.bsc.compss.types.resources.ClusterMethodResourceDescription;
@@ -61,23 +60,21 @@ import es.bsc.compss.types.resources.MethodWorker;
 import es.bsc.compss.types.resources.ResourcesFile;
 import es.bsc.compss.types.resources.configuration.HTTPConfiguration;
 import es.bsc.compss.types.resources.configuration.MethodConfiguration;
-import es.bsc.compss.types.resources.configuration.ServiceConfiguration;
 import es.bsc.compss.types.resources.description.CloudImageDescription;
 import es.bsc.compss.types.resources.description.CloudInstanceTypeDescription;
-
 import es.bsc.compss.types.resources.exceptions.ResourcesFileValidationException;
+
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 
 import org.apache.logging.log4j.LogManager;

@@ -20,8 +20,11 @@ import es.bsc.compss.COMPSsConstants;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.util.ErrorManager;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -76,7 +79,10 @@ public class MOConfiguration {
     }
 
     private static void readConfiguration(String configFile) throws ConfigurationException {
-        PropertiesConfiguration config = new PropertiesConfiguration(configFile);
+        FileBasedConfigurationBuilder<PropertiesConfiguration> builder =
+            new FileBasedConfigurationBuilder<PropertiesConfiguration>(PropertiesConfiguration.class)
+                .configure(new Parameters().properties().setFileName(configFile));
+        PropertiesConfiguration config = builder.getConfiguration();
         OP_PARAMETER = OptimizationParameter
             .valueOf(config.getString("optimization.parameter", OptimizationParameter.TIME.toString()));
         TIME_BOUNDARY = config.getLong("time.boundary", Long.MAX_VALUE);
