@@ -107,24 +107,24 @@ def merge_files(files, result_file, file_tag):
         if first:
             # ###################################
             # Update header - TODO: make sure this is kept across EAR versions
-            if file_tag == "app":
-                for i, v in enumerate(header):
-                    if v == "JOBID":
-                        header[i] = "id"
-                    if v == "APPID":
-                        header[i] = "step_id"
-                    if v == "JOBNAME":
-                        header[i] = "app_id"
-                    if v == "START_TIME":
-                        header[i] = "start_time"
-                    if v == "END_TIME":
-                        header[i] = "end_time"
-            if file_tag == "loops":
-                for i, v in enumerate(header):
-                    if v == "STEPID":
-                        header[i] = "STEPID_SLURM"
-                    if v == "APPID":
-                        header[i] = "STEPID"
+            # if file_tag == "app":
+            #     for i, v in enumerate(header):
+            #         if v == "JOBID":
+            #             header[i] = "id"
+            #         if v == "APPID":
+            #             header[i] = "step_id"
+            #         if v == "JOBNAME":
+            #             header[i] = "app_id"
+            #         if v == "START_TIME":
+            #             header[i] = "start_time"
+            #         if v == "END_TIME":
+            #             header[i] = "end_time"
+            # if file_tag == "loops":
+            #     for i, v in enumerate(header):
+            #         if v == "STEPID":
+            #             header[i] = "STEPID_SLURM"
+            #         if v == "APPID":
+            #             header[i] = "STEPID"
             # ###################################
             result_contents.append(";".join(header))
             first = False
