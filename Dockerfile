@@ -1,6 +1,6 @@
 ARG DEBIAN_FRONTEND=noninteractive
-ARG BASE=base20
-ARG BASE_VERSION=240506-144932
+ARG BASE=base22
+ARG BASE_VERSION=240613-064709
 
 FROM compss/${BASE}_ci:${BASE_VERSION} as ci
 ENV GRADLE_HOME /opt/gradle
@@ -16,7 +16,6 @@ ENV COMPSS_HOME=/opt/COMPSs/
 # Install COMPSs
 RUN cd /framework && \
     ./submodules_get.sh && \
-    #export EXTRAE_MPI_HEADERS=/usr/include/x86_64-linux-gnu/mpi && \
     /framework/builders/buildlocal /opt/COMPSs && \
     mv /root/.m2 /home/jenkins && \
     chown -R jenkins: /framework && \
@@ -33,7 +32,6 @@ COPY --from=ci /opt/COMPSs /opt/COMPSs
 COPY --from=ci /etc/init.d/compss-monitor /etc/init.d/compss-monitor
 COPY --from=ci /etc/profile.d/compss.sh /etc/profile.d/compss.sh
 
-#ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 ENV PATH $PATH:/opt/COMPSs/Runtime/scripts/user:/opt/COMPSs/Bindings/c/bin:/opt/COMPSs/Runtime/scripts/utils
 ENV CLASSPATH $CLASSPATH:/opt/COMPSs/Runtime/compss-engine.jar
 ENV LD_LIBRARY_PATH /opt/COMPSs/Bindings/bindings-common/lib:$LD_LIBRARY_PATH
@@ -48,7 +46,6 @@ COPY --from=ci /opt/COMPSs /opt/COMPSs
 COPY --from=ci /etc/init.d/compss-monitor /etc/init.d/compss-monitor
 COPY --from=ci /etc/profile.d/compss.sh /etc/profile.d/compss.sh
 
-#ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 ENV PATH $PATH:/opt/COMPSs/Runtime/scripts/user:/opt/COMPSs/Bindings/c/bin:/opt/COMPSs/Runtime/scripts/utils:/root/.local/bin
 ENV CLASSPATH $CLASSPATH:/opt/COMPSs/Runtime/compss-engine.jar
 ENV LD_LIBRARY_PATH /opt/COMPSs/Bindings/bindings-common/lib:$LD_LIBRARY_PATH
@@ -75,7 +72,6 @@ FROM compss/${BASE}_rt:${BASE_VERSION} as minimal
 COPY --from=ci /opt/COMPSs /opt/COMPSs
 COPY --from=ci /etc/profile.d/compss.sh /etc/profile.d/compss.sh
 
-# ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 ENV PATH $PATH:/opt/COMPSs/Runtime/scripts/user:/opt/COMPSs/Bindings/c/bin:/opt/COMPSs/Runtime/scripts/utils
 ENV CLASSPATH $CLASSPATH:/opt/COMPSs/Runtime/compss-engine.jar
 ENV LD_LIBRARY_PATH /opt/COMPSs/Bindings/bindings-common/lib:$LD_LIBRARY_PATH
@@ -88,7 +84,6 @@ COPY --from=ci /opt/COMPSs /opt/COMPSs
 COPY --from=ci /etc/init.d/compss-monitor /etc/init.d/compss-monitor
 COPY --from=ci /etc/profile.d/compss.sh /etc/profile.d/compss.sh
 
-# ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 ENV PATH $PATH:/opt/COMPSs/Runtime/scripts/user:/opt/COMPSs/Bindings/c/bin:/opt/COMPSs/Runtime/scripts/utils
 ENV CLASSPATH $CLASSPATH:/opt/COMPSs/Runtime/compss-engine.jar
 ENV LD_LIBRARY_PATH /opt/COMPSs/Bindings/bindings-common/lib:$LD_LIBRARY_PATH
