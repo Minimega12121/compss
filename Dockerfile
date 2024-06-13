@@ -1,6 +1,6 @@
 ARG DEBIAN_FRONTEND=noninteractive
 ARG BASE=base22
-ARG BASE_VERSION=240613-064709
+ARG BASE_VERSION=240613-105207
 
 FROM compss/${BASE}_ci:${BASE_VERSION} as ci
 ENV GRADLE_HOME /opt/gradle
@@ -59,7 +59,7 @@ RUN python3 -m pip install --no-cache-dir dislib jupyterlab==3.6.3 pycompss-cli 
     cd ipycompss_lab_extension && mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_16.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
-    apt-get update && apt-get install -y --no-install-recommends --no-upgrade nodejs python3.8-tk && \
+    apt-get update && apt-get install -y --no-install-recommends --no-upgrade nodejs python3-tk && \
     jlpm install --network-timeout 600000 --network-concurrency 100 && jlpm run build:prod && python3 -m pip install . && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/* && cd ../../ && rm -r je
 

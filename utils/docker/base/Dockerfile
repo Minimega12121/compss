@@ -22,7 +22,7 @@ ENV EXTRAE_MPI_HEADERS /usr/include/aarch64-linux-gnu/mpi
 FROM base_$TARGETARCH as base_rt
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends openjdk-8-jdk graphviz xdg-utils uuid-runtime && \
+    apt-get install -y --no-install-recommends openjdk-11-jdk graphviz xdg-utils uuid-runtime && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/*
 
