@@ -3,9 +3,9 @@ package es.bsc;
 import com.google.gson.Gson;
 import org.eclipse.jetty.server.Server;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.json.JSONObject;
 
 
