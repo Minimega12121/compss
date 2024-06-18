@@ -461,7 +461,10 @@ def deserialize_from_handler(
     original_position = 0
     try:
         original_position = handler.tell()
-        serializer = IDX2LIB[int(handler.read(4))]
+        ser_type = handler.read(4)
+        if ser_type == b"" or ser_type is None:
+            return None, True
+        serializer = IDX2LIB[int(ser_type)]
         if __debug__:
             logger.debug("Using deserializer: %s" % str(serializer.__name__))
     except KeyError as key_error:
