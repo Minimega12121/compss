@@ -35,15 +35,20 @@ RUN apt-get update && \
 
 FROM base_python as base_all
 
+COPY dataclay/requirements.txt /tmp/dataclay_requirements.txt
+
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libboost-all-dev libxml2 papi-tools openmpi-bin libopenmpi-dev libtool automake build-essential python3-pip openssh-server jq bc && \
+    apt-get install -y --no-install-recommends libboost-all-dev libxml2 papi-tools openmpi-bin libopenmpi-dev libtool automake build-essential python3-pip openssh-server jq bc git && \
     pip3 --no-cache-dir install pip setuptools wheel --upgrade && \
     pip3 install --no-cache-dir dill guppy3 decorator mpi4py kafka-python rocrate==0.9.0 && \
+    pip3 install -r /tmp/dataclay_requirements.txt && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/*
 RUN mkdir /run/sshd && \
     yes yes | ssh-keygen -f /root/.ssh/id_rsa -t rsa -N '' > /dev/null && \
-    cat /root/.ssh/id_rsa.pub > /root/.ssh/authorized_keys
+    cat /root/.ssh/id_rsa.pub > /root/.ssh/authorized_keys && \
+    mkdir -p /dataclay/storage && \
+    mkdir -p /dataclay/metadata
 
 FROM base_all as base_tutorial
 
@@ -60,12 +65,10 @@ RUN apt-get update && \
 FROM base_tutorial as base_ci
 
 RUN apt-get update && \
-
-    #Required for compilation and tests
-    apt-get install -y --no-install-recommends libxml2-dev libpapi-dev python3-dev gfortran \
-    sudo firefox gnupg lsb-release libgraphviz-dev && \
+    # Required for compilation and tests
+    apt-get install -y --no-install-recommends libxml2-dev libpapi-dev python3-dev gfortran sudo firefox gnupg lsb-release libgraphviz-dev && \
     apt-get autoclean && \
-    rm -rf /var/lib/apt/lists/* 
+    rm -rf /var/lib/apt/lists/*
 
 RUN  curl -fsSL https://install.julialang.org > install.sh && sh install.sh -y && \
      mv ~/.julia/juliaup/julia-* /opt/julia && ln -s /opt/julia/bin/julia /usr/bin/julia && \
@@ -105,4 +108,3 @@ RUN pip3 --no-cache-dir install pycodestyle selenium redis==3.5.3 redis-py-clust
    groupadd docker && \
    usermod -aG docker jenkins && \
    newgrp docker
-
