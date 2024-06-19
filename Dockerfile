@@ -74,7 +74,7 @@ ENV LD_LIBRARY_PATH /opt/COMPSs/Bindings/bindings-common/lib:$LD_LIBRARY_PATH
 ENV COMPSS_HOME=/opt/COMPSs/
 
 
-FROM compss/${BASE}_python:${BASE_VERSION} as pycompss 
+FROM compss/${BASE}_python:${BASE_VERSION} as pycompss
 
 COPY --from=ci /opt/COMPSs /opt/COMPSs
 COPY --from=ci /etc/init.d/compss-monitor /etc/init.d/compss-monitor
