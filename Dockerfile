@@ -16,7 +16,7 @@ ENV COMPSS_HOME=/opt/COMPSs/
 # Install COMPSs
 RUN cd /framework && \
     ./submodules_get.sh && \
-    /framework/builders/buildlocal /opt/COMPSs && \
+    /framework/builders/buildlocal -N -m --skip-tests /opt/COMPSs && \
     mv /root/.m2 /home/jenkins && \
     chown -R jenkins: /framework && \
     chown -R jenkins: /home/jenkins/ && \
@@ -51,6 +51,7 @@ ENV CLASSPATH $CLASSPATH:/opt/COMPSs/Runtime/compss-engine.jar
 ENV LD_LIBRARY_PATH /opt/COMPSs/Bindings/bindings-common/lib:$LD_LIBRARY_PATH
 ENV COMPSS_HOME=/opt/COMPSs/
 ENV PYTHONPATH=$COMPSS_HOME/Bindings/python/3:$PYTHONPATH
+ARG TZ=Etc/UTC
 
 RUN python3 -m pip install --no-cache-dir dislib pycompss-cli && \
     git clone https://github.com/bsc-wdc/jupyter-extension.git je && \
