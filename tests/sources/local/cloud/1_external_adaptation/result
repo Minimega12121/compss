@@ -47,7 +47,7 @@
 
   #----------------------------------------------------------------------------------
   # Compute result status
-  test_value=$(grep "Application values OK" "${output_file}" )
+  test_value=$(grep -a "Application values OK" "${output_file}" )
   if [ -z "${test_value}" ]; then
     echo "[ERROR] Some error found. See errors above." | tee "${output_file}"
     exit 2
