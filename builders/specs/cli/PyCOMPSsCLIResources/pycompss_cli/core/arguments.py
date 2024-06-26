@@ -284,6 +284,19 @@ def parse_sys_argv():
                                             type=str,
                                             help="ID of the environment to remove")  # noqa: E501                                                                           
 
+    # INSPECT
+    parser_environment = subparsers.add_parser("inspect",
+                                               aliases=["ins"],
+                                               help="Inspect an RO-Crate from a COMPSs application run.",  # noqa: E501
+                                               parents=[parent_parser],
+                                               formatter_class=FORMATTER_CLASS)
+
+    parser_environment.set_defaults(action='inspect')
+
+    parser_environment.add_argument("ro_crate",
+                                 type=str,
+                                 help="Folder or zip file containing the RO-Crate")
+
     # Check if the user does not include any argument
     if len(sys.argv) < 2:
         print(parser.print_help())

@@ -167,3 +167,7 @@ class Actions(ABC):
         
         print(f'Deleting environment `{env_id}`...')
         shutil.rmtree(env_dir_name)
+
+    @abstractmethod
+    def inspect(self):
+        pass
