@@ -1,6 +1,6 @@
 ARG DEBIAN_FRONTEND=noninteractive
 ARG BASE=base22
-ARG BASE_VERSION=240613-105207
+ARG BASE_VERSION=240626-122235
 
 FROM compss/${BASE}_ci:${BASE_VERSION} as ci
 ENV GRADLE_HOME /opt/gradle
@@ -52,16 +52,12 @@ ENV LD_LIBRARY_PATH /opt/COMPSs/Bindings/bindings-common/lib:$LD_LIBRARY_PATH
 ENV COMPSS_HOME=/opt/COMPSs/
 ENV PYTHONPATH=$COMPSS_HOME/Bindings/python/3:$PYTHONPATH
 
-RUN python3 -m pip install --no-cache-dir dislib jupyterlab==3.6.3 pycompss-cli rocrate==0.9.0 && \
-    apt-get update && apt-get install -y --no-install-recommends jq bc ca-certificates curl gnupg && \
+RUN python3 -m pip install --no-cache-dir dislib pycompss-cli && \
     git clone https://github.com/bsc-wdc/jupyter-extension.git je && \
-    cd je && python3 -m pip install ./ipycompss_kernel && \
-    cd ipycompss_lab_extension && mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_16.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
-    apt-get update && apt-get install -y --no-install-recommends --no-upgrade nodejs python3-tk && \
-    jlpm install --network-timeout 600000 --network-concurrency 100 && jlpm run build:prod && python3 -m pip install . && \
-    apt-get autoclean && rm -rf /var/lib/apt/lists/* && cd ../../ && rm -r je
+    cd je && && sed -i '/\"pycompss\"/d' ipycompss_kernel/pyproject.toml && \
+    python3 -m pip install ./ipycompss_kernel && cd ipycompss_lab_extension && \
+    jlpm install --network-timeout 600000 --network-concurrency 100 && \
+    jlpm run build:prod && python3 -m pip --no-cache-dir install . && cd ../.. && rm -r je 
 
 EXPOSE 22
 EXPOSE 43000-44000
