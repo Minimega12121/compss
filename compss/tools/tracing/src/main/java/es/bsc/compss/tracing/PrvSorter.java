@@ -18,7 +18,6 @@ package es.bsc.compss.tracing;
 
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.types.tracing.ApplicationComposition;
-import es.bsc.compss.types.tracing.SystemComposition;
 import es.bsc.compss.types.tracing.Thread;
 import es.bsc.compss.types.tracing.ThreadIdentifier;
 import es.bsc.compss.types.tracing.Threads;
@@ -75,6 +74,7 @@ public class PrvSorter implements ThreadTranslator {
      * @throws IOException error raised during prv file reading
      */
     public PrvSorter(PRVTrace trace) throws FileNotFoundException, IOException {
+        LOGGER.debug("Generating execution's new Thread Organization");
         List<Machine> machines = identifyThreads(trace);
         computeTranslationMap(machines);
     }
@@ -88,8 +88,18 @@ public class PrvSorter implements ThreadTranslator {
      */
     private static List<Machine> identifyThreads(PRVTrace trace) throws FileNotFoundException, IOException {
         ApplicationComposition<PRVApplication> apps = trace.getThreadOrganization();
-
+        LOGGER.debug("\tNew execution composed of ");
         List<Machine> machines = new ArrayList<>();
+        int newAppId = 1;
+        for (PRVApplication app : apps.getSubComponents()) {
+            List<PRVTask> tasks = app.getSubComponents();
+            for (PRVTask task : tasks) {
+                LOGGER.debug("\t\t Application " + newAppId++ + " on node " + task.getNode().getNodeId());
+                machines.add(new Machine(task.getNode()));
+            }
+        }
+
+        LOGGER.debug("\tIndentifying threads ");
         try (RecordScanner events = trace.getRecords()) {
             String line;
             // the isEmpty check should not be necessary if the .prv files are well constructed
@@ -98,11 +108,6 @@ public class PrvSorter implements ThreadTranslator {
 
                 PRVThreadIdentifier threadId = prvLine.getEmisorThreadIdentifier();
                 int machineId = Integer.parseInt(threadId.getTask());
-                while (machines.size() < machineId) {
-                    PRVApplication app = apps.getSubComponents().get(Integer.parseInt(threadId.getApp()) - 1);
-                    PRVTask task = app.getSubComponents().get(Integer.parseInt(threadId.getTask()) - 1);
-                    machines.add(new Machine(task.getNode()));
-                }
                 Machine machine = machines.get(machineId - 1);
                 machine.registerThread(threadId);
 
