@@ -17,11 +17,12 @@ ENV COMPSS_HOME=/opt/COMPSs/
 RUN cd /framework && \
     ./submodules_get.sh && \
     python3 -m pip --no-cache-dir install pip wheel setuptools --upgrade && \
-    /framework/builders/buildlocal -N -m --skip-tests /opt/COMPSs && \
+    /framework/builders/buildlocal /opt/COMPSs && \
     mv /root/.m2 /home/jenkins && \
     chown -R jenkins: /framework && \
     chown -R jenkins: /home/jenkins/ && \
-    python3 -m pip --no-cache-dir install rocrate==0.9.0
+    python3 -m pip install --no-cache-dir rocrate==0.9.0
+
 
 # Expose SSH port and run SSHD
 EXPOSE 22
