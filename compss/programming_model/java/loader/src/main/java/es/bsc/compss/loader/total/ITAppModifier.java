@@ -21,6 +21,7 @@ import es.bsc.compss.loader.LoaderConstants;
 import es.bsc.compss.loader.LoaderUtils;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.util.ErrorManager;
+
 import java.lang.reflect.Method;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -246,7 +247,7 @@ public class ITAppModifier {
              * Load the modified class into memory and return it. Generally, once a class is loaded into memory no
              * further modifications can be performed on it.
              */
-            return appClass.toClass();
+            return appClass.toClass(annotItf);
         }
     }
 

@@ -114,10 +114,8 @@ public class JavaNestedInvoker extends JavaInvoker {
                 ClassLoader myLoader = new URLClassLoader(new URL[] { new URL(ENGINE_PATH) });
 
                 Thread.currentThread().setContextClassLoader(myLoader);
-
                 ClassPool classPool = getClassPool();
                 CtClass appClass = classPool.get(className);
-                appClass.defrost();
 
                 String varName = LoaderUtils.randomName(5, LoaderConstants.STR_COMPSS_PREFIX);
                 String itApiVar = varName + LoaderConstants.STR_COMPSS_API;
@@ -129,13 +127,13 @@ public class JavaNestedInvoker extends JavaInvoker {
                 instrumentClass(classPool, appClass, ceiClass, itApiVar, itSRVar, itORVar, itAppIdVar);
                 addModifyVariablesMethod(appClass, itApiVar, itSRVar, itORVar, itAppIdVar);
 
-                methodClass = appClass.toClass();
-                appClass.defrost();
+                methodClass = appClass.toClass(ceiClass);
                 method = ClassUtils.findMethod(methodClass, methodName, this.invocation.getParams());
             } catch (Exception e) {
                 LOGGER.warn("Could not instrument the method to detect nested tasks.", e);
                 method = super.findMethod();
             } finally {
+
                 if (Tracer.isActivated()) {
                     Tracer.emitEventEnd(TraceEvent.INSTRUMENTING_CLASS);
                 }
@@ -145,7 +143,7 @@ public class JavaNestedInvoker extends JavaInvoker {
     }
 
     private static ClassPool getClassPool() {
-        ClassPool cp = new ClassPool();
+        ClassPool cp = ClassPool.getDefault();
         cp.appendSystemPath();
         cp.importPackage(LoaderConstants.PACKAGE_COMPSS_ROOT);
         cp.importPackage(LoaderConstants.PACKAGE_COMPSS_API);
