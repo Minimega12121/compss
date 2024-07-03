@@ -409,7 +409,7 @@ def main() -> None:
     # Fourth, if in MN5, try to generate the ear traces
     if "BSC_MACHINE" in os.environ and os.environ["BSC_MACHINE"] == "mn5":
         job_id = str(content[0][1])
-        command = f"module load ear; module use /gpfs/projects/bsc19/ePyCOMPSs/LIBRARIES; module load ear-job-analytics; module load hdf5 python/3.12.1; export PYTHONPATH=/gpfs/projects/bsc19/ePyCOMPSs/LIBRARIES/python3.12/site-packages:PYTHONPATH; ear-job-analytics --format ear2prv -j {job_id} --input loops.csv"
+        command = f"module load ear ear-tools/ear-lite/5.0 ear-tools/ear-job-analytics/5.0; ear-job-analytics --format ear2prv -j {job_id} --input loops.csv"
         print("Generating EAR trace:")
         print(f"- Command: {command}")
         run_command(command)
