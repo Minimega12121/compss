@@ -119,7 +119,7 @@ public class ITAppModifier {
         CtMethod[] instrCandidates = appClass.getDeclaredMethods();
 
         ITAppEditor itAppEditor =
-            new ITAppEditor(remoteMethods, instrCandidates, itApiVar, itSRVar, itORVar, itAppIdVar, appClass);
+            new ITAppEditor(remoteMethods, instrCandidates, itApiVar, itSRVar, itORVar, itAppIdVar, appClass, null);
         // itAppEditor.setAppId(itAppIdVar);
         // itAppEditor.setAppClass(appClass);
 
@@ -141,7 +141,7 @@ public class ITAppModifier {
                 .debug("Flags: ToFile: " + WRITE_TO_FILE + " isWS: " + IS_WS_CLASS + " isMainClass: " + IS_MAIN_CLASS);
         }
         for (CtMethod m : instrCandidates) {
-            if (LoaderUtils.checkRemote(m, remoteMethods) == null) {
+            if (LoaderUtils.checkRemote(m, remoteMethods, null, null) == null) {
                 // Not a remote method, we must instrument it
                 if (DEBUG) {
                     LOGGER.debug("Instrumenting method " + m.getName());
