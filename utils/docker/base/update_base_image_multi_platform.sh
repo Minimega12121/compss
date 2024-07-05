@@ -5,7 +5,7 @@ dh_username=$2
 dh_password=$3
 
 #base_name=base18
-base_name=base20
+base_name=base22
 base_images="rt python all tutorial ci"
 platforms="linux/amd64,linux/arm64"
 builder="docker-multiarch"

@@ -34,11 +34,8 @@
     <properties>
         <!-- BSC Components versions -->
         <cepbatools-extrae.version>1.4</cepbatools-extrae.version>
-        <comm.version>1.8-1</comm.version>
-        <conn.version>1.8-11</conn.version>
-        <!--comm.version>1.7-23</comm.version-->
-        <!--conn.version>1.7-3</conn.version-->
-        <!--java-affinity.version>0.0.1-4</java-affinity.version-->
+        <comm.version>1.8-2</comm.version>
+        <conn.version>1.8-12</conn.version>
         <java-affinity.version>0.0.2-3</java-affinity.version>
 
         <!-- ZK version -->
@@ -48,8 +45,8 @@
         <json.version>20180813</json.version>
 
         <!-- Jaxb version -->
-        <jaxb.version>2.3.3</jaxb.version>
-        <jaxws.version>2.3.3</jaxws.version>
+        <jaxb.version>4.0.2</jaxb.version>
+        <jaxws.version>4.0.2</jaxws.version>
         <cxf.version>3.4.4</cxf.version>
         <cxf.api.version>2.7.18</cxf.api.version>
 
@@ -102,56 +99,8 @@
             </dependency>
 
             <dependency>
-                <groupId>com.sun.xml.bind</groupId>
-                <artifactId>jaxb-impl</artifactId>
-                <version>${jaxb.version}</version>
-                <scope>runtime</scope>
-            </dependency>
-
-            <!-- CXF -->
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-rt-frontend-jaxws</artifactId>
-                <version>${cxf.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.geronimo.specs</groupId>
-                        <artifactId>geronimo-javamail_1.4_spec</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.geronimo.specs</groupId>
-                        <artifactId>geronimo-activation_1.1_spec</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.geronimo.specs</groupId>
-                        <artifactId>geronimo-servlet_2.5_spec</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-rt-transports-http</artifactId>
-                <version>${cxf.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-api</artifactId>
-                <version>${cxf.api.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>jakarta.xml.ws</groupId>
                 <artifactId>jakarta.xml.ws-api</artifactId>
-                <version>${jaxws.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.sun.xml.ws</groupId>
-                <artifactId>jaxws-rt</artifactId>
-                <version>${jaxws.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.sun.xml.ws</groupId>
-                <artifactId>rt</artifactId>
                 <version>${jaxws.version}</version>
             </dependency>
 

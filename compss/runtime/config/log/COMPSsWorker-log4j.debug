@@ -45,7 +45,9 @@
     <Logger name="es.bsc.compss.Worker" additivity="FALSE" level="debug">
       <AppenderRef ref="Console"/>
     </Logger>
-
+    <Logger name="es.bsc.compss.Worker.Executor.Invoker" additivity="FALSE" level="debug">
+      <AppenderRef ref="Console"/>
+    </Logger>
     <!-- WORKER SUBCOMPONENTS. DEFAULT = DEBUG -->
     <Logger name="es.bsc.compss.Worker.ExecManager" additivity="FALSE" level="debug">
       <AppenderRef ref="Console"/>

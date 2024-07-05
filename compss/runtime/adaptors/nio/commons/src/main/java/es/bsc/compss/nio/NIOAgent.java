@@ -475,7 +475,7 @@ public abstract class NIOAgent {
                 releaseSendSlot(c);
                 handleDataToSendNotAvailable(c, d);
             }
-            c.sendDataFile(zipFile);
+            c.sendDataFile(zipFile, true);
         } else {
             // todo: make sure this is not the case!
             ErrorManager.warn(

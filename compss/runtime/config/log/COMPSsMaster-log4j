@@ -151,7 +151,13 @@
 
     <!-- WORKER -->
     <!-- es.bsc.compss.Worker: DEFAULT = OFF -->
-    <Logger name="es.bsc.compss.Worker" additivity="FALSE" level="off">
+    <Logger name="es.bsc.compss.Worker" additivity="FALSE" level="warn">
+      <AppenderRef ref="COMPSsRuntimeLog"/>
+    </Logger>
+    <Logger name="es.bsc.compss.Worker.Executor" additivity="FALSE" level="warn">
+      <AppenderRef ref="COMPSsRuntimeLog"/>
+    </Logger>
+    <Logger name="es.bsc.compss.Worker.Executor.Invoker" additivity="FALSE" level="warn">
       <AppenderRef ref="COMPSsRuntimeLog"/>
     </Logger>
 

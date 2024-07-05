@@ -235,7 +235,7 @@ int main() {
     char b = 'K';
     char c = 'M';
 
-    char* str;
+    char* str = "";
     
     make_string(a, b, c, str);
 

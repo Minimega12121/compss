@@ -17,7 +17,7 @@
 package es.bsc.compss.agent.rest.types.messages;
 
 import es.bsc.compss.types.resources.MethodResourceDescription;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 
 @XmlRootElement(name = "reduceNode")

@@ -20,8 +20,8 @@ import es.bsc.compss.agent.types.Resource;
 import es.bsc.compss.types.project.jaxb.ExternalAdaptorProperties;
 import es.bsc.compss.types.resources.MethodResourceDescription;
 import es.bsc.compss.types.resources.jaxb.ResourcesExternalAdaptorProperties;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 
 @XmlRootElement(name = "externalResource")

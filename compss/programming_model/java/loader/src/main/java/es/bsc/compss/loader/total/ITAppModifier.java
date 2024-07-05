@@ -21,6 +21,7 @@ import es.bsc.compss.loader.LoaderConstants;
 import es.bsc.compss.loader.LoaderUtils;
 import es.bsc.compss.log.Loggers;
 import es.bsc.compss.util.ErrorManager;
+
 import java.lang.reflect.Method;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -118,7 +119,7 @@ public class ITAppModifier {
         CtMethod[] instrCandidates = appClass.getDeclaredMethods();
 
         ITAppEditor itAppEditor =
-            new ITAppEditor(remoteMethods, instrCandidates, itApiVar, itSRVar, itORVar, itAppIdVar, appClass);
+            new ITAppEditor(remoteMethods, instrCandidates, itApiVar, itSRVar, itORVar, itAppIdVar, appClass, null);
         // itAppEditor.setAppId(itAppIdVar);
         // itAppEditor.setAppClass(appClass);
 
@@ -140,7 +141,7 @@ public class ITAppModifier {
                 .debug("Flags: ToFile: " + WRITE_TO_FILE + " isWS: " + IS_WS_CLASS + " isMainClass: " + IS_MAIN_CLASS);
         }
         for (CtMethod m : instrCandidates) {
-            if (LoaderUtils.checkRemote(m, remoteMethods) == null) {
+            if (LoaderUtils.checkRemote(m, remoteMethods, null, null) == null) {
                 // Not a remote method, we must instrument it
                 if (DEBUG) {
                     LOGGER.debug("Instrumenting method " + m.getName());
@@ -246,7 +247,7 @@ public class ITAppModifier {
              * Load the modified class into memory and return it. Generally, once a class is loaded into memory no
              * further modifications can be performed on it.
              */
-            return appClass.toClass();
+            return appClass.toClass(annotItf);
         }
     }
 

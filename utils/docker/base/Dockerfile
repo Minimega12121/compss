@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 as base
+FROM ubuntu:22.04 as base
 LABEL maintainer="COMPSs Support <support-compss@bsc.es>" \
       vendor="Barcelona Supercomputing Center (BSC)" \
       url="http://compss.bsc.es"
@@ -8,21 +8,21 @@ ARG TARGETARCH=amd
 
 FROM base as base_amd64
 
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
-ENV LD_LIBRARY_PATH=$JAVA_HOME/jre/lib/amd64/server:$LD_LIRBRARY_PATH
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
+ENV LD_LIBRARY_PATH=$JAVA_HOME/lib/server:$LD_LIRBRARY_PATH
 ENV EXTRAE_MPI_HEADERS /usr/include/x86_64-linux-gnu/mpi
 
 FROM base as base_arm64
 
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-arm64/
-ENV LD_LIBRARY_PATH=$JAVA_HOME/jre/lib/aarch64/server:$LD_LIRBRARY_PATH
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-arm64/
+ENV LD_LIBRARY_PATH=$JAVA_HOME/lib/server:$LD_LIRBRARY_PATH
 ENV EXTRAE_MPI_HEADERS /usr/include/aarch64-linux-gnu/mpi
 
 
 FROM base_$TARGETARCH as base_rt
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends openjdk-8-jdk graphviz xdg-utils uuid-runtime && \
+    apt-get install -y --no-install-recommends openjdk-11-jdk graphviz xdg-utils uuid-runtime && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -38,7 +38,7 @@ FROM base_python as base_all
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libboost-all-dev libxml2 papi-tools openmpi-bin libopenmpi-dev libtool automake build-essential python3-pip openssh-server jq bc && \
     pip3 --no-cache-dir install pip setuptools wheel --upgrade && \
-    pip3 install --no-cache-dir dill guppy3==3.1.0 decorator mpi4py kafka-python && \
+    pip3 install --no-cache-dir dill guppy3 decorator mpi4py kafka-python rocrate==0.9.0 && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/*
 RUN mkdir /run/sshd && \
@@ -48,11 +48,14 @@ RUN mkdir /run/sshd && \
 FROM base_all as base_tutorial
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git vim wget ca-certificates maven curl unzip cmake libopenblas-dev && \
-    pip3 install --no-cache-dir graphviz matplotlib>=2.2.3 numba==0.56.4 numpy==1.23.5 numpydoc>=0.8.0 scipy>=1.3.0 cvxpy>=1.1.5 scikit-learn>=1.0.2 python-dateutil==2.8.2 pandas>=0.24.2 tabulate==0.8.9 jupyter ipykernel ipython==8.3.0 jupyterlab && \
+    apt-get install -y --no-install-recommends git vim wget ca-certificates maven curl unzip cmake libopenblas-dev jq curl gnupg && \
+    pip3 install --no-cache-dir graphviz matplotlib>=2.2.3 numba==0.56.4 numpy==1.23.5 numpydoc>=0.8.0 scipy>=1.3.0 cvxpy>=1.1.5 scikit-learn>=1.0.2 python-dateutil==2.8.2 pandas>=0.24.2 tabulate==0.8.9 jupyter ipykernel ipython==8.3.0 jupyterlab==3.6.3 && \
     python3 -m ipykernel install && \
-    apt-get autoclean && \
-    rm -rf /var/lib/apt/lists/*
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_16.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    apt-get update && apt-get install -y --no-install-recommends --no-upgrade nodejs python3-tk && \
+    apt-get autoclean && rm -rf /var/lib/apt/lists/* 
 
 FROM base_tutorial as base_ci
 
@@ -60,10 +63,15 @@ RUN apt-get update && \
 
     #Required for compilation and tests
     apt-get install -y --no-install-recommends libxml2-dev libpapi-dev python3-dev gfortran \
-    sudo firefox gnupg lsb-release libgraphviz-dev julia && \
+    sudo firefox gnupg lsb-release libgraphviz-dev && \
     apt-get autoclean && \
-    rm -rf /var/lib/apt/lists/* && \
-    pip3 --no-cache-dir install pycodestyle selenium redis==3.5.3 redis-py-cluster==2.1.3 enum34 tabulate black==24.4.0 memory-profiler && \
+    rm -rf /var/lib/apt/lists/* 
+
+RUN  curl -fsSL https://install.julialang.org > install.sh && sh install.sh -y && \
+     mv ~/.julia/juliaup/julia-* /opt/julia && ln -s /opt/julia/bin/julia /usr/bin/julia && \
+     rm -r install.sh ~/.julia/
+
+RUN pip3 --no-cache-dir install pycodestyle selenium redis==3.5.3 redis-py-cluster==2.1.3 enum34 tabulate black==24.4.0 memory-profiler && \
     pip3 --no-cache-dir install pytest pytest-cov nbval nbconvert mistune==2.0.5 coverage pytest-html-profiling pytest-metadata pytest-profiling pytest-subprocess pytest-sugar pydocstyle && \
     pip3 --no-cache-dir install black[jupyter]==24.4.0 && \
     # for fixing a nbcovert jinja2 compatibility problem

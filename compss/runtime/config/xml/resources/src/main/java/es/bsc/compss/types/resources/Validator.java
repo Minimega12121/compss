@@ -46,12 +46,11 @@ import es.bsc.compss.types.resources.jaxb.SharedDiskType;
 import es.bsc.compss.types.resources.jaxb.SoftwareListType;
 import es.bsc.compss.types.resources.jaxb.StorageType;
 import es.bsc.compss.types.resources.jaxb.SubmissionSystemType;
-
+import jakarta.xml.bind.JAXBElement;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
 import org.apache.logging.log4j.Logger;

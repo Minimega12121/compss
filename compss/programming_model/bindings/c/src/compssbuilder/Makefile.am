@@ -18,7 +18,7 @@
 ACLOCAL_AMFLAGS=-I m4
 
 bin_SCRIPTS = compss_build
-nobase_dist_pkgdata_DATA = \
+nobase_dist_data_DATA = \
 	c_build/master/configure.ac \
 	c_build/master/Makefile.am \
 	c_build/worker/configure.ac \

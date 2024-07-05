@@ -24,13 +24,14 @@ import es.bsc.compss.types.project.exceptions.ProjectFileValidationException;
 import es.bsc.compss.types.project.jaxb.ExternalAdaptorProperties;
 import es.bsc.compss.types.project.jaxb.NIOAdaptorProperties;
 
+import jakarta.xml.bind.JAXBException;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
 
 import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBException;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 

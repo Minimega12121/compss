@@ -62,6 +62,9 @@
     <Logger name="es.bsc.compss.Worker.ThreadBinder" additivity="FALSE" level="warn">
       <AppenderRef ref="Console"/>
     </Logger>
+    <Logger name="es.bsc.compss.Worker.Executor.Invoker" additivity="FALSE" level="warn">
+      <AppenderRef ref="Console"/>
+    </Logger>
 
     <!-- RUNTIME TIMERS -->
     <!-- es.bsc.compss.Timers: DEFAULT = OFF -->

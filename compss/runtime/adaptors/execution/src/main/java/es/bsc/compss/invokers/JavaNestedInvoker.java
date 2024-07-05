@@ -118,24 +118,25 @@ public class JavaNestedInvoker extends JavaInvoker {
                 ClassPool classPool = getClassPool();
                 CtClass appClass = classPool.get(className);
                 appClass.defrost();
-
                 String varName = LoaderUtils.randomName(5, LoaderConstants.STR_COMPSS_PREFIX);
+                appClass.setName(className + "_" + varName);
                 String itApiVar = varName + LoaderConstants.STR_COMPSS_API;
                 String itSRVar = varName + LoaderConstants.STR_COMPSS_STREAM_REGISTRY;
                 String itORVar = varName + LoaderConstants.STR_COMPSS_OBJECT_REGISTRY;
                 String itAppIdVar = varName + LoaderConstants.STR_COMPSS_APP_ID;
 
                 addVariables(classPool, appClass, itApiVar, itSRVar, itORVar, itAppIdVar);
-                instrumentClass(classPool, appClass, ceiClass, itApiVar, itSRVar, itORVar, itAppIdVar);
+                instrumentClass(classPool, appClass, ceiClass, itApiVar, itSRVar, itORVar, itAppIdVar, className);
                 addModifyVariablesMethod(appClass, itApiVar, itSRVar, itORVar, itAppIdVar);
-
-                methodClass = appClass.toClass();
+                Class<?> origClass = Class.forName(className);
+                methodClass = appClass.toClass(origClass);
                 appClass.defrost();
                 method = ClassUtils.findMethod(methodClass, methodName, this.invocation.getParams());
             } catch (Exception e) {
                 LOGGER.warn("Could not instrument the method to detect nested tasks.", e);
                 method = super.findMethod();
             } finally {
+
                 if (Tracer.isActivated()) {
                     Tracer.emitEventEnd(TraceEvent.INSTRUMENTING_CLASS);
                 }
@@ -179,14 +180,15 @@ public class JavaNestedInvoker extends JavaInvoker {
     }
 
     private static void instrumentClass(ClassPool cp, CtClass appClass, Class<?> annotItf, String itApiVar,
-        String itSRVar, String itORVar, String itAppIdVar)
+        String itSRVar, String itORVar, String itAppIdVar, String originalClassName)
         throws ClassNotFoundException, NotFoundException, CannotCompileException {
         Method[] remoteMethods = annotItf.getMethods();
 
         CtMethod[] instrCandidates = appClass.getDeclaredMethods();
         // Candidates to be instrumented if they are not remote
         ITAppEditor itAppEditor;
-        itAppEditor = new ITAppEditor(remoteMethods, instrCandidates, itApiVar, itSRVar, itORVar, itAppIdVar, appClass);
+        itAppEditor = new ITAppEditor(remoteMethods, instrCandidates, itApiVar, itSRVar, itORVar, itAppIdVar, appClass,
+            originalClassName);
 
         /*
          * Create Code Converter

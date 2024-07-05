@@ -40,9 +40,14 @@
 
 		<!-- Classes to handle the JVM environment -->
 		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-configuration2</artifactId>
 		</dependency>
+
+		<dependency>
+                        <groupId>commons-beanutils</groupId>
+                        <artifactId>commons-beanutils</artifactId>
+                </dependency>
 
 		<!-- Log4j -->
 		<dependency>
@@ -53,11 +58,6 @@
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-impl</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
 		<!-- JUnit dependencies -->

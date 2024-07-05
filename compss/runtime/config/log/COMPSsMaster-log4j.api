@@ -154,6 +154,12 @@
     <Logger name="es.bsc.compss.Worker" additivity="FALSE" level="info">
       <AppenderRef ref="COMPSsRuntimeLog"/>
     </Logger>
+    <Logger name="es.bsc.compss.Worker.Executor" additivity="FALSE" level="info">
+      <AppenderRef ref="COMPSsRuntimeLog"/>
+    </Logger>
+    <Logger name="es.bsc.compss.Worker.Invoker" additivity="FALSE" level="info">
+      <AppenderRef ref="COMPSsRuntimeLog"/>
+    </Logger>
 
     <!-- STORAGE -->
     <!-- es.bsc.compss.Storage: DEFAULT = INFO -->
