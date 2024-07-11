@@ -177,6 +177,18 @@ def local_inspect(ro_crate_zip_or_dir: str):
         elif e.id == "#compss":
             print(pointers[0] + "COMPSs Runtime version")
             print(prefix + pointers[1] + e.get('version'))
+        elif "ComputationalWorkflow" in e.type:
+            print(pointers[0] + "Software Dependencies")
+            software_requirements = e.get("softwareRequirements")
+            if software_requirements:
+                if isinstance(software_requirements, list):
+                    for i, s in enumerate(software_requirements):
+                        if i == (len(software_requirements) - 1):
+                            print(prefix + pointers[1] + s['name'])
+                        else:
+                            print(prefix + pointers[0] + s['name'])
+                else:
+                    print(prefix + pointers[1] + software_requirements['name'])
     print(pointers[0] + "RO-Crate Profiles compliance")
     for i, prof in enumerate(profiles):
         if i == (len(profiles) - 1):
@@ -185,6 +197,7 @@ def local_inspect(ro_crate_zip_or_dir: str):
             print(prefix + pointers[0] + prof)
     print(pointers[0] + "Description")
     print(prefix + pointers[1] + desc_str)
+
 
     prefix = empty_prefix + follow_prefix
     for e in crate.get_entities():
