@@ -3,107 +3,18 @@ import os
 import uuid
 import subprocess
 import socket
+import sys
 
 from pathlib import Path
 from datetime import timezone
 from datetime import datetime
-# from ..utils.url_fixes import fix_dir_url
-# TODO: FIX SIBLING PACKAGE REFERENCE
+sys.path.append("..")
+from utils.url_fixes import fix_dir_url
+from processing.entities import add_person_definition
 
 from rocrate.rocrate import ROCrate
-from rocrate.model.person import Person
 from rocrate.model.contextentity import ContextEntity
 from rocrate.utils import iso_now
-
-
-# TODO: FIX SIBLING PACKAGE REFERENCE
-def fix_dir_url(in_url: str) -> str:
-    """
-    Fix dir:// URL returned by the runtime, change it to file:// and ensure it ends with '/'
-
-    :param in_url: URL that may need to be fixed
-
-    :returns: A file:// URL
-    """
-
-    from urllib.parse import urlsplit
-
-    runtime_url = urlsplit(in_url)
-    if (
-        runtime_url.scheme == "dir"
-    ):  # Fix dir:// to file:// and ensure it ends with a slash
-        new_url = "file://" + runtime_url.netloc + runtime_url.path
-        if new_url[-1] != "/":
-            new_url += "/"  # Add end slash if needed
-        return new_url
-    # else
-    return in_url  # No changes required
-
-# TODO: FIX SIBLING PACKAGE REFERENCE
-def add_person_definition(
-    compss_crate: ROCrate,
-    contact_type: str,
-    yaml_author: dict,
-    info_yaml: str
-) -> bool:
-    """
-    Check if a specified person has enough defined terms to be added in the RO-Crate.
-
-    :param compss_crate: The COMPSs RO-Crate being generated
-    :param contact_type: contactType definition for the ContactPoint. "Author" or "Agent"
-    :param yaml_author: Content of the YAML file describing the user
-    :param info_yaml: Name of the YAML file specified by the user
-
-    :returns: If the person is valid. It is added if True
-    """
-
-    # Expected Person fields
-    # orcid - Mandatory in RO-Crate 1.1
-    # name - Mandatory in WorkflowHub
-    # e-mail - Optional
-    #
-    # ror - Optional
-    # organisation_name - Optional even if ror is defined. But won't show anything at WorkflowHub
-
-    person_dict = {}
-    mail_dict = {}
-    org_dict = {}
-
-    if not "orcid" in yaml_author:
-        print(
-            f"PROVENANCE | ERROR in your {info_yaml} file. A 'Person' is ignored, since it has no 'orcid' defined"
-        )
-        return False
-    if "name" in yaml_author:
-        person_dict["name"] = yaml_author["name"]
-    # Name is no longer mandatory in WFHub
-    # else:
-    #     print(f"PROVENANCE | ERROR in your {info_yaml} file. A 'Person' is ignored, since it has 'orcid' but no 'name' defined")
-    #     return False
-    if "e-mail" in yaml_author:
-        person_dict["contactPoint"] = {"@id": "mailto:" + yaml_author["e-mail"]}
-        mail_dict["@type"] = "ContactPoint"
-        mail_dict["contactType"] = contact_type
-        mail_dict["email"] = yaml_author["e-mail"]
-        mail_dict["identifier"] = yaml_author["e-mail"]
-        mail_dict["url"] = yaml_author["orcid"]
-        compss_crate.add(
-            ContextEntity(compss_crate, "mailto:" + yaml_author["e-mail"], mail_dict)
-        )
-    if "ror" in yaml_author:
-        person_dict["affiliation"] = {"@id": yaml_author["ror"]}
-        # If ror defined, organisation_name becomes mandatory, if it is to be shown in WorkflowHub
-        org_dict["@type"] = "Organization"
-        if "organisation_name" in yaml_author:
-            org_dict["name"] = yaml_author["organisation_name"]
-            compss_crate.add(ContextEntity(compss_crate, yaml_author["ror"], org_dict))
-        else:
-            print(
-                f"PROVENANCE | WARNING in your {info_yaml} file. 'organisation_name' not defined for an 'Organisation'"
-            )
-    compss_crate.add(Person(compss_crate, yaml_author["orcid"], person_dict))
-
-    return True
 
 
 def wrroc_create_action(

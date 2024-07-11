@@ -1,7 +1,13 @@
 
 
 def get_yaml_template():
+    """
+    Create a YAML template for the ro-crate-info.yaml file, when not provided by the user
 
+    :param None
+
+    :returns: The string with the content of the template
+    """
 
     return (
         "COMPSs Workflow Information:\n"

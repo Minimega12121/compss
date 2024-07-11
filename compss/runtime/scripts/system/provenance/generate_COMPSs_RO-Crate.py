@@ -22,11 +22,6 @@
 """
 
 from pathlib import Path
-from urllib.parse import urlsplit
-from datetime import datetime, timezone
-import os
-import typing
-
 
 import yaml
 import time
@@ -35,11 +30,7 @@ import sys
 from rocrate.rocrate import ROCrate
 from rocrate.model.contextentity import ContextEntity
 
-# from rocrate.model.entity import Entity
-# from rocrate.model.file import File
-from rocrate.utils import iso_now
-
-from processing.entities import root_entity, add_person_definition, get_main_entities
+from processing.entities import root_entity, get_main_entities
 from processing.files import process_accessed_files
 from file_adding.source_files import add_application_source_files
 from file_adding.dataset_files import add_dataset_file_to_crate, add_manual_datasets
