@@ -28,7 +28,6 @@ import time
 import sys
 
 from rocrate.rocrate import ROCrate
-from rocrate.model.contextentity import ContextEntity
 
 from utils.url_fixes import fix_in_files_at_out_dirs
 from utils.common_paths import get_common_paths
@@ -38,11 +37,7 @@ from processing.files import process_accessed_files
 from file_adding.source_code import add_application_source_files
 from file_adding.datasets import add_dataset_file_to_crate, add_manual_datasets
 from wrroc.create_action import wrroc_create_action
-
-
-PROFILES_BASE = "https://w3id.org/ro/wfrun"
-PROFILES_VERSION = "0.5"
-WROC_PROFILE_VERSION = "1.0"
+from wrroc.profile import set_profile_details
 
 
 def main():
@@ -55,9 +50,7 @@ def main():
     """
 
     exec_time = time.time()
-
     yaml_template = get_yaml_template()
-
     compss_crate = ROCrate()
 
     # First, read values defined by user from ro-crate-info.yaml
@@ -81,9 +74,7 @@ def main():
     compss_wf_info, author_list = root_entity(compss_crate, yaml_content, INFO_YAML)
 
     # Get mainEntity from COMPSs runtime log dataprovenance.log
-    compss_ver, main_entity, out_profile = get_main_entities(
-        compss_wf_info, INFO_YAML, DP_LOG
-    )
+    compss_ver, main_entity, out_profile = get_main_entities(compss_wf_info, INFO_YAML, DP_LOG)
 
     # Process set of accessed files, as reported by COMPSs runtime.
     # This must be done before adding the Workflow to the RO-Crate
@@ -100,8 +91,7 @@ def main():
         COMPLETE_GRAPH,
     )
 
-    # Add in and out files, not to be physically copied in the Crate by default
-
+    # Add in and out files, not to be physically copied in the Crate by default (data_persistence = False)
     # First, add to the lists any inputs or outputs defined by the user, in case they exist
     if "inputs" in compss_wf_info:
         ins = add_manual_datasets("inputs", compss_wf_info, ins)
@@ -113,11 +103,9 @@ def main():
     # Merge lists to avoid duplication when detecting common_paths
     ins_and_outs = ins.copy() + outs.copy()
     ins_and_outs.sort()  # Put together shared paths between ins an outs
-
     # print(f"PROVENANCE DEBUG | List of ins and outs: {ins_and_outs}")
 
     # The list has at this point detected ins and outs, but also added any ins an outs defined by the user
-
     list_common_paths = []
     part_time = time.time()
     if (
@@ -154,9 +142,9 @@ def main():
         f"PROVENANCE | RO-Crate adding output files TIME (Persistence: {persistence}): "
         f"{time.time() - part_time} s"
     )
-
     # print(f"FIXED_INS: {fixed_ins}")
     # print(f"FIXED_OUTS: {fixed_outs}")
+
     # Register execution details using WRROC profile
     # Compliance with RO-Crate WorkflowRun Level 2 profile, aka. Workflow Run Crate
     run_uuid = wrroc_create_action(
@@ -170,52 +158,8 @@ def main():
         DP_LOG,
     )
 
-    # ro-crate-py does not deal with profiles
-    # compss_crate.metadata.append_to(
-    #     "conformsTo", {"@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.0"}
-    # )
-
-    #  Code from runcrate https://github.com/ResearchObject/runcrate/blob/411c70da556b60ee2373fea0928c91eb78dd9789/src/runcrate/convert.py#L270
-    profiles = []
-    for proc in "process", "workflow":
-        id_ = f"{PROFILES_BASE}/{proc}/{PROFILES_VERSION}"
-        profiles.append(
-            compss_crate.add(
-                ContextEntity(
-                    compss_crate,
-                    id_,
-                    properties={
-                        "@type": "CreativeWork",
-                        "name": f"{proc.title()} Run Crate",
-                        "version": PROFILES_VERSION,
-                    },
-                )
-            )
-        )
-    # In the future, this could go out of sync with the wroc
-    # profile added by ro-crate-py to the metadata descriptor
-    wroc_profile_id = (
-        f"https://w3id.org/workflowhub/workflow-ro-crate/{WROC_PROFILE_VERSION}"
-    )
-    profiles.append(
-        compss_crate.add(
-            ContextEntity(
-                compss_crate,
-                wroc_profile_id,
-                properties={
-                    "@type": "CreativeWork",
-                    "name": "Workflow RO-Crate",
-                    "version": WROC_PROFILE_VERSION,
-                },
-            )
-        )
-    )
-    compss_crate.root_dataset["conformsTo"] = profiles
-
-    # Add Checksum algorithm and "environment" to context
-    compss_crate.metadata.extra_contexts.append(
-        "https://w3id.org/ro/terms/workflow-run"
-    )
+    # Set RO-Crate conformance to profiles
+    set_profile_details(compss_crate)
 
     # Debug
     # for e in compss_crate.get_entities():
