@@ -160,13 +160,14 @@ def local_inspect(ro_crate_zip_or_dir: str):
             print(prefix + pointers[1] + f"{publish_time.strftime('%A, %d of %B of %Y - %H:%M %Z')}")
             print(pointers[0] + "Name")
             print(prefix + pointers[1] + e.get('name'))
-            creators = e.get('creator')
             print(pointers[0] + "Authors")
-            for i, c in enumerate(creators):
-                if i == (len(creators) - 1):
-                    print(prefix + pointers[1] + c['name'])
-                else:
-                    print(prefix + pointers[0] + c['name'])
+            creators = e.get('creator')
+            if creators:
+                for i, c in enumerate(creators):
+                    if i == (len(creators) - 1):
+                        print(prefix + pointers[1] + c['name'])
+                    else:
+                        print(prefix + pointers[0] + c['name'])
             desc_str = e.get('description')
             print(pointers[0] + "License")
             print(prefix + pointers[1] + e.get('license'))
@@ -190,7 +191,9 @@ def local_inspect(ro_crate_zip_or_dir: str):
         if e.type == "CreateAction":
             print(pointers[1] + "CreateAction (execution details)")
             print(empty_prefix + pointers[0] + "Agent")
-            print(prefix + pointers[1] + e.get('agent')['name'])
+            agent_entity = e.get('agent')
+            if agent_entity:
+                print(prefix + pointers[1] + agent_entity['name'])
             print(empty_prefix + pointers[0] + "Application's main file")
             print(prefix + pointers[1] + e.get('instrument')['name'])
             # Parse 'name' for hostname and JOB_ID
