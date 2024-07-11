@@ -398,3 +398,40 @@ def get_main_entities(
     )
 
     return compss_v, main_entity, out_profile_fn.name
+
+
+def get_manually_defined_software_requirements(compss_crate: ROCrate, wf_info: dict) -> list:
+    """
+    Extract all application software dependencies manually specified by the user in the YAML file. At least "name"
+    and "version" must be specified in the YAML
+
+    :param compss_crate: The COMPSs RO-Crate being generated
+    :param wf_info: YAML dict to extract info form the application, as specified by the user
+
+    :returns: list of id's to be added to the ComputationalWorkflow as softwareRequirements
+    """
+
+    software_info = []
+    software_requirements_list = []
+
+    if not "software" in wf_info:
+        return None
+
+    if isinstance(wf_info["software"], list):
+        software_info = wf_info["software"]
+    else:
+        software_info.append(wf_info["software"])
+
+    for soft_details in software_info:
+        software_dict = {"@type": "SoftwareApplication"}
+        if "url" in soft_details:
+            software_id = soft_details["url"]
+            software_dict["url"] = soft_details["url"]
+        else:
+            software_id = "#" + soft_details["name"].lower()
+        software_dict["name"] = soft_details["name"]
+        software_dict["version"] = soft_details["version"]
+        software_requirements_list.append({'@id': software_id})
+        compss_crate.add(ContextEntity(compss_crate, software_id, software_dict))
+
+    return software_requirements_list

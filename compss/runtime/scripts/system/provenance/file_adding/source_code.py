@@ -2,6 +2,7 @@ import typing
 import time
 import os
 import json
+import sys
 
 from pathlib import Path
 from hashlib import sha256
@@ -10,9 +11,12 @@ from mmap import mmap, ACCESS_READ
 from rocrate.rocrate import ROCrate
 from rocrate.model.contextentity import ContextEntity
 
+from processing.entities import get_manually_defined_software_requirements
+
 
 def add_file_to_crate(
     compss_crate: ROCrate,
+    wf_info: dict,
     file_name: str,
     compss_ver: str,
     main_entity: str,
@@ -163,7 +167,12 @@ def add_file_to_crate(
         )
     else:
         # Add software dependencies as softwareRequirements
-        # file_properties["softwareRequirments"] = get_manually_defined_software_requirements(wf_info)
+        req_list = get_manually_defined_software_requirements(compss_crate, wf_info)
+        if req_list:
+            if len(req_list) > 1:
+                file_properties["softwareRequirements"] = req_list
+            else:
+                file_properties["softwareRequirements"] = req_list[0]
 
         # We get lang_version from dataprovenance.log
         # print(f"PROVENANCE DEBUG | Adding main source file: {file_path.name}, file_name: {file_name}")
@@ -427,6 +436,7 @@ def add_application_source_files(
                     if resolved_file not in added_files:
                         add_file_to_crate(
                             compss_crate,
+                            compss_wf_info,
                             resolved_file,
                             compss_ver,
                             main_entity,
@@ -451,6 +461,7 @@ def add_application_source_files(
                         Path.touch(git_keep)
                         add_file_to_crate(
                             compss_crate,
+                            compss_wf_info,
                             str(git_keep),
                             compss_ver,
                             main_entity,
@@ -467,6 +478,7 @@ def add_application_source_files(
                 Path.touch(git_keep)
                 add_file_to_crate(
                     compss_crate,
+                    compss_wf_info,
                     str(git_keep),
                     compss_ver,
                     main_entity,
@@ -479,6 +491,7 @@ def add_application_source_files(
             if resolved_source not in added_files:
                 add_file_to_crate(
                     compss_crate,
+                    compss_wf_info,
                     resolved_source,
                     compss_ver,
                     main_entity,
@@ -502,6 +515,7 @@ def add_application_source_files(
         # No sources defined by the user, add the selected main_entity at least
         add_file_to_crate(
             compss_crate,
+            compss_wf_info,
             main_entity,
             compss_ver,
             main_entity,
