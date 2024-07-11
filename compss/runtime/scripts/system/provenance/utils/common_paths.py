@@ -4,6 +4,7 @@ import os
 from urllib.parse import urlsplit
 from pathlib import Path
 
+
 def get_common_paths(url_list: list) -> list:
     """
     Find the common paths in the list of files passed.

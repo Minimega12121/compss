@@ -81,7 +81,9 @@ def main():
     compss_wf_info, author_list = root_entity(compss_crate, yaml_content, INFO_YAML)
 
     # Get mainEntity from COMPSs runtime log dataprovenance.log
-    compss_ver, main_entity, out_profile = get_main_entities(compss_wf_info, INFO_YAML, DP_LOG)
+    compss_ver, main_entity, out_profile = get_main_entities(
+        compss_wf_info, INFO_YAML, DP_LOG
+    )
 
     # Process set of accessed files, as reported by COMPSs runtime.
     # This must be done before adding the Workflow to the RO-Crate
@@ -89,7 +91,13 @@ def main():
 
     # Add application source files to the RO-Crate, that will also be physically in the crate
     add_application_source_files(
-        compss_crate, compss_wf_info, compss_ver, main_entity, out_profile, INFO_YAML, COMPLETE_GRAPH
+        compss_crate,
+        compss_wf_info,
+        compss_ver,
+        main_entity,
+        out_profile,
+        INFO_YAML,
+        COMPLETE_GRAPH,
     )
 
     # Add in and out files, not to be physically copied in the Crate by default
@@ -152,7 +160,14 @@ def main():
     # Register execution details using WRROC profile
     # Compliance with RO-Crate WorkflowRun Level 2 profile, aka. Workflow Run Crate
     run_uuid = wrroc_create_action(
-        compss_crate, main_entity, author_list, fixed_ins, fixed_outs, yaml_content, INFO_YAML, DP_LOG
+        compss_crate,
+        main_entity,
+        author_list,
+        fixed_ins,
+        fixed_outs,
+        yaml_content,
+        INFO_YAML,
+        DP_LOG,
     )
 
     # ro-crate-py does not deal with profiles

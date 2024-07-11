@@ -1,5 +1,3 @@
-
-
 def get_yaml_template():
     """
     Create a YAML template for the ro-crate-info.yaml file, when not provided by the user

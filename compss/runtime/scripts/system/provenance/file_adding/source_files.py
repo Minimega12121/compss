@@ -10,6 +10,7 @@ from mmap import mmap, ACCESS_READ
 from rocrate.rocrate import ROCrate
 from rocrate.model.contextentity import ContextEntity
 
+
 def add_file_to_crate(
     compss_crate: ROCrate,
     file_name: str,
@@ -18,7 +19,7 @@ def add_file_to_crate(
     out_profile: str,
     in_sources_dir: str,
     complete_graph: str,
-    info_yaml: str
+    info_yaml: str,
 ) -> str:
     """
     Get details of a file, and add it physically to the Crate. The file will be an application source file, so,
@@ -336,7 +337,7 @@ def add_application_source_files(
     main_entity: str,
     out_profile: str,
     info_yaml: str,
-    complete_graph: str
+    complete_graph: str,
 ) -> None:
     """
     Add all application source files as part of the crate. This means, to include them physically in the resulting
@@ -432,7 +433,7 @@ def add_application_source_files(
                             out_profile,
                             resolved_source,
                             complete_graph,
-                            info_yaml
+                            info_yaml,
                         )
                         added_files.append(resolved_file)
                     else:
@@ -456,7 +457,7 @@ def add_application_source_files(
                             out_profile,
                             resolved_source,
                             complete_graph,
-                            info_yaml
+                            info_yaml,
                         )
             if not os.listdir(resolved_source):
                 # The root directory itself is empty
@@ -472,7 +473,7 @@ def add_application_source_files(
                     out_profile,
                     resolved_source,
                     complete_graph,
-                    info_yaml
+                    info_yaml,
                 )
         elif os.path.isfile(resolved_source):
             if resolved_source not in added_files:
@@ -484,7 +485,7 @@ def add_application_source_files(
                     out_profile,
                     "",
                     complete_graph,
-                    info_yaml
+                    info_yaml,
                 )
                 added_files.append(resolved_source)
             else:
@@ -500,7 +501,14 @@ def add_application_source_files(
     if len(sources_list) == 0:
         # No sources defined by the user, add the selected main_entity at least
         add_file_to_crate(
-            compss_crate, main_entity, compss_ver, main_entity, out_profile, "", complete_graph, info_yaml
+            compss_crate,
+            main_entity,
+            compss_ver,
+            main_entity,
+            out_profile,
+            "",
+            complete_graph,
+            info_yaml,
         )
         added_files.append(main_entity)
 

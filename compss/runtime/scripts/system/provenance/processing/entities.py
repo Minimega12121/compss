@@ -7,11 +7,9 @@ from rocrate.rocrate import ROCrate
 from rocrate.model.person import Person
 from rocrate.model.contextentity import ContextEntity
 
+
 def add_person_definition(
-    compss_crate: ROCrate,
-    contact_type: str,
-    yaml_author: dict,
-    info_yaml: str
+    compss_crate: ROCrate, contact_type: str, yaml_author: dict, info_yaml: str
 ) -> bool:
     """
     Check if a specified person has enough defined terms to be added in the RO-Crate.
@@ -72,7 +70,10 @@ def add_person_definition(
 
     return True
 
-def root_entity(compss_crate: ROCrate, yaml_content: dict, info_yaml: str) -> typing.Tuple[dict, list]:
+
+def root_entity(
+    compss_crate: ROCrate, yaml_content: dict, info_yaml: str
+) -> typing.Tuple[dict, list]:
     """
     Generate the Root Entity in the RO-Crate generated for the COMPSs application
 
@@ -142,7 +143,9 @@ def root_entity(compss_crate: ROCrate, yaml_content: dict, info_yaml: str) -> ty
     return compss_wf_info, crate_author_list
 
 
-def get_main_entities(wf_info: dict, info_yaml: str, dp_log: str) -> typing.Tuple[str, str, str]:
+def get_main_entities(
+    wf_info: dict, info_yaml: str, dp_log: str
+) -> typing.Tuple[str, str, str]:
     """
     Get COMPSs version and mainEntity from dataprovenance.log first lines
     3 First lines expected format: compss_version_number\n main_entity\n output_profile_file\n
@@ -395,4 +398,3 @@ def get_main_entities(wf_info: dict, info_yaml: str, dp_log: str) -> typing.Tupl
     )
 
     return compss_v, main_entity, out_profile_fn.name
-

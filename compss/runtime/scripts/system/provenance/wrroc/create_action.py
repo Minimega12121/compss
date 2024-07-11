@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from datetime import timezone
 from datetime import datetime
+
 sys.path.append("..")
 from utils.url_fixes import fix_dir_url
 from processing.entities import add_person_definition
@@ -25,7 +26,7 @@ def wrroc_create_action(
     outs: list,
     yaml_content: dict,
     info_yaml: str,
-    dp_log: str
+    dp_log: str,
 ) -> str:
     """
     Add a CreateAction term to the ROCrate to make it compliant with WRROC.  RO-Crate WorkflowRun Level 2 profile,

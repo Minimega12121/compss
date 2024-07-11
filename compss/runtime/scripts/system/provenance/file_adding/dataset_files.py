@@ -1,6 +1,7 @@
 import typing
 import os
 import datetime as dt
+import sys
 
 from urllib.parse import urlsplit
 from pathlib import Path
@@ -417,4 +418,3 @@ def add_manual_datasets(yaml_term: str, compss_wf_info: dict, data_list: list) -
     )
 
     return data_list
-
