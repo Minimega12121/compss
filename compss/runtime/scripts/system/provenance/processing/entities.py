@@ -210,7 +210,7 @@ def get_main_entities(
             main_entity = detected_app
         else:
             print(
-                f"PROVENANCE | ERROR: No 'sources' defined at {info_yaml}, and detected mainEntity not found in Current Working Directory"
+                f"PROVENANCE | ERROR: No 'sources' defined at {info_yaml}, and detected 'mainEntity' not found in Current Working Directory"
             )
             raise KeyError(f"No 'sources' key defined at {info_yaml}")
 
@@ -312,13 +312,13 @@ def get_main_entities(
                 # the detected_app was not found previously in the list of files
                 found = True
                 print(
-                    f"PROVENANCE | WARNING: The file defined at sources_main_file is assigned as mainEntity: {resolved_sources_main_file}"
+                    f"PROVENANCE | WARNING: The file defined at sources_main_file is assigned as 'mainEntity': {resolved_sources_main_file}"
                 )
             else:
                 print(
                     f"PROVENANCE | WARNING: The file defined at sources_main_file "
                     f"({resolved_sources_main_file}) in {info_yaml} does not match with the "
-                    f"automatically identified mainEntity ({main_entity})"
+                    f"automatically identified 'mainEntity' ({main_entity})"
                 )
             main_entity = resolved_sources_main_file
             found = True
@@ -344,7 +344,7 @@ def get_main_entities(
                             print(
                                 f"PROVENANCE | WARNING: The file defined at sources_main_file "
                                 f"({resolved_sources_main_file}) in {info_yaml} does not match with the "
-                                f"automatically identified mainEntity ({main_entity})"
+                                f"automatically identified 'mainEntity' ({main_entity})"
                             )
                         # else: the user has defined exactly the file we found
                         # In both cases: set file defined by user
@@ -362,7 +362,7 @@ def get_main_entities(
                             print(
                                 f"PROVENANCE | WARNING: The file defined at sources_main_file "
                                 f"({file}) in {info_yaml} does not match with the "
-                                f"automatically identified mainEntity ({main_entity})"
+                                f"automatically identified 'mainEntity' ({main_entity})"
                             )
                         # else: the user has defined exactly the file we found
                         # In both cases: set file defined by user
@@ -383,30 +383,31 @@ def get_main_entities(
         if backup_main_entity is None:
             # We have a fatal problem
             print(
-                f"PROVENANCE | ERROR: no mainEntity has been found. Check the definition of 'sources' and "
+                f"PROVENANCE | ERROR: no 'mainEntity' has been found. Check the definition of 'sources' and "
                 f"'sources_main_file' in {info_yaml}"
             )
             raise FileNotFoundError
         main_entity = backup_main_entity
         print(
-            f"PROVENANCE | WARNING: the detected mainEntity {detected_app} does not exist in the list "
+            f"PROVENANCE | WARNING: the detected 'mainEntity' {detected_app} does not exist in the list "
             f"of application files provided in {info_yaml}. Setting {main_entity} as mainEntity"
         )
 
     print(
-        f"PROVENANCE | COMPSs version: {compss_v}, out_profile: {out_profile_fn.name}, main_entity: {main_entity}"
+        f"PROVENANCE | COMPSs version: '{compss_v}', out_profile: '{out_profile_fn.name}', main_entity: '{main_entity}'"
     )
 
     return compss_v, main_entity, out_profile_fn.name
 
 
-def get_manually_defined_software_requirements(compss_crate: ROCrate, wf_info: dict) -> list:
+def get_manually_defined_software_requirements(compss_crate: ROCrate, wf_info: dict, info_yaml:str) -> list:
     """
     Extract all application software dependencies manually specified by the user in the YAML file. At least "name"
     and "version" must be specified in the YAML
 
     :param compss_crate: The COMPSs RO-Crate being generated
     :param wf_info: YAML dict to extract info form the application, as specified by the user
+    :param info_yaml: Name of the YAML file specified by the user
 
     :returns: list of id's to be added to the ComputationalWorkflow as softwareRequirements
     """
@@ -423,6 +424,12 @@ def get_manually_defined_software_requirements(compss_crate: ROCrate, wf_info: d
         software_info.append(wf_info["software"])
 
     for soft_details in software_info:
+        if not "name" in soft_details or not "version" in soft_details:
+            print(
+                f"PROVENANCE | WARNING in your {info_yaml} file. A 'software' does not have a 'name' or 'version' "
+                f"defined. The 'software' dependency definition will be ignored"
+            )
+            continue
         software_dict = {"@type": "SoftwareApplication"}
         if "url" in soft_details:
             software_id = soft_details["url"]
@@ -433,5 +440,6 @@ def get_manually_defined_software_requirements(compss_crate: ROCrate, wf_info: d
         software_dict["version"] = soft_details["version"]
         software_requirements_list.append({'@id': software_id})
         compss_crate.add(ContextEntity(compss_crate, software_id, software_dict))
+        print(f"PROVENANCE | 'softwareRequirements' dependency correctly added: {soft_details['name']}")
 
     return software_requirements_list

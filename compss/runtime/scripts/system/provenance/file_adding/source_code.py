@@ -167,7 +167,7 @@ def add_file_to_crate(
         )
     else:
         # Add software dependencies as softwareRequirements
-        req_list = get_manually_defined_software_requirements(compss_crate, wf_info)
+        req_list = get_manually_defined_software_requirements(compss_crate, wf_info, info_yaml)
         if req_list:
             if len(req_list) > 1:
                 file_properties["softwareRequirements"] = req_list
