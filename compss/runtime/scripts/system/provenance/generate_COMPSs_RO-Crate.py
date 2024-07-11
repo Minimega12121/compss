@@ -30,13 +30,13 @@ import sys
 from rocrate.rocrate import ROCrate
 from rocrate.model.contextentity import ContextEntity
 
-from processing.entities import root_entity, get_main_entities
-from processing.files import process_accessed_files
-from file_adding.source_files import add_application_source_files
-from file_adding.dataset_files import add_dataset_file_to_crate, add_manual_datasets
 from utils.url_fixes import fix_in_files_at_out_dirs
 from utils.common_paths import get_common_paths
 from utils.yaml_template import get_yaml_template
+from processing.entities import root_entity, get_main_entities
+from processing.files import process_accessed_files
+from file_adding.source_code import add_application_source_files
+from file_adding.datasets import add_dataset_file_to_crate, add_manual_datasets
 from wrroc.create_action import wrroc_create_action
 
 

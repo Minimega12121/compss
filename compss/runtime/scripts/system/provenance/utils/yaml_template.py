@@ -55,4 +55,5 @@ def get_yaml_template():
         "  organisation_name: Agent Institution name\n"
         "  ror: https://ror.org/XXXXXXXXX\n"
         "    # Find them in ror.org\n"
+        "\n"
     )
