@@ -54,13 +54,13 @@ class FDLocker:
         self.file_name = file_name
         self.file_descriptor = open(file_name, "ab")
 
-    def __enter__ (self):
+    def __enter__(self):
         if self.file_descriptor.closed:
             self.file_descriptor = open(self.file_name, "ab")
         fcntl.flock(self.file_descriptor.fileno(), fcntl.LOCK_EX)
         return self
 
-    def __exit__ (self, _type, value, tb):
+    def __exit__(self, _type, value, tb):
         self.file_descriptor.flush()
         fcntl.flock(self.file_descriptor.fileno(), fcntl.LOCK_UN)
         self.file_descriptor.close()
@@ -109,12 +109,12 @@ def std_redirector(
     try:
         stdout_fd = stdout.fileno()
     except ValueError:
-        sys.stdout = os.fdopen(1, 'w') #, 0)
+        sys.stdout = os.fdopen(1, "w")  # , 0)
         stdout_fd = sys.stdout.fileno()
     try:
         stderr_fd = stderr.fileno()
     except ValueError:
-        sys.stderr = os.fdopen(2, 'w') #, 0)
+        sys.stderr = os.fdopen(2, "w")  # , 0)
         stderr_fd = sys.stderr.fileno()
 
     def _redirect_stdout(to_fd: int) -> None:
@@ -186,12 +186,12 @@ def ipython_std_redirector(
     try:
         stdout_fd = stdout.fileno()
     except ValueError:
-        sys.stdout = os.fdopen(1, 'w')  # , 0)
+        sys.stdout = os.fdopen(1, "w")  # , 0)
         stdout_fd = sys.stdout.fileno()
     try:
         stderr_fd = stderr.fileno()
     except ValueError:
-        sys.stderr = os.fdopen(2, 'w')  # , 0)
+        sys.stderr = os.fdopen(2, "w")  # , 0)
         stderr_fd = sys.stderr.fileno()
 
     def _redirect_stdout(to_fd: int) -> None:
