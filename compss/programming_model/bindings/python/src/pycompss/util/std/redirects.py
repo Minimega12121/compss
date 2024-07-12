@@ -51,23 +51,32 @@ class FDLocker:
     """
 
     def __init__(self, file_name):
+        """Initialize a FDLocker object (context).
+
+        :param file_name: File path to lock.
+        """
         self.file_name = file_name
         self.file_descriptor = open(file_name, "ab")
 
     def __enter__(self):
+        """Lock the file."""
         if self.file_descriptor.closed:
             self.file_descriptor = open(self.file_name, "ab")
         fcntl.flock(self.file_descriptor.fileno(), fcntl.LOCK_EX)
         return self
 
     def __exit__(self, _type, value, tb):
+        """Flush and unlock the file."""
         self.file_descriptor.flush()
         fcntl.flock(self.file_descriptor.fileno(), fcntl.LOCK_UN)
         self.file_descriptor.close()
 
 
 def _dup2(to_fd: int, from_fd: int) -> None:
-    """Wrapper around dup2 to do retries if fails.
+    """Wrap dup2 to do retries if fails.
+
+    dup2 has a race condition in Linux with open, that can result in
+    error 16 EBUSY.
 
     :param to_fd: Destination file descriptor.
     :param from_fd: Source file descriptor.
