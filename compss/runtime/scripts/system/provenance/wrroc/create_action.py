@@ -27,6 +27,7 @@ def wrroc_create_action(
     yaml_content: dict,
     info_yaml: str,
     dp_log: str,
+    end_time: datetime,
 ) -> str:
     """
     Add a CreateAction term to the ROCrate to make it compliant with WRROC.  RO-Crate WorkflowRun Level 2 profile,
@@ -40,6 +41,7 @@ def wrroc_create_action(
     :param yaml_content: Content of the YAML file specified by the user
     :param info_yaml: Name of the YAML file specified by the user
     :param dp_log: Full path to the dataprovenance.log file
+    :param end_time: Time where the COMPSs application execution ended
 
     :returns: UUID generated for this run
     """
@@ -113,15 +115,30 @@ def wrroc_create_action(
             resolved_main_entity = entity.id
 
     # Register user submitting the workflow
-    if "Agent" in yaml_content and add_person_definition(
-        compss_crate, "Agent", yaml_content["Agent"], info_yaml
-    ):
-        agent = {"@id": yaml_content["Agent"]["orcid"]}
-    else:  # Choose first author, to avoid leaving it empty. May be true most of the times
+    agent_added = False
+    if "Agent" in yaml_content:
+        if isinstance(yaml_content["Agent"], list):
+            print(
+                f"PROVENANCE | WARNING: 'Agent' in {info_yaml} can only be a single person. First item selected "
+                f"as the application submitter agent"
+            )
+            agent_entity = yaml_content["Agent"][0]
+        else:
+            agent_entity = yaml_content["Agent"]
+        if add_person_definition(compss_crate, "Agent", agent_entity, info_yaml):
+            agent = {"@id": agent_entity["orcid"]}
+            agent_added = True
+        else:
+            print(
+                f"PROVENANCE | WARNING: 'Agent' in {info_yaml} wrongly defined"
+            )
+
+    if "Agent" not in yaml_content or not agent_added:
+    # Choose first author, to avoid leaving it empty. May be true most of the times
         if author_list:
             agent = author_list[0]
             print(
-                f"PROVENANCE | WARNING: 'Agent' not specified in {info_yaml}. First author selected by default."
+                f"PROVENANCE | WARNING: 'Agent' not correctly specified in {info_yaml}. First author selected by default"
             )
         else:
             agent = None
@@ -133,7 +150,7 @@ def wrroc_create_action(
         "@type": "CreateAction",
         "instrument": {"@id": resolved_main_entity},  # Resolved path of the main file
         "actionStatus": {"@id": "http://schema.org/CompletedActionStatus"},
-        "endTime": iso_now(),  # Get current time
+        "endTime": end_time,  # endTime of the application corresponds to the start of the provenance generation
         "name": name_property,
         "description": description_property,
     }

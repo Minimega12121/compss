@@ -28,6 +28,7 @@ import time
 import sys
 
 from rocrate.rocrate import ROCrate
+from rocrate.utils import iso_now
 
 from utils.url_fixes import fix_in_files_at_out_dirs
 from utils.common_paths import get_common_paths
@@ -52,6 +53,7 @@ def main():
     exec_time = time.time()
     yaml_template = get_yaml_template()
     compss_crate = ROCrate()
+    end_time = iso_now()
 
     # First, read values defined by user from ro-crate-info.yaml
     try:
@@ -156,6 +158,7 @@ def main():
         yaml_content,
         INFO_YAML,
         DP_LOG,
+        end_time
     )
 
     # Set RO-Crate conformance to profiles
