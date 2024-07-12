@@ -400,7 +400,9 @@ def get_main_entities(
     return compss_v, main_entity, out_profile_fn.name
 
 
-def get_manually_defined_software_requirements(compss_crate: ROCrate, wf_info: dict, info_yaml:str) -> list:
+def get_manually_defined_software_requirements(
+    compss_crate: ROCrate, wf_info: dict, info_yaml: str
+) -> list:
     """
     Extract all application software dependencies manually specified by the user in the YAML file. At least "name"
     and "version" must be specified in the YAML
@@ -438,8 +440,10 @@ def get_manually_defined_software_requirements(compss_crate: ROCrate, wf_info: d
             software_id = "#" + soft_details["name"].lower()
         software_dict["name"] = soft_details["name"]
         software_dict["version"] = soft_details["version"]
-        software_requirements_list.append({'@id': software_id})
+        software_requirements_list.append({"@id": software_id})
         compss_crate.add(ContextEntity(compss_crate, software_id, software_dict))
-        print(f"PROVENANCE | 'softwareRequirements' dependency correctly added: {soft_details['name']}")
+        print(
+            f"PROVENANCE | 'softwareRequirements' dependency correctly added: {soft_details['name']}"
+        )
 
     return software_requirements_list

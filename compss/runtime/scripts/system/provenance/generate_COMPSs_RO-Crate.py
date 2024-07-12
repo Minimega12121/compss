@@ -76,7 +76,9 @@ def main():
     compss_wf_info, author_list = root_entity(compss_crate, yaml_content, INFO_YAML)
 
     # Get mainEntity from COMPSs runtime log dataprovenance.log
-    compss_ver, main_entity, out_profile = get_main_entities(compss_wf_info, INFO_YAML, DP_LOG)
+    compss_ver, main_entity, out_profile = get_main_entities(
+        compss_wf_info, INFO_YAML, DP_LOG
+    )
 
     # Process set of accessed files, as reported by COMPSs runtime.
     # This must be done before adding the Workflow to the RO-Crate
@@ -158,7 +160,7 @@ def main():
         yaml_content,
         INFO_YAML,
         DP_LOG,
-        end_time
+        end_time,
     )
 
     # Set RO-Crate conformance to profiles
