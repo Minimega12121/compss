@@ -11,7 +11,7 @@ from mmap import mmap, ACCESS_READ
 from rocrate.rocrate import ROCrate
 from rocrate.model.contextentity import ContextEntity
 
-from processing.entities import get_manually_defined_software_requirements
+from provenance.processing.entities import get_manually_defined_software_requirements
 
 
 def add_file_to_crate(

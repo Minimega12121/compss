@@ -1,17 +1,15 @@
 import typing
 import os
 import datetime as dt
-import sys
 
 from urllib.parse import urlsplit
 from pathlib import Path
 from datetime import timezone
 
-sys.path.append("..")
-from utils.url_fixes import fix_dir_url
-
 from rocrate.rocrate import ROCrate
 from rocrate.utils import iso_now
+
+from provenance.utils.url_fixes import fix_dir_url
 
 
 def add_dataset_file_to_crate(

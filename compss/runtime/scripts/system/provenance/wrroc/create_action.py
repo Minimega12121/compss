@@ -3,19 +3,16 @@ import os
 import uuid
 import subprocess
 import socket
-import sys
 
 from pathlib import Path
 from datetime import timezone
 from datetime import datetime
 
-sys.path.append("..")
-from utils.url_fixes import fix_dir_url
-from processing.entities import add_person_definition
-
 from rocrate.rocrate import ROCrate
 from rocrate.model.contextentity import ContextEntity
-from rocrate.utils import iso_now
+
+from provenance.utils.url_fixes import fix_dir_url
+from provenance.processing.entities import add_person_definition
 
 
 def wrroc_create_action(

@@ -14,8 +14,8 @@ def set_profile_details(compss_crate: ROCrate) -> None:
     """
 
     PROFILES_BASE = "https://w3id.org/ro/wfrun"
-    PROFILES_VERSION = "0.5"
-    WROC_PROFILE_VERSION = "1.0"
+    WRROC_PROFILES_VERSION = "0.5"
+    WF_PROFILE_VERSION = "1.0"
 
     # ro-crate-py does not deal with profiles
     # compss_crate.metadata.append_to(
@@ -25,7 +25,7 @@ def set_profile_details(compss_crate: ROCrate) -> None:
     #  Code from runcrate https://github.com/ResearchObject/runcrate/blob/411c70da556b60ee2373fea0928c91eb78dd9789/src/runcrate/convert.py#L270
     profiles = []
     for proc in "process", "workflow":
-        id_ = f"{PROFILES_BASE}/{proc}/{PROFILES_VERSION}"
+        id_ = f"{PROFILES_BASE}/{proc}/{WRROC_PROFILES_VERSION}"
         profiles.append(
             compss_crate.add(
                 ContextEntity(
@@ -34,7 +34,7 @@ def set_profile_details(compss_crate: ROCrate) -> None:
                     properties={
                         "@type": "CreativeWork",
                         "name": f"{proc.title()} Run Crate",
-                        "version": PROFILES_VERSION,
+                        "version": WRROC_PROFILES_VERSION,
                     },
                 )
             )
@@ -42,7 +42,7 @@ def set_profile_details(compss_crate: ROCrate) -> None:
     # In the future, this could go out of sync with the wroc
     # profile added by ro-crate-py to the metadata descriptor
     wroc_profile_id = (
-        f"https://w3id.org/workflowhub/workflow-ro-crate/{WROC_PROFILE_VERSION}"
+        f"https://w3id.org/workflowhub/workflow-ro-crate/{WF_PROFILE_VERSION}"
     )
     profiles.append(
         compss_crate.add(
@@ -52,7 +52,7 @@ def set_profile_details(compss_crate: ROCrate) -> None:
                 properties={
                     "@type": "CreativeWork",
                     "name": "Workflow RO-Crate",
-                    "version": WROC_PROFILE_VERSION,
+                    "version": WF_PROFILE_VERSION,
                 },
             )
         )
