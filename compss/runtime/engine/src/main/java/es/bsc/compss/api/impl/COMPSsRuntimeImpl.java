@@ -549,6 +549,10 @@ public class COMPSsRuntimeImpl implements COMPSsRuntime, LoaderAPI, ErrorHandler
 
         LOGGER.warn("Execution Finished");
 
+        if (DP_ENABLED) {
+            DP_LOGGER.info(Instant.now().toString());
+        }
+
     }
 
     /*
