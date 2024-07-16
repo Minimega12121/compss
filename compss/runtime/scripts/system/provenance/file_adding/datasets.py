@@ -143,8 +143,6 @@ def add_dataset_file_to_crate(
                     # Avoid dealing with symlinks with wildcards
                     continue
                 listed_file = os.path.join(root, f_name)
-                if __debug__:
-                    print(f"PROVENANCE DEBUG: listed_file is {listed_file}")
                 dir_f_properties = {
                     "name": f_name,
                     "sdDatePublished": iso_now(),  # Register when the Data Entity was last accessible
