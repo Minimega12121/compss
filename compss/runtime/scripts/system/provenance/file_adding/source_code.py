@@ -177,7 +177,8 @@ def add_file_to_crate(
         path_in_crate = "application_sources/" + file_path.name
 
     if file_name != main_entity:
-        # print(f"PROVENANCE DEBUG | Adding auxiliary source file: {file_name}")
+        if __debug__:
+            print(f"PROVENANCE DEBUG | Adding auxiliary source file: {file_name}")
         compss_crate.add_file(
             source=file_name, dest_path=path_in_crate, properties=file_properties
         )
@@ -193,7 +194,8 @@ def add_file_to_crate(
                 file_properties["softwareRequirements"] = req_list[0]
 
         # We get lang_version from dataprovenance.log
-        # print(f"PROVENANCE DEBUG | Adding main source file: {file_path.name}, file_name: {file_name}")
+        if __debug__:
+            print(f"PROVENANCE DEBUG | Adding main source file: {file_path.name}, file_name: {file_name}")
         compss_crate.add_workflow(
             source=file_name,
             dest_path=path_in_crate,
@@ -473,7 +475,8 @@ def add_application_source_files(
                     # Check if it's an empty directory, needs to be added by hand
                     full_dir_name = os.path.join(root, dir_name)
                     if not os.listdir(full_dir_name):
-                        # print(f"PROVENANCE DEBUG | Adding an empty directory. root ({root}), full_dir_name ({full_dir_name}), resolved_source ({resolved_source})")
+                        if __debug__:
+                            print(f"PROVENANCE DEBUG | Adding an empty directory. root ({root}), full_dir_name ({full_dir_name}), resolved_source ({resolved_source})")
                         # Workaround to add empty directories in a git repository
                         git_keep = Path(full_dir_name + "/" + ".gitkeep")
                         Path.touch(git_keep)
@@ -490,7 +493,8 @@ def add_application_source_files(
                         )
             if not os.listdir(resolved_source):
                 # The root directory itself is empty
-                # print(f"PROVENANCE DEBUG | Adding an empty directory. resolved_source ({resolved_source})")
+                if __debug__:
+                    print(f"PROVENANCE DEBUG | Adding an empty directory. resolved_source ({resolved_source})")
                 # Workaround to add empty directories in a git repository
                 git_keep = Path(resolved_source + "/" + ".gitkeep")
                 Path.touch(git_keep)
@@ -553,7 +557,8 @@ def add_application_source_files(
     #                 e.append_to("hasPart", {"@id": file})
 
     print(f"PROVENANCE | Application source files detected ({len(added_files)})")
-    # print(f"PROVENANCE DEBUG | Source files detected: {added_files}")
+    if __debug__:
+        print(f"PROVENANCE DEBUG | Source files detected: {added_files}")
 
     print(
         f"PROVENANCE | RO-Crate adding source files TIME: {time.time() - part_time} s"

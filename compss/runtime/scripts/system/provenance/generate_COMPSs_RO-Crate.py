@@ -106,8 +106,9 @@ def main():
 
     # Merge lists to avoid duplication when detecting common_paths
     ins_and_outs = ins.copy() + outs.copy()
-    ins_and_outs.sort()  # Put together shared paths between ins an outs
-    # print(f"PROVENANCE DEBUG | List of ins and outs: {ins_and_outs}")
+    ins_and_outs.sort()  # Put together shared paths between ins an
+    if __debug__:
+        print(f"PROVENANCE DEBUG | List of ins and outs: {ins_and_outs}")
 
     # The list has at this point detected ins and outs, but also added any ins an outs defined by the user
     list_common_paths = []

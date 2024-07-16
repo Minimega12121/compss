@@ -103,7 +103,8 @@ def add_dataset_file_to_crate(
                             + url_parts.path[len(item) :]
                         )  # Slice out the common part of the path
                     break
-            # print(f"PROVENANCE DEBUG | Adding {url_parts.path} as {crate_path}")
+            if __debug__:
+                print(f"PROVENANCE DEBUG | Adding {url_parts.path} as {crate_path}")
             compss_crate.add_file(
                 source=url_parts.path, dest_path=crate_path, properties=file_properties
             )
@@ -142,7 +143,8 @@ def add_dataset_file_to_crate(
                     # Avoid dealing with symlinks with wildcards
                     continue
                 listed_file = os.path.join(root, f_name)
-                # print(f"PROVENANCE DEBUG: listed_file is {listed_file}")
+                if __debug__:
+                    print(f"PROVENANCE DEBUG: listed_file is {listed_file}")
                 dir_f_properties = {
                     "name": f_name,
                     "sdDatePublished": iso_now(),  # Register when the Data Entity was last accessible
@@ -160,7 +162,8 @@ def add_dataset_file_to_crate(
                         len(url_parts.path) :
                     ]  # Does not include an initial '/'
                     dir_f_url = "dataset/" + final_item_name + "/" + filtered_url
-                    # print(f"PROVENANCE DEBUG | Adding DATASET FILE {listed_file} as {dir_f_url}")
+                    if __debug__:
+                        print(f"PROVENANCE DEBUG | Adding DATASET FILE {listed_file} as {dir_f_url}")
                     compss_crate.add_file(
                         source=listed_file,
                         dest_path=dir_f_url,
@@ -184,7 +187,8 @@ def add_dataset_file_to_crate(
                 # Check if it's an empty directory, needs to be added by hand
                 full_dir_name = os.path.join(root, dir_name)
                 if not os.listdir(full_dir_name):
-                    # print(f"PROVENANCE DEBUG | Adding an empty directory in data persistence. root ({root}), full_dir_name ({full_dir_name})")
+                    if __debug__:
+                        print(f"PROVENANCE DEBUG | Adding an empty directory in data persistence. root ({root}), full_dir_name ({full_dir_name})")
                     dir_properties = {
                         "sdDatePublished": iso_now(),
                         "dateModified": dt.datetime.fromtimestamp(
@@ -233,7 +237,8 @@ def add_dataset_file_to_crate(
         # After checking all directory structure, represent correctly the dataset
         if not os.listdir(url_parts.path):
             # The root directory itself is empty
-            # print(f"PROVENANCE DEBUG | Adding an empty directory. url_parts.path ({url_parts.path})")
+            if __debug__:
+                print(f"PROVENANCE DEBUG | Adding an empty directory. url_parts.path ({url_parts.path})")
             if persist:
                 # Workaround to add empty directories in a git repository
                 git_keep = Path(url_parts.path + "/" + ".gitkeep")
@@ -287,7 +292,8 @@ def add_dataset_file_to_crate(
             if persist:
                 dataset_path = url_parts.path
                 path_in_crate = "dataset/" + final_item_name + "/"
-                # print(f"PROVENANCE DEBUG | Adding DATASET {dataset_path} as {path_in_crate}")
+                if __debug__:
+                    print(f"PROVENANCE DEBUG | Adding DATASET {dataset_path} as {path_in_crate}")
                 compss_crate.add_dataset(
                     source=dataset_path,
                     dest_path=path_in_crate,
