@@ -101,9 +101,9 @@ def main():
     # Add in and out files, not to be physically copied in the Crate by default (data_persistence = False)
     # First, add to the lists any inputs or outputs defined by the user, in case they exist
     if "inputs" in compss_wf_info:
-        ins = add_manual_datasets("inputs", compss_wf_info, ins)
+        ins = add_manual_datasets("inputs", compss_wf_info, ins, INFO_YAML)
     if "outputs" in compss_wf_info:
-        outs = add_manual_datasets("outputs", compss_wf_info, outs)
+        outs = add_manual_datasets("outputs", compss_wf_info, outs, INFO_YAML)
 
     ins, outs = fix_in_files_at_out_dirs(ins, outs)
 
