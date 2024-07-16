@@ -220,7 +220,9 @@ def get_main_entities(
                 me_file_name = second_line.split(".")[-1]
                 detected_app = me_file_name + ".java"
             if __debug__:
-                print(f"PROVENANCE DEBUG | Detected app when no 'sources' defined is: {detected_app}")
+                print(
+                    f"PROVENANCE DEBUG | Detected app when no 'sources' defined is: {detected_app}"
+                )
             third_line = next(dp_file).rstrip()
             out_profile_fn = Path(third_line)
         if os.path.isfile(detected_app):
@@ -246,7 +248,9 @@ def get_main_entities(
                 }:
                     backup_main_entity = resolved_source
                     if __debug__:
-                        print(f"PROVENANCE DEBUG | FOUND SOURCE FILE AS BACKUP MAIN: {backup_main_entity}")
+                        print(
+                            f"PROVENANCE DEBUG | FOUND SOURCE FILE AS BACKUP MAIN: {backup_main_entity}"
+                        )
             elif os.path.isdir(resolved_source):
                 for root, _, files in os.walk(
                     resolved_source, topdown=True, followlinks=True
@@ -255,7 +259,9 @@ def get_main_entities(
                         continue  # We skip __pycache__ subdirectories
                     for f_name in files:
                         if __debug__:
-                            print(f"PROVENANCE DEBUG | ADDING FILE to list_of_sources: {f_name}. root is: {root}")
+                            print(
+                                f"PROVENANCE DEBUG | ADDING FILE to list_of_sources: {f_name}. root is: {root}"
+                            )
                         if f_name.startswith("*"):
                             # Avoid dealing with symlinks with wildcards
                             continue
@@ -269,7 +275,9 @@ def get_main_entities(
                         }:
                             backup_main_entity = full_name
                             if __debug__:
-                                print(f"PROVENANCE DEBUG | FOUND SOURCE FILE IN A DIRECTORY AS BACKUP MAIN: {backup_main_entity}")
+                                print(
+                                    f"PROVENANCE DEBUG | FOUND SOURCE FILE IN A DIRECTORY AS BACKUP MAIN: {backup_main_entity}"
+                                )
             else:
                 print(
                     f"PROVENANCE | WARNING: A defined source is neither a directory, nor a file ({resolved_source})"
@@ -312,7 +320,9 @@ def get_main_entities(
     for file in list_of_sources:  # Try to find the identified mainEntity
         if file.endswith(detected_app):
             if __debug__:
-                print(f"PROVENANCE DEBUG | IDENTIFIED MAIN ENTITY FOUND IN LIST OF FILES: {file}")
+                print(
+                    f"PROVENANCE DEBUG | IDENTIFIED MAIN ENTITY FOUND IN LIST OF FILES: {file}"
+                )
             main_entity = file
             break
     # main_entity has a value if mainEntity has been automatically detected
@@ -354,7 +364,9 @@ def get_main_entities(
                     if file == resolved_sources_main_file:
                         # The file exists
                         if __debug__:
-                            print(f"PROVENANCE DEBUG | The file defined at sources_main_file exists: {resolved_sources_main_file}")
+                            print(
+                                f"PROVENANCE DEBUG | The file defined at sources_main_file exists: {resolved_sources_main_file}"
+                            )
                         if resolved_sources_main_file != main_entity:
                             print(
                                 f"PROVENANCE | WARNING: The file defined at sources_main_file "
@@ -370,7 +382,9 @@ def get_main_entities(
                     if file.endswith(wf_info["sources_main_file"]):
                         # The file exists
                         if __debug__:
-                            print(f"PROVENANCE DEBUG | The file defined at sources_main_file exists: {resolved_sources_main_file}")
+                            print(
+                                f"PROVENANCE DEBUG | The file defined at sources_main_file exists: {resolved_sources_main_file}"
+                            )
                         if file != main_entity:
                             print(
                                 f"PROVENANCE | WARNING: The file defined at sources_main_file "

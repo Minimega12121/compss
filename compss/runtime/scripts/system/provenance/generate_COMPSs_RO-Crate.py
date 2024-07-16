@@ -36,7 +36,10 @@ from provenance.utils.yaml_template import get_yaml_template
 from provenance.processing.entities import root_entity, get_main_entities
 from provenance.processing.files import process_accessed_files
 from provenance.file_adding.source_code import add_application_source_files
-from provenance.file_adding.datasets import add_dataset_file_to_crate, add_manual_datasets
+from provenance.file_adding.datasets import (
+    add_dataset_file_to_crate,
+    add_manual_datasets,
+)
 from provenance.wrroc.create_action import wrroc_create_action
 from provenance.wrroc.profile import set_profile_details
 

@@ -195,7 +195,9 @@ def add_file_to_crate(
 
         # We get lang_version from dataprovenance.log
         if __debug__:
-            print(f"PROVENANCE DEBUG | Adding main source file: {file_path.name}, file_name: {file_name}")
+            print(
+                f"PROVENANCE DEBUG | Adding main source file: {file_path.name}, file_name: {file_name}"
+            )
         compss_crate.add_workflow(
             source=file_name,
             dest_path=path_in_crate,
@@ -476,7 +478,9 @@ def add_application_source_files(
                     full_dir_name = os.path.join(root, dir_name)
                     if not os.listdir(full_dir_name):
                         if __debug__:
-                            print(f"PROVENANCE DEBUG | Adding an empty directory. root ({root}), full_dir_name ({full_dir_name}), resolved_source ({resolved_source})")
+                            print(
+                                f"PROVENANCE DEBUG | Adding an empty directory. root ({root}), full_dir_name ({full_dir_name}), resolved_source ({resolved_source})"
+                            )
                         # Workaround to add empty directories in a git repository
                         git_keep = Path(full_dir_name + "/" + ".gitkeep")
                         Path.touch(git_keep)
@@ -494,7 +498,9 @@ def add_application_source_files(
             if not os.listdir(resolved_source):
                 # The root directory itself is empty
                 if __debug__:
-                    print(f"PROVENANCE DEBUG | Adding an empty directory. resolved_source ({resolved_source})")
+                    print(
+                        f"PROVENANCE DEBUG | Adding an empty directory. resolved_source ({resolved_source})"
+                    )
                 # Workaround to add empty directories in a git repository
                 git_keep = Path(resolved_source + "/" + ".gitkeep")
                 Path.touch(git_keep)

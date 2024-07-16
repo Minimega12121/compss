@@ -161,7 +161,9 @@ def add_dataset_file_to_crate(
                     ]  # Does not include an initial '/'
                     dir_f_url = "dataset/" + final_item_name + "/" + filtered_url
                     if __debug__:
-                        print(f"PROVENANCE DEBUG | Adding DATASET FILE {listed_file} as {dir_f_url}")
+                        print(
+                            f"PROVENANCE DEBUG | Adding DATASET FILE {listed_file} as {dir_f_url}"
+                        )
                     compss_crate.add_file(
                         source=listed_file,
                         dest_path=dir_f_url,
@@ -186,7 +188,9 @@ def add_dataset_file_to_crate(
                 full_dir_name = os.path.join(root, dir_name)
                 if not os.listdir(full_dir_name):
                     if __debug__:
-                        print(f"PROVENANCE DEBUG | Adding an empty directory in data persistence. root ({root}), full_dir_name ({full_dir_name})")
+                        print(
+                            f"PROVENANCE DEBUG | Adding an empty directory in data persistence. root ({root}), full_dir_name ({full_dir_name})"
+                        )
                     dir_properties = {
                         "sdDatePublished": iso_now(),
                         "dateModified": dt.datetime.fromtimestamp(
@@ -236,7 +240,9 @@ def add_dataset_file_to_crate(
         if not os.listdir(url_parts.path):
             # The root directory itself is empty
             if __debug__:
-                print(f"PROVENANCE DEBUG | Adding an empty directory. url_parts.path ({url_parts.path})")
+                print(
+                    f"PROVENANCE DEBUG | Adding an empty directory. url_parts.path ({url_parts.path})"
+                )
             if persist:
                 # Workaround to add empty directories in a git repository
                 git_keep = Path(url_parts.path + "/" + ".gitkeep")
@@ -291,7 +297,9 @@ def add_dataset_file_to_crate(
                 dataset_path = url_parts.path
                 path_in_crate = "dataset/" + final_item_name + "/"
                 if __debug__:
-                    print(f"PROVENANCE DEBUG | Adding DATASET {dataset_path} as {path_in_crate}")
+                    print(
+                        f"PROVENANCE DEBUG | Adding DATASET {dataset_path} as {path_in_crate}"
+                    )
                 compss_crate.add_dataset(
                     source=dataset_path,
                     dest_path=path_in_crate,
