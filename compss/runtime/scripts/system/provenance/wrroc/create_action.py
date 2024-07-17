@@ -149,7 +149,7 @@ def wrroc_create_action(
         if author_list:
             agent = author_list[0]
             print(
-                f"PROVENANCE | WARNING: 'Agent' not correctly specified in {info_yaml}. First author selected by default"
+                f"PROVENANCE | WARNING: 'Agent' missing or not correctly specified in {info_yaml}. First author selected by default"
             )
         else:
             agent = None
@@ -200,7 +200,8 @@ def wrroc_create_action(
                     ).isoformat()
                 except ValueError:
                     print(
-                        f"PROVENANCE | WARNING: No 'startTime' found in dataprovenance.log"
+                        f"PROVENANCE | WARNING: No 'startTime' found in dataprovenance.log. SLURM's job start time "
+                        f"will be used, if available"
                     )
             else:
                 last_line = line.strip()
@@ -211,7 +212,9 @@ def wrroc_create_action(
                 microsecond=0
             ).isoformat()
         except ValueError:
-            print(f"PROVENANCE | WARNING: No 'endTime' found in dataprovenance.log")
+            print(
+                f"PROVENANCE | WARNING: No 'endTime' found in dataprovenance.log. Using current time as 'endTime'"
+            )
 
     if agent:
         create_action_properties["agent"] = agent
