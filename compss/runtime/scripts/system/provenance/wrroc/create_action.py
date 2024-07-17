@@ -200,7 +200,7 @@ def wrroc_create_action(
                     ).isoformat()
                 except ValueError:
                     print(
-                        f"PROVENANCE | WARNING: No startTime found in dataprovenance.log"
+                        f"PROVENANCE | WARNING: No 'startTime' found in dataprovenance.log"
                     )
             else:
                 last_line = line.strip()
@@ -211,9 +211,7 @@ def wrroc_create_action(
                 microsecond=0
             ).isoformat()
         except ValueError:
-            print(
-                f"PROVENANCE | WARNING: No endTime found in dataprovenance.log"
-                )
+            print(f"PROVENANCE | WARNING: No 'endTime' found in dataprovenance.log")
 
     if agent:
         create_action_properties["agent"] = agent

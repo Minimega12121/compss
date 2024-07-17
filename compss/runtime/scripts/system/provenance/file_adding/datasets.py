@@ -330,7 +330,9 @@ def add_dataset_file_to_crate(
     return fix_dir_url(in_url)
 
 
-def add_manual_datasets(yaml_term: str, compss_wf_info: dict, data_list: list, info_yaml: str) -> list:
+def add_manual_datasets(
+    yaml_term: str, compss_wf_info: dict, data_list: list, info_yaml: str
+) -> list:
     """
     Adds to a list of dataset entities (files or directories) the ones specified by the user. At the end, removes any
     file:// references that belong to other dir:// references
