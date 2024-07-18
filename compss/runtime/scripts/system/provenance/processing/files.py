@@ -71,11 +71,10 @@ def process_accessed_files(dp_log: str) -> typing.Tuple[list, list]:
 
     # Fix dir:// references, they don't end with slash '/' at dataprovenance.log
     for data_list in [l_ins, l_outs]:
-        for item in data_list:
+        for i, item in enumerate(data_list):
             url_parts = urlsplit(item)
             if url_parts.scheme == "dir":
-                data_list.append("dir://" + socket.gethostname() + url_parts.path + "/")
-                data_list.remove(item)
+                data_list[i] = "dir://" + socket.gethostname() + url_parts.path + "/"
             else:
                 break  # File has been reached, all directories have been treated
         data_list.sort()

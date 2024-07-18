@@ -36,7 +36,10 @@ from provenance.utils.yaml_template import get_yaml_template
 from provenance.processing.entities import root_entity, get_main_entities
 from provenance.processing.files import process_accessed_files
 from provenance.file_adding.source_code import add_application_source_files
-from provenance.file_adding.datasets import add_dataset_file_to_crate, add_manual_datasets
+from provenance.file_adding.datasets import (
+    add_dataset_file_to_crate,
+    add_manual_datasets,
+)
 from provenance.wrroc.create_action import wrroc_create_action
 from provenance.wrroc.profile import set_profile_details
 
@@ -98,16 +101,17 @@ def main():
     # Add in and out files, not to be physically copied in the Crate by default (data_persistence = False)
     # First, add to the lists any inputs or outputs defined by the user, in case they exist
     if "inputs" in compss_wf_info:
-        ins = add_manual_datasets("inputs", compss_wf_info, ins)
+        ins = add_manual_datasets("inputs", compss_wf_info, ins, INFO_YAML)
     if "outputs" in compss_wf_info:
-        outs = add_manual_datasets("outputs", compss_wf_info, outs)
+        outs = add_manual_datasets("outputs", compss_wf_info, outs, INFO_YAML)
 
     ins, outs = fix_in_files_at_out_dirs(ins, outs)
 
     # Merge lists to avoid duplication when detecting common_paths
     ins_and_outs = ins.copy() + outs.copy()
-    ins_and_outs.sort()  # Put together shared paths between ins an outs
-    # print(f"PROVENANCE DEBUG | List of ins and outs: {ins_and_outs}")
+    ins_and_outs.sort()  # Put together shared paths between ins an
+    if __debug__:
+        print(f"PROVENANCE DEBUG | List of ins and outs: {ins_and_outs}")
 
     # The list has at this point detected ins and outs, but also added any ins an outs defined by the user
     list_common_paths = []
