@@ -171,7 +171,7 @@ public class ExecutionSandbox {
         if (version1array.length < 2 || version2array.length < 2) {
             return DataComparison.ERROR;
         }
-        if (version1array[1].compareTo(version2array[1]) == 0) {
+        if (version1array[0].compareTo(version2array[0]) == 0) {
             // same data
             int version1int;
             int version2int;
