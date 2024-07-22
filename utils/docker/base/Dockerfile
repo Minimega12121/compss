@@ -36,20 +36,25 @@ RUN apt-get update && \
 FROM base_python as base_all
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libboost-all-dev libxml2 papi-tools openmpi-bin libopenmpi-dev libtool automake build-essential python3-pip openssh-server jq bc && \
+    apt-get install -y --no-install-recommends wget libboost-all-dev libxml2 papi-tools openmpi-bin libopenmpi-dev libtool automake build-essential python3-pip openssh-server jq bc && \
     pip3 --no-cache-dir install pip setuptools wheel --upgrade && \
-    pip3 install --no-cache-dir dill guppy3 decorator mpi4py kafka-python rocrate==0.9.0 && \
+    pip3 --no-cache-dir install dill guppy3 decorator mpi4py kafka-python rocrate==0.9.0 && \
+    wget https://github.com/bsc-dom/dataclay/archive/refs/heads/cyclops.zip && \
+    pip3 --no-cache-dir install cyclops.zip && \
+    rm cyclops.zip && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/*
 RUN mkdir /run/sshd && \
     yes yes | ssh-keygen -f /root/.ssh/id_rsa -t rsa -N '' > /dev/null && \
-    cat /root/.ssh/id_rsa.pub > /root/.ssh/authorized_keys
+    cat /root/.ssh/id_rsa.pub > /root/.ssh/authorized_keys && \
+    mkdir -p /dataclay/storage && \
+    mkdir -p /dataclay/metadata
 
 FROM base_all as base_tutorial
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git vim wget ca-certificates maven curl unzip cmake libopenblas-dev jq curl gnupg && \
-    pip3 install --no-cache-dir graphviz matplotlib>=2.2.3 numba==0.56.4 numpy==1.23.5 numpydoc>=0.8.0 scipy>=1.3.0 cvxpy>=1.1.5 scikit-learn>=1.0.2 python-dateutil==2.8.2 pandas>=0.24.2 tabulate==0.8.9 jupyter ipykernel ipython==8.3.0 jupyterlab==3.6.3 && \
+    pip3 --no-cache-dir install graphviz matplotlib>=2.2.3 numba==0.56.4 numpy==1.23.5 numpydoc>=0.8.0 scipy>=1.3.0 cvxpy>=1.1.5 scikit-learn>=1.0.2 python-dateutil==2.8.2 pandas>=0.24.2 tabulate==0.8.9 jupyter ipykernel ipython==8.3.0 jupyterlab==3.6.3 && \
     python3 -m ipykernel install && \
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_16.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
@@ -60,12 +65,10 @@ RUN apt-get update && \
 FROM base_tutorial as base_ci
 
 RUN apt-get update && \
-
-    #Required for compilation and tests
-    apt-get install -y --no-install-recommends libxml2-dev libpapi-dev python3-dev gfortran \
-    sudo firefox gnupg lsb-release libgraphviz-dev && \
+    # Required for compilation and tests
+    apt-get install -y --no-install-recommends libxml2-dev libpapi-dev python3-dev gfortran sudo firefox gnupg lsb-release libgraphviz-dev && \
     apt-get autoclean && \
-    rm -rf /var/lib/apt/lists/* 
+    rm -rf /var/lib/apt/lists/*
 
 RUN  curl -fsSL https://install.julialang.org > install.sh && sh install.sh -y && \
      mv ~/.julia/juliaup/julia-* /opt/julia && ln -s /opt/julia/bin/julia /usr/bin/julia && \
@@ -105,4 +108,3 @@ RUN pip3 --no-cache-dir install pycodestyle selenium redis==3.5.3 redis-py-clust
    groupadd docker && \
    usermod -aG docker jenkins && \
    newgrp docker
-

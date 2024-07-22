@@ -1,6 +1,6 @@
 ARG DEBIAN_FRONTEND=noninteractive
 ARG BASE=base22
-ARG BASE_VERSION=240626-122235
+ARG BASE_VERSION=240628-095006
 
 FROM compss/${BASE}_ci:${BASE_VERSION} as ci
 ENV GRADLE_HOME /opt/gradle
@@ -16,11 +16,13 @@ ENV COMPSS_HOME=/opt/COMPSs/
 # Install COMPSs
 RUN cd /framework && \
     ./submodules_get.sh && \
+    python3 -m pip --no-cache-dir install pip wheel setuptools --upgrade && \
     /framework/builders/buildlocal /opt/COMPSs && \
     mv /root/.m2 /home/jenkins && \
     chown -R jenkins: /framework && \
     chown -R jenkins: /home/jenkins/ && \
     python3 -m pip install --no-cache-dir rocrate==0.9.0
+
 
 # Expose SSH port and run SSHD
 EXPOSE 22
@@ -51,10 +53,11 @@ ENV CLASSPATH $CLASSPATH:/opt/COMPSs/Runtime/compss-engine.jar
 ENV LD_LIBRARY_PATH /opt/COMPSs/Bindings/bindings-common/lib:$LD_LIBRARY_PATH
 ENV COMPSS_HOME=/opt/COMPSs/
 ENV PYTHONPATH=$COMPSS_HOME/Bindings/python/3:$PYTHONPATH
+ARG TZ=Etc/UTC
 
 RUN python3 -m pip install --no-cache-dir dislib pycompss-cli && \
     git clone https://github.com/bsc-wdc/jupyter-extension.git je && \
-    cd je && && sed -i '/\"pycompss\"/d' ipycompss_kernel/pyproject.toml && \
+    cd je && sed -i '/\"pycompss\"/d' ipycompss_kernel/pyproject.toml && \
     python3 -m pip install ./ipycompss_kernel && cd ipycompss_lab_extension && \
     jlpm install --network-timeout 600000 --network-concurrency 100 && \
     jlpm run build:prod && python3 -m pip --no-cache-dir install . && cd ../.. && rm -r je 
@@ -74,7 +77,7 @@ ENV LD_LIBRARY_PATH /opt/COMPSs/Bindings/bindings-common/lib:$LD_LIBRARY_PATH
 ENV COMPSS_HOME=/opt/COMPSs/
 
 
-FROM compss/${BASE}_python:${BASE_VERSION} as pycompss 
+FROM compss/${BASE}_python:${BASE_VERSION} as pycompss
 
 COPY --from=ci /opt/COMPSs /opt/COMPSs
 COPY --from=ci /etc/init.d/compss-monitor /etc/init.d/compss-monitor

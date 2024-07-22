@@ -139,7 +139,9 @@ class PiperWorkerConfiguration:
             HEADER + "log_dir        : " + str(GLOBALS.get_log_directory())
         )
         logger.debug(
-            HEADER + "analysis_dir   : " + str(GLOBALS.get_analysis_directory)
+            HEADER
+            + "analysis_dir   : "
+            + str(GLOBALS.get_analysis_directory())
         )
         logger.debug(HEADER + "Nesting        : " + str(self.nesting))
         logger.debug(HEADER + "Debug          : " + str(self.debug))
