@@ -88,16 +88,16 @@ def get_common_paths(url_list: list) -> list:
         # url_parts.path does not end with '/'
         tmp = os.path.commonpath([url_parts.path, common_path])
         if tmp != "/":  # String not empty, they have a common path
-            if __debug__:
-                print(
-                    f"PROVENANCE DEBUG | Searching. Previous common path is: {common_path}. tmp: {tmp}"
-                )
+            # if __debug__:
+            #     print(
+            #         f"PROVENANCE DEBUG | Searching. Previous common path is: {common_path}. tmp: {tmp}"
+            #     )
             common_path = tmp
         else:  # if they don't, we are in a new path, so, store the previous in list_common_paths, and assign the new to common_path
-            if __debug__:
-                print(
-                    f"PROVENANCE DEBUG | New root to search common_path: {url_parts.path}"
-                )
+            # if __debug__:
+            #     print(
+            #         f"PROVENANCE DEBUG | New root to search common_path: {url_parts.path}"
+            #     )
             if common_path not in list_common_paths:
                 list_common_paths.append(common_path + "/")
             # Need to remove filename from url_parts.path
