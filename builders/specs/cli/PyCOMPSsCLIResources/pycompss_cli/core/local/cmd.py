@@ -313,7 +313,7 @@ def local_inspect(ro_crate_zip_or_dir: str):
                         print(
                             prefix
                             + pointers[1]
-                            + f"{wf_in.get('@id')} ({wf_in['contentSize']} bytes)"
+                            + f"{wf_in.get('@id')} ({int(wf_in['contentSize']):,} bytes)"
                         )
                     else:
                         print(prefix + pointers[1] + f"{wf_in.get('@id')}")
@@ -322,7 +322,7 @@ def local_inspect(ro_crate_zip_or_dir: str):
                         print(
                             prefix
                             + pointers[0]
-                            + f"{wf_in.get('@id')} ({wf_in['contentSize']} bytes)"
+                            + f"{wf_in.get('@id')} ({int(wf_in['contentSize']):,} bytes)"
                         )
                     else:
                         print(prefix + pointers[0] + f"{wf_in.get('@id')}")
@@ -340,7 +340,7 @@ def local_inspect(ro_crate_zip_or_dir: str):
                         print(
                             prefix
                             + pointers[1]
-                            + f"{wf_out.get('@id')} ({wf_out['contentSize']} bytes)"
+                            + f"{wf_out.get('@id')} ({int(wf_out['contentSize']):,} bytes)"
                         )
                     else:
                         print(prefix + pointers[1] + f"{wf_out.get('@id')}")
@@ -349,7 +349,7 @@ def local_inspect(ro_crate_zip_or_dir: str):
                         print(
                             prefix
                             + pointers[0]
-                            + f"{wf_out.get('@id')} ({wf_out['contentSize']} bytes)"
+                            + f"{wf_out.get('@id')} ({int(wf_out['contentSize']):,} bytes)"
                         )
                     else:
                         print(prefix + pointers[0] + f"{wf_out.get('@id')}")
