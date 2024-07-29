@@ -348,4 +348,14 @@ public class JSONStateManager {
             ErrorManager.warn("Error loading profile. Exception reading " + filename + ".", e);
         }
     }
+
+    /**
+     * Dumps the internal JSON Object into file.
+     */
+    public void writeDataProvenance(Logger logger) {
+        // transform json representation to the logger
+        // Log access to file in the dataprovenance.log.
+        logger.info("--------TEST---------");
+        logger.info(getString());
+    }
 }
