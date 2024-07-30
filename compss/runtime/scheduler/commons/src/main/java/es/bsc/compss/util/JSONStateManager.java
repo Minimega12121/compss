@@ -34,6 +34,9 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -350,12 +353,94 @@ public class JSONStateManager {
     }
 
     /**
-     * Dumps the internal JSON Object into file.
+     * Dumps the JSON Object of the statistic data into dataprovenance.log file.
+     *
+     * @param logger DP_LOGGER
      */
     public void writeDataProvenance(Logger logger) {
         // transform json representation to the logger
         // Log access to file in the dataprovenance.log.
-        logger.info("--------TEST---------");
-        logger.info(getString());
+        JSONObject data = new JSONObject(getString());
+
+        JSONObject resources = data.getJSONObject("resources");
+        List<List<String>> dataParsed = new LinkedList<>();
+        List<String> resourcesList = getListKeys(resources);
+        for (String resource : resourcesList) {
+            JSONObject implementations = resources.getJSONObject(resource).getJSONObject("implementations");
+            dataParsed.addAll(getListByResource(implementations, resource));
+        }
+
+        JSONObject implementations = data.getJSONObject("implementations");
+        dataParsed.addAll(getListByResource(implementations, "overall"));
+
+        writeStats(logger, dataParsed);
+    }
+
+    /**
+     * get list of resources used in the execution.
+     *
+     * @param jsonObject object containing the JSON parsed from the App_Profile.json
+     * @return list of keys referred to the resources
+     */
+    private List<String> getListKeys(JSONObject jsonObject) {
+        List<String> listToBuild = new LinkedList<>();
+        jsonObject.keys().forEachRemaining(listToBuild::add);
+        return listToBuild;
+    }
+
+    /**
+     * Build the list containing the statistic for resource and the implementation.
+     *
+     * @param resource name of the resource
+     * @param implementation name of the implementation
+     * @param stat name of the stat
+     * @param value value of the stat
+     * @return the new list of string containing the data
+     */
+    private List<String> buildDataList(String resource, String implementation, String stat, int value) {
+        if (value <= 0) {
+            return new LinkedList<>(Arrays.asList(resource, implementation, stat, "None"));
+        }
+        return new LinkedList<>(Arrays.asList(resource, implementation, stat, String.valueOf(value)));
+    }
+
+    /**
+     * Get the list containing the information about the implementations in a resource.
+     *
+     * @param implementations JSON object of the implementation that contains the statistics
+     * @param nameResource name of the resource
+     * @return the data about the statistics measured in the implementation
+     */
+    private List<List<String>> getListByResource(JSONObject implementations, String nameResource) {
+        List<List<String>> dataParsed = new LinkedList<>();
+        List<String> implementationsList = getListKeys(implementations);
+        for (String implementation : implementationsList) {
+            JSONObject stats = implementations.getJSONObject(implementation);
+            List<String> statsList = getListKeys(stats);
+            boolean avgTimeNull = false;
+            for (String stat : statsList) {
+                int value = avgTimeNull ? 0 : stats.getInt(stat);
+                avgTimeNull = stat.equals("executions") && value == 0;
+                dataParsed.add(buildDataList(nameResource, implementation, stat, value));
+            }
+        }
+        return dataParsed;
+    }
+
+    /**
+     * Write the statistic data in the provenancedata.log file.
+     *
+     * @param logger object that allows to write in the dataprovenance.log
+     * @param listData list of data to write
+     */
+    private void writeStats(Logger logger, List<List<String>> listData) {
+        for (List<String> line : listData) {
+            String resource = line.get(0);
+            String implementation = line.get(1);
+            String stat = line.get(2);
+            String value = line.get(3);
+            String stringToWrite = String.format("%s\t%s\t%s\t%s", resource, implementation, stat, value);
+            logger.info(stringToWrite);
+        }
     }
 }
