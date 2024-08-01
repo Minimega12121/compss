@@ -23,12 +23,111 @@ import socket
 from pathlib import Path
 from datetime import timezone
 from datetime import datetime
+import pytz
 
 from rocrate.rocrate import ROCrate
 from rocrate.model.contextentity import ContextEntity
 
 from provenance.utils.url_fixes import fix_dir_url
 from provenance.processing.entities import add_person_definition
+
+
+def get_stats_list(dp_path: str) -> list:
+    """
+    Function that provide a list of the statistical data recorded
+
+    :param dp_path: pathname of the dataprovenance.log
+
+    :return data_list: list of data parsed from dataprovenance.log
+    """
+    data_list = []
+    start_time = None
+    with open(dp_path, "r") as data_provenance:
+        for idx, row in enumerate(data_provenance.readlines()):
+            if idx == 1:
+                application_name = row.rstrip()
+                continue
+            elif idx < 3: continue
+
+            try:
+                ts = row.rstrip()
+                timestamp = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S.%fZ")
+                timestamp = timestamp.replace(tzinfo=pytz.UTC)
+                if start_time is None:
+                    start_time = timestamp.timestamp()
+                else:
+                    end_time = timestamp.timestamp()
+            except:
+                if row.startswith(("gs", "overall", "localhost")):
+                    parameter_list = list(filter(None, list(row.rstrip().split(" "))))
+                    data_list.append(parameter_list)
+
+        execution_time = (int)((end_time - start_time)*1000)
+        data_list.append(['overall', application_name, 'executionTime', str(execution_time)])
+
+    return data_list
+
+
+def add_execution(id_name: str, value: int) -> dict:
+    """
+    Function that generate a new dictionary of the executions as a ROCrate object.
+
+    :param id_name: id of the new item
+    :param value: value of the parameter passed
+
+    :return new_item: the ROCrate object with the new Data Entity added
+    """
+    # If there is no execution, it means that it haven't been executed
+    if value == 0:
+        value = None
+    new_item = {'id': id_name, '@type': 'PropertyValue', 'name': 'executions',
+                'propertyID': "https://w3id.org/ro/terms/compss#executions", 'value': str(value)}
+    return new_item
+
+
+def add_time(id_name: str, name_parameter: str, value: int) -> dict:
+    """
+    Function that generate a new Data Entity as a ROCrate object.
+
+    :param id_name: identifier of the Data Entity that is generated
+    :param name_parameter: the name of the parameter
+    :param value: value of the parameter passed
+
+    :return new_item: the ROCrate object with the new Data Entity added
+    """
+    new_item = {'id': id_name, '@type': 'PropertyValue', 'name': name_parameter,
+                'propertyID': f"https://w3id.org/ro/terms/compss#{name_parameter}", 'value': str(value)}
+    return new_item
+
+def get_new_item(id_name: str, stat: str, value: int) -> dict:
+    if stat == 'executions':
+        return add_execution(id_name, value)
+    else:
+        return add_time(id_name, stat, value)
+
+def get_resource_usage_dataset(dp_path: str) -> list:
+    """
+    Function that provides a list of the statistical data recorded
+
+    :param crate: the ROCrate object which the new item is added to
+    :param dp_path: pathname of the dataprovenance.log
+
+    :return data_list: list of data parsed from dataprovenance.log
+    """
+    stats_list = get_stats_list(dp_path)
+    resource_dataset = []
+    for data in stats_list:
+        resource = data[0]
+        implementation = data[1]
+        stat = data[2]
+        try:
+            value = int(data[3])
+        except:
+            value = None
+        id_name = f"#{resource}.{implementation}.{stat}"
+        new_item = get_new_item(id_name, stat, value)
+        resource_dataset.append(new_item)
+    return resource_dataset
 
 
 def wrroc_create_action(
@@ -215,6 +314,26 @@ def wrroc_create_action(
             print(
                 f"PROVENANCE | WARNING: No 'endTime' found in dataprovenance.log. Using current time as 'endTime'"
             )
+
+    try:
+        print(
+            f"PROVENANCE | RO-Crate adding statistical data"
+        )
+        # Add the resource usage to the ROCrate object
+        resource_usage_list = get_resource_usage_dataset(dp_log)
+        id_name_list = []
+        for resource_usage in resource_usage_list:
+            resource_id = resource_usage['id']
+            del resource_usage['id']
+            compss_crate.add(
+                ContextEntity(compss_crate, resource_id, properties=resource_usage)
+            )
+            id_name_list.append({'@id': resource_id})
+        create_action_properties["resourceUsage"] = id_name_list
+    except ValueError:
+        print(
+            f"PROVENANCE | WARNING: No statistical data found in dataprovenance.log. SLURM's job start time "
+        )
 
     if agent:
         create_action_properties["agent"] = agent
