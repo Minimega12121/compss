@@ -439,7 +439,7 @@ public class JSONStateManager {
             String implementation = line.get(1);
             String stat = line.get(2);
             String value = line.get(3);
-            String stringToWrite = String.format("%s\t%s\t%s\t%s", resource, implementation, stat, value);
+            String stringToWrite = String.format("%-20s %-40s %-15s %s", resource, implementation, stat, value);
             logger.info(stringToWrite);
         }
     }
