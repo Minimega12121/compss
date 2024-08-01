@@ -96,7 +96,8 @@ def add_time(id_name: str, name_parameter: str, value: int) -> dict:
     :return new_item: the ROCrate object with the new Data Entity added
     """
     new_item = {'id': id_name, '@type': 'PropertyValue', 'name': name_parameter,
-                'propertyID': f"https://w3id.org/ro/terms/compss#{name_parameter}", 'value': str(value)}
+                'propertyID': f"https://w3id.org/ro/terms/compss#{name_parameter}",
+                "unitCode": "https://qudt.org/vocab/unit/MilliSEC", 'value': str(value)}
     return new_item
 
 def get_new_item(id_name: str, stat: str, value: int) -> dict:
