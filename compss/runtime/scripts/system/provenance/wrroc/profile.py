@@ -40,7 +40,7 @@ def set_profile_details(compss_crate: ROCrate) -> None:
 
     #  Code from runcrate https://github.com/ResearchObject/runcrate/blob/411c70da556b60ee2373fea0928c91eb78dd9789/src/runcrate/convert.py#L270
     profiles = []
-    for proc in "process", "workflow":
+    for proc in "process", "workflow", "provenance":
         id_ = f"{PROFILES_BASE}/{proc}/{WRROC_PROFILES_VERSION}"
         profiles.append(
             compss_crate.add(
