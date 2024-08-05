@@ -64,7 +64,9 @@ def get_stats_list(dp_path: str) -> list:
                     data_list.append(parameter_list)
 
         execution_time = (int)((end_time - start_time) * 1000)
-        data_list.append(['overall', application_name, 'executionTime', str(execution_time)])
+        data_list.append(
+            ["overall", application_name, "executionTime", str(execution_time)]
+        )
 
     return data_list
 
@@ -81,8 +83,13 @@ def add_execution(id_name: str, value: int) -> dict:
     # If there is no execution, it means that it haven't been executed
     if value == 0:
         value = None
-    new_item = {'id': id_name, '@type': 'PropertyValue', 'name': 'executions',
-                'propertyID': "https://w3id.org/ro/terms/compss#executions", 'value': str(value)}
+    new_item = {
+        "id": id_name,
+        "@type": "PropertyValue",
+        "name": "executions",
+        "propertyID": "https://w3id.org/ro/terms/compss#executions",
+        "value": str(value),
+    }
     return new_item
 
 
@@ -96,14 +103,19 @@ def add_time(id_name: str, name_parameter: str, value: int) -> dict:
 
     :return new_item: the ROCrate object with the new Data Entity added
     """
-    new_item = {'id': id_name, '@type': 'PropertyValue', 'name': name_parameter,
-                'propertyID': f"https://w3id.org/ro/terms/compss#{name_parameter}",
-                "unitCode": "https://qudt.org/vocab/unit/MilliSEC", 'value': str(value)}
+    new_item = {
+        "id": id_name,
+        "@type": "PropertyValue",
+        "name": name_parameter,
+        "propertyID": f"https://w3id.org/ro/terms/compss#{name_parameter}",
+        "unitCode": "https://qudt.org/vocab/unit/MilliSEC",
+        "value": str(value),
+    }
     return new_item
 
 
 def get_new_item(id_name: str, stat: str, value: int) -> dict:
-    if stat == 'executions':
+    if stat == "executions":
         return add_execution(id_name, value)
     else:
         return add_time(id_name, stat, value)
@@ -135,15 +147,15 @@ def get_resource_usage_dataset(dp_path: str) -> list:
 
 
 def wrroc_create_action(
-        compss_crate: ROCrate,
-        main_entity: str,
-        author_list: list,
-        ins: list,
-        outs: list,
-        yaml_content: dict,
-        info_yaml: str,
-        dp_log: str,
-        end_time: datetime,
+    compss_crate: ROCrate,
+    main_entity: str,
+    author_list: list,
+    ins: list,
+    outs: list,
+    yaml_content: dict,
+    info_yaml: str,
+    dp_log: str,
+    end_time: datetime,
 ) -> str:
     """
     Add a CreateAction term to the ROCrate to make it compliant with WRROC.  RO-Crate WorkflowRun Level 2 profile,
@@ -177,22 +189,22 @@ def wrroc_create_action(
 
     if job_id is None:
         name_property = (
-                "COMPSs " + main_entity_pathobj.name + " execution at " + host_name
+            "COMPSs " + main_entity_pathobj.name + " execution at " + host_name
         )
         userportal_url = None
         create_action_id = "#COMPSs_Workflow_Run_Crate_" + host_name + "_" + run_uuid
     else:
         name_property = (
-                "COMPSs "
-                + main_entity_pathobj.name
-                + " execution at "
-                + host_name
-                + " with JOB_ID "
-                + job_id
+            "COMPSs "
+            + main_entity_pathobj.name
+            + " execution at "
+            + host_name
+            + " with JOB_ID "
+            + job_id
         )
         userportal_url = "https://userportal.bsc.es/"  # job_id cannot be added, does not match the one in userportal
         create_action_id = (
-                "#COMPSs_Workflow_Run_Crate_" + host_name + "_SLURM_JOB_ID_" + job_id
+            "#COMPSs_Workflow_Run_Crate_" + host_name + "_SLURM_JOB_ID_" + job_id
         )
     compss_crate.root_dataset["mentions"] = {"@id": create_action_id}
 
@@ -206,8 +218,8 @@ def wrroc_create_action(
     environment_property = []
     for name, value in os.environ.items():
         if (
-                name.startswith(("SLURM_JOB", "SLURM_MEM", "SLURM_SUBMIT", "COMPSS"))
-                and name != "SLURM_JOBID"
+            name.startswith(("SLURM_JOB", "SLURM_MEM", "SLURM_SUBMIT", "COMPSS"))
+            and name != "SLURM_JOBID"
         ):
             # Changed to 'environment' term in WRROC v0.4
             env_var = {}
@@ -320,19 +332,17 @@ def wrroc_create_action(
             )
 
     try:
-        print(
-            f"PROVENANCE | RO-Crate adding statistical data"
-        )
+        print(f"PROVENANCE | RO-Crate adding statistical data")
         # Add the resource usage to the ROCrate object
         resource_usage_list = get_resource_usage_dataset(dp_log)
         id_name_list = []
         for resource_usage in resource_usage_list:
-            resource_id = resource_usage['id']
-            del resource_usage['id']
+            resource_id = resource_usage["id"]
+            del resource_usage["id"]
             compss_crate.add(
                 ContextEntity(compss_crate, resource_id, properties=resource_usage)
             )
-            id_name_list.append({'@id': resource_id})
+            id_name_list.append({"@id": resource_id})
         create_action_properties["resourceUsage"] = id_name_list
     except ValueError:
         print(
@@ -372,7 +382,7 @@ def wrroc_create_action(
             file_properties["name"] = "compss-" + job_id + f_suffix
             file_properties["contentSize"] = os.path.getsize(file_properties["name"])
             file_properties["description"] = (
-                    "COMPSs console standard " + f_msg + " log file"
+                "COMPSs console standard " + f_msg + " log file"
             )
             file_properties["encodingFormat"] = "text/plain"
             file_properties["about"] = create_action_id
