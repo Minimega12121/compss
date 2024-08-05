@@ -331,7 +331,9 @@ def wrroc_create_action(
             )
 
     try:
-        print(f"PROVENANCE | RO-Crate adding statistical data")
+        print(
+            f"PROVENANCE | RO-Crate adding statistical data"
+        )
         # Add the resource usage to the ROCrate object
         resource_usage_list = get_resource_usage_dataset(dp_log, start_time, end_time)
         id_name_list = []
