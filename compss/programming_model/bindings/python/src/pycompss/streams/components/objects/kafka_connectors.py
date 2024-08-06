@@ -38,6 +38,11 @@ if __debug__:
 
     logger = logging.getLogger("pycompss.streams.distro_stream")
 
+#
+# Globals
+#
+
+API_VERSION = (3, 8, 0)
 
 #
 # ODSPublisher definition
@@ -61,7 +66,7 @@ class ODSPublisher:
             logger.debug("Creating Publisher...")
 
         # Create internal producer
-        from kafka import KafkaProducer
+        from kafka3 import KafkaProducer
 
         bootstrap_server_info = str(bootstrap_server).split(":")
         bootstrap_server_ip = str(
@@ -74,6 +79,8 @@ class ODSPublisher:
             retries=0,
             batch_size=16384,
             linger_ms=0,
+            api_version=API_VERSION,
+            max_block_ms=120000,
         )
         # Other flags:
         # auto_commit_interval_ms=2,
@@ -150,13 +157,21 @@ class ODSConsumer:
         # Parse configuration
 
         # Create internal consumer
-        from kafka import KafkaConsumer
+        from kafka3 import KafkaConsumer
 
         bootstrap_server_info = str(bootstrap_server).split(":")
         bootstrap_server_ip = str(
             socket.gethostbyname(bootstrap_server_info[0])
         )  # noqa: E501
         bootstrap_server_port = str(bootstrap_server_info[1])
+        if __debug__:
+            logger.debug(
+                "Bootstrap server: %s - info: %s - %s:%s",
+                bootstrap_server,
+                bootstrap_server_info,
+                bootstrap_server_ip,
+                bootstrap_server_port,
+            )
         self.kafka_consumer = KafkaConsumer(
             bootstrap_servers=f"{bootstrap_server_ip}:{bootstrap_server_port}",
             enable_auto_commit=True,
@@ -167,6 +182,7 @@ class ODSConsumer:
             fetch_min_bytes=1,
             receive_buffer_bytes=262144,
             max_partition_fetch_bytes=2097152,
+            api_version=API_VERSION,
         )
         # Other flags:
         # key_deserializer="org.apache.kafka.common.serialization.StringSerializer",  # noqa: E501
