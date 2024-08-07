@@ -358,8 +358,8 @@ public class JSONStateManager {
      * @param logger DP_LOGGER
      */
     public void writeDataProvenance(Logger logger) {
-        // transform json representation to the logger
-        // Log access to file in the dataprovenance.log.
+        // Transform json representation to the logger
+        // Write application execution metrics to dataprovenance.log file
         JSONObject data = new JSONObject(getString());
 
         JSONObject resources = data.getJSONObject("resources");

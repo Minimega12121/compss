@@ -188,7 +188,7 @@ public class TaskScheduler {
             updateState();
             this.jsm.write();
             if (DP_ENABLED) {
-                // Log access to file in the dataprovenance.log.
+                // Write application execution metrics to dataprovenance.log file
                 this.jsm.writeDataProvenance(DP_LOGGER);
             }
         } catch (Exception e) {
