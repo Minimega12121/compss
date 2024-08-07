@@ -32,16 +32,17 @@ from provenance.utils.url_fixes import fix_dir_url
 from provenance.processing.entities import add_person_definition
 
 
-def get_stats_list(dp_path: str) -> list:
+def get_stats_list(dp_path: str, start_time: datetime, end_time: datetime) -> list:
     """
     Function that provide a list of the statistical data recorded
 
     :param dp_path: pathname of the dataprovenance.log
+    :param start_time: starting time of the execution
+    :param end_time: ending time of the execution
 
     :return data_list: list of data parsed from dataprovenance.log
     """
     data_list = []
-    start_time = None
     with open(dp_path, "r") as data_provenance:
         for idx, row in enumerate(data_provenance.readlines()):
             if idx == 1:
@@ -50,21 +51,14 @@ def get_stats_list(dp_path: str) -> list:
             elif idx < 3:
                 continue
 
-            try:
-                ts = row.rstrip()
-                timestamp = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S.%fZ")
-                timestamp = timestamp.replace(tzinfo=pytz.UTC)
-                if start_time is None:
-                    start_time = timestamp.timestamp()
-                else:
-                    end_time = timestamp.timestamp()
-            except:
-                parameter_list = list(filter(None, row.strip().split(" ")))
-                len_row = len(parameter_list)
-                if len_row >= 4:
-                    data_list.append(parameter_list)
+            parameter_list = list(filter(None, row.strip().split(" ")))
+            len_row = len(parameter_list)
+            if len_row >= 4:
+                data_list.append(parameter_list)
 
-        execution_time = (int)((end_time - start_time) * 1000)
+        start_time = start_time.timestamp()
+        end_time = end_time.timestamp()
+        execution_time = int((end_time - start_time) * 1000)
         data_list.append(
             ["overall", application_name, "executionTime", str(execution_time)]
         )
@@ -122,15 +116,17 @@ def get_new_item(id_name: str, stat: str, value: int) -> dict:
         return add_time(id_name, stat, value)
 
 
-def get_resource_usage_dataset(dp_path: str) -> list:
+def get_resource_usage_dataset(dp_path: str, start_time: datetime, end_time: datetime) -> list:
     """
     Function that provides a list of the statistical data recorded
 
     :param dp_path: pathname of the dataprovenance.log
+    :param start_time: starting time of the execution
+    :param end_time: ending time of the execution
 
     :return data_list: list of data parsed from dataprovenance.log
     """
-    stats_list = get_stats_list(dp_path)
+    stats_list = get_stats_list(dp_path, start_time, end_time)
     resource_dataset = []
     for data in stats_list:
         resource = data[0]
@@ -334,7 +330,7 @@ def wrroc_create_action(
     try:
         print(f"PROVENANCE | RO-Crate adding statistical data")
         # Add the resource usage to the ROCrate object
-        resource_usage_list = get_resource_usage_dataset(dp_log)
+        resource_usage_list = get_resource_usage_dataset(dp_log, start_time, end_time)
         id_name_list = []
         for resource_usage in resource_usage_list:
             resource_id = resource_usage["id"]
