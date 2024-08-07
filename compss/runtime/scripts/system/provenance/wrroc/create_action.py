@@ -74,12 +74,12 @@ def get_stats_list(dp_path: str) -> list:
 
 def add_execution(id_name: str, value: int) -> dict:
     """
-    Function that generate a new dictionary of the executions as a ROCrate object.
+    Function that generate a new dictionary of the number of executions.
 
     :param id_name: id of the new item
     :param value: value of the parameter passed
 
-    :return new_item: the ROCrate object with the new Data Entity added
+    :return new_item: new item referred to the number of executions data
     """
     # If there is no execution, it means that it haven't been executed
     if value == 0:
@@ -96,13 +96,13 @@ def add_execution(id_name: str, value: int) -> dict:
 
 def add_time(id_name: str, name_parameter: str, value: int) -> dict:
     """
-    Function that generate a new Data Entity as a ROCrate object.
+    Function that generate a new dictionary of the item referred to a time.
 
     :param id_name: identifier of the Data Entity that is generated
     :param name_parameter: the name of the parameter
     :param value: value of the parameter passed
 
-    :return new_item: the ROCrate object with the new Data Entity added
+    :return new_item: new item referred to a time data
     """
     new_item = {
         "id": id_name,
@@ -126,7 +126,6 @@ def get_resource_usage_dataset(dp_path: str) -> list:
     """
     Function that provides a list of the statistical data recorded
 
-    :param crate: the ROCrate object which the new item is added to
     :param dp_path: pathname of the dataprovenance.log
 
     :return data_list: list of data parsed from dataprovenance.log
@@ -347,7 +346,7 @@ def wrroc_create_action(
         create_action_properties["resourceUsage"] = id_name_list
     except ValueError:
         print(
-            f"PROVENANCE | WARNING: No statistical data found in dataprovenance.log. SLURM's job start time "
+            f"PROVENANCE | WARNING: No statistical data found in dataprovenance.log "
         )
 
     if agent:
