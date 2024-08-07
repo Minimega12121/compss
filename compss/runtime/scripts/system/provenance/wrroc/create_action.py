@@ -59,8 +59,9 @@ def get_stats_list(dp_path: str) -> list:
                 else:
                     end_time = timestamp.timestamp()
             except:
-                if row.startswith(("gs", "overall", "localhost")):
-                    parameter_list = list(filter(None, list(row.rstrip().split(" "))))
+                parameter_list = list(filter(None, row.strip().split(" ")))
+                len_row = len(parameter_list)
+                if len_row >= 4:
                     data_list.append(parameter_list)
 
         execution_time = (int)((end_time - start_time) * 1000)
