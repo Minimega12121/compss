@@ -102,6 +102,8 @@ generate_stream_config_files() {
 dataDir=${zookeeper_log_dir}
 clientPort=49000
 maxClientCnxns=0
+admin.enableServer=false
+# admin.serverPort=8080
 EOT
 
   # Create kafka properties
@@ -123,12 +125,19 @@ num.recovery.threads.per.data.dir=1
 offsets.topic.replication.factor=1
 transaction.state.log.replication.factor=1
 transaction.state.log.min.isr=1
+#log.flush.interval.messages=10000
+#log.flush.interval.ms=1000
 log.retention.hours=168
 log.segment.bytes=1073741824
+#log.retention.bytes=1073741824
 log.retention.check.interval.ms=300000
 zookeeper.connect=localhost:49000
-zookeeper.connection.timeout.ms=6000
+zookeeper.connection.timeout.ms=18000
 group.initial.rebalance.delay.ms=0
+auto.create.topics.enable=true
+max.block.ms=600000
+listeners=PLAINTEXT://:49001
+# advertised.listeners=PLAINTEXT://localhost:49001
 EOT
 }
 
@@ -149,7 +158,6 @@ EOT
 #----------------------------------------------
 start_stream_backends() {
   if [ "${streaming}" == "${STREAMING_OBJECTS}" ] || [ "${streaming}" == "${STREAMING_ALL}" ]; then
-  
   echo ""
   display_info "Starting Streaming Backend"
     if [ -d "${KAFKA_HOME}" ]; then

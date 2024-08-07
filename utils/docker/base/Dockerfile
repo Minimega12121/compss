@@ -38,7 +38,7 @@ FROM base_python as base_all
 RUN apt-get update && \
     apt-get install -y --no-install-recommends wget libboost-all-dev libxml2 papi-tools openmpi-bin libopenmpi-dev libtool automake build-essential python3-pip openssh-server jq bc && \
     pip3 --no-cache-dir install pip setuptools wheel --upgrade && \
-    pip3 --no-cache-dir install dill guppy3 decorator mpi4py kafka-python rocrate==0.9.0 && \
+    pip3 --no-cache-dir install dill guppy3 decorator mpi4py kafka-python3 rocrate==0.9.0 && \
     wget https://github.com/bsc-dom/dataclay/archive/refs/heads/cyclops.zip && \
     pip3 --no-cache-dir install cyclops.zip && \
     rm cyclops.zip && \
@@ -54,7 +54,7 @@ FROM base_all as base_tutorial
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git vim wget ca-certificates maven curl unzip cmake libopenblas-dev jq curl gnupg && \
-    pip3 --no-cache-dir install graphviz matplotlib>=2.2.3 numba==0.56.4 numpy==1.23.5 numpydoc>=0.8.0 scipy>=1.3.0 cvxpy>=1.1.5 scikit-learn>=1.0.2 python-dateutil==2.8.2 pandas>=0.24.2 tabulate==0.8.9 jupyter ipykernel ipython==8.3.0 jupyterlab==3.6.3 && \
+    pip3 --no-cache-dir install graphviz "matplotlib>=2.2.3" numba==0.56.4 numpy==1.23.5 "numpydoc>=0.8.0" "scipy>=1.3.0" "cvxpy>=1.1.5" "scikit-learn>=1.0.2" python-dateutil==2.8.2 "pandas>=0.24.2" tabulate==0.8.9 jupyter ipykernel ipython==8.3.0 jupyterlab==3.6.3 && \
     python3 -m ipykernel install && \
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_16.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
@@ -80,10 +80,10 @@ RUN pip3 --no-cache-dir install pycodestyle selenium redis==3.5.3 redis-py-clust
     # for fixing a nbcovert jinja2 compatibility problem
     pip3 --no-cache-dir install jinja2==3.0.3 && \
     pip3 --no-cache-dir install mypy==0.990 mypy-extensions==0.4.3 py types-tabulate types-decorator && \
-    wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip && \
-    unzip -d /opt gradle-5.4.1-bin.zip && \
-    rm gradle-5.4.1-bin.zip && \
-    mv /opt/gradle-5.4.1 /opt/gradle && \
+    wget https://services.gradle.org/distributions/gradle-8.7-bin.zip && \
+    unzip -d /opt gradle-8.7-bin.zip && \
+    rm gradle-8.7-bin.zip && \
+    mv /opt/gradle-8.7 /opt/gradle && \
     # Docker-CLI
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
