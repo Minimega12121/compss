@@ -119,7 +119,9 @@ def get_new_item(id_name: str, stat: str, value: int) -> dict:
         return add_time(id_name, stat, value)
 
 
-def get_resource_usage_dataset(dp_path: str, start_time: datetime, end_time: datetime) -> list:
+def get_resource_usage_dataset(
+    dp_path: str, start_time: datetime, end_time: datetime
+) -> list:
     """
     Function that provides a list of the statistical data recorded
 
@@ -346,9 +348,7 @@ def wrroc_create_action(
             id_name_list.append({"@id": resource_id})
         create_action_properties["resourceUsage"] = id_name_list
     except ValueError:
-        print(
-            f"PROVENANCE | WARNING: No statistical data found in dataprovenance.log "
-        )
+        print(f"PROVENANCE | WARNING: No statistical data found in dataprovenance.log ")
 
     if agent:
         create_action_properties["agent"] = agent
