@@ -56,12 +56,15 @@ def get_stats_list(dp_path: str, start_time: datetime, end_time: datetime) -> li
             if len_row >= 4:
                 data_list.append(parameter_list)
 
-        start_time = start_time.timestamp()
-        end_time = end_time.timestamp()
-        execution_time = int((end_time - start_time) * 1000)
-        data_list.append(
-            ["overall", application_name, "executionTime", str(execution_time)]
-        )
+        try:
+            start_time = start_time.timestamp()
+            end_time = end_time.timestamp()
+            execution_time = int((end_time - start_time) * 1000)
+            data_list.append(
+                ["overall", application_name, "executionTime", str(execution_time)]
+            )
+        except TypeError:
+            print("PROVENANCE | WARNING: could not retrieve execution time")
 
     return data_list
 
@@ -272,7 +275,7 @@ def wrroc_create_action(
         "@type": "CreateAction",
         "instrument": {"@id": resolved_main_entity},  # Resolved path of the main file
         "actionStatus": {"@id": "http://schema.org/CompletedActionStatus"},
-        "endTime": end_time,  # endTime of the application corresponds to the start of the provenance generation
+        "endTime": end_time.isoformat(),  # endTime of the application corresponds to the start of the provenance generation
         "name": name_property,
         "description": description_property,
     }

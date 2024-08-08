@@ -20,7 +20,7 @@
     following the Workflow Run Crate profile specification. Takes as parameters the ro-crate-info.yaml, and the
     dataprovenance.log generated from the run.
 """
-
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -164,7 +164,7 @@ def main():
         yaml_content,
         INFO_YAML,
         DP_LOG,
-        end_time,
+        datetime.fromisoformat(end_time),
     )
 
     # Set RO-Crate conformance to profiles
