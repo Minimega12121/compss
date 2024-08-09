@@ -185,10 +185,11 @@ def local_inspect(ro_crate_zip_or_dir: str):
                 print(pointers[0] + "Authors")
                 creators = e.get("creator")
                 for i, c in enumerate(creators):
+                    author_str = c["name"] if "name" in c else c["@id"]
                     if i == (len(creators) - 1):
-                        print(prefix + pointers[1] + c["name"])
+                        print(prefix + pointers[1] + author_str)
                     else:
-                        print(prefix + pointers[0] + c["name"])
+                        print(prefix + pointers[0] + author_str)
             desc_str = e.get("description")
             if "license" in e:
                 print(pointers[0] + "License")
