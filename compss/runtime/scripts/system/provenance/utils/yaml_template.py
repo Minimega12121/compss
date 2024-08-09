@@ -28,7 +28,7 @@ def get_yaml_template():
         "  name: Name of your COMPSs application\n"
         "  description: Detailed description of your COMPSs application\n"
         "  license: Apache-2.0\n"
-        "    # URL preferred, but these strings are accepted: https://about.workflowhub.eu/Workflow-RO-Crate/#supported-licenses\n"
+        "    # URL preferred, but these strings are accepted: https://spdx.org/licenses/\n"
         "  sources: [/absolute_path_to/dir_1/, relative_path_to/dir_2/, main_file.py, relative_path/aux_file_1.py, /abs_path/aux_file_2.py]\n"
         "    # List of application source files and directories. Relative or absolute paths can be used.\n"
         "  sources_main_file: my_main_file.py\n"
