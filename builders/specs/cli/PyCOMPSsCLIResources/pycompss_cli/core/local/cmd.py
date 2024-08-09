@@ -228,7 +228,7 @@ def local_inspect(ro_crate_zip_or_dir: str):
     prefix = empty_prefix + follow_prefix
     if e_create_action:
         print(pointers[1] + "CreateAction (execution details)")
-        if "Agent" in e_create_action:
+        if "agent" in e_create_action:
             print(empty_prefix + pointers[0] + "Agent")
             print(prefix + pointers[1] + e_create_action.get("agent")["name"])
         if "instrument" in e_create_action:
