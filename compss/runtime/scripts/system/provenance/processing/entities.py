@@ -56,22 +56,20 @@ def add_person_definition(
     if "name" in yaml_author:
         person_dict["name"] = yaml_author["name"]
         if not "orcid" in yaml_author:
+            # If we have a name, but not an ORCID, search by name
             remote_orcid, remote_org = search_orcid(yaml_author["name"])
-            if not remote_orcid:
-                print(
-                    f"PROVENANCE | ERROR in your {info_yaml} file. A 'Person' is ignored, since it has no 'orcid' defined"
-                )
-                return False
-            else:
-                yaml_author["orcid"] = remote_orcid
-                yaml_author["organisation_name"] = remote_org
-    # Name is no longer mandatory in WFHub
+            yaml_author["orcid"] = remote_orcid
+            yaml_author["organisation_name"] = remote_org
     # else:
-    #     print(f"PROVENANCE | ERROR in your {info_yaml} file. A 'Person' is ignored, since it has 'orcid' but no 'name' defined")
-    #     return False
+        # if "orcid" in yaml_author:
+            # If we have an ORCID but not a name, we can try to complete the name info, searching by ORCID,
+            # since the user has specified it
 
-    # if "orcid" in yaml_author and not "name" in yaml_author:
-        # We could try to complete the name info, searching by ORCID since the user has specified it
+    if not "orcid" in yaml_author:
+        print(
+            f"PROVENANCE | ERROR in your {info_yaml} file. A 'Person' is ignored, since it has no 'orcid' defined"
+        )
+        return False
 
     if "e-mail" in yaml_author:
         person_dict["contactPoint"] = {"@id": "mailto:" + yaml_author["e-mail"]}
@@ -85,20 +83,29 @@ def add_person_definition(
         )
 
     # if "ror" in yaml_author and not "organisation_name" in yaml_author:
-        # We can try to complete the organisation_name info, searching by ROR since the user has specified it
+        # We can try to complete the organisation_name info, searching by ROR, since the user has specified it
 
-    if not "ror" in yaml_author and "name" in yaml_author:
-        # We can try to complete Organisation, even if the ORCID was defined
-        if not remote_org:
-            remote_orcid, remote_org = search_orcid(yaml_author["name"])
-        remote_ror, remote_org_name = search_ror(remote_org)
+    if not "ror" in yaml_author:
+        # We can try to complete Organisation data
+        if "organisation_name" in yaml_author:
+            # Either specified by the user, or updated earlier by Author name
+            remote_ror, remote_org_name = search_ror(yaml_author["organisation_name"])
+        else:
+            if not remote_org and "name" in yaml_author:
+                # No previous author search has been done, search now
+                remote_orcid, remote_org = search_orcid(yaml_author["name"])
+            remote_ror, remote_org_name = search_ror(remote_org)
         if remote_ror:
             yaml_author["ror"] = remote_ror
             yaml_author["organisation_name"] = remote_org_name
 
     if "ror" in yaml_author:
+        # Not an else from previous case
         person_dict["affiliation"] = {"@id": yaml_author["ror"]}
         # If ror defined, organisation_name becomes mandatory, if it is to be shown in WorkflowHub
+        # Search by ROR, if organisation_name has not been defined by the user
+        # if not "organisation_name" in yaml_author:
+        #       yaml_author["organisation_name"] = search_name_by_ror(yaml_author["ror"])
         org_dict["@type"] = "Organization"
         if "organisation_name" in yaml_author:
             org_dict["name"] = yaml_author["organisation_name"]
