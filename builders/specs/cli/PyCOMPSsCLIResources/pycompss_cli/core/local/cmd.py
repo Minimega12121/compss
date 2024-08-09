@@ -186,10 +186,15 @@ def local_inspect(ro_crate_zip_or_dir: str):
                 creators = e.get("creator")
                 for i, c in enumerate(creators):
                     author_str = c["name"] if "name" in c else c["@id"]
-                    if i == (len(creators) - 1):
-                        print(prefix + pointers[1] + author_str)
+                    affiliation_e = c["affiliation"] if "affiliation" in c else None
+                    if affiliation_e:
+                        affiliation_str = affiliation_e["name"] if "name" in affiliation_e else affiliation_e
                     else:
-                        print(prefix + pointers[0] + author_str)
+                        affiliation_str = ""
+                    if i == (len(creators) - 1):
+                        print(prefix + pointers[1] + author_str + ' (' + affiliation_str + ')')
+                    else:
+                        print(prefix + pointers[0] + author_str + ' (' + affiliation_str + ')')
             desc_str = e.get("description")
             if "license" in e:
                 print(pointers[0] + "License")
@@ -231,7 +236,14 @@ def local_inspect(ro_crate_zip_or_dir: str):
         print(pointers[1] + "CreateAction (execution details)")
         if "agent" in e_create_action:
             print(empty_prefix + pointers[0] + "Agent")
-            print(prefix + pointers[1] + e_create_action.get("agent")["name"])
+            agent_e = e_create_action.get("agent")
+            agent_str = agent_e["name"] if "name" in agent_e else agent_e["@id"]
+            affiliation_e = agent_e["affiliation"] if "affiliation" in agent_e else None
+            if affiliation_e:
+                affiliation_str = affiliation_e["name"] if "name" in affiliation_e else affiliation_e
+            else:
+                affiliation_str = ""
+            print(prefix + pointers[1] + agent_str  + ' (' + affiliation_str + ')')
         if "instrument" in e_create_action:
             print(empty_prefix + pointers[0] + "Application's main file")
             print(prefix + pointers[1] + e_create_action.get("instrument")["name"])

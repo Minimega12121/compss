@@ -58,8 +58,11 @@ def add_person_definition(
         if not "orcid" in yaml_author:
             # If we have a name, but not an ORCID, search by name
             remote_orcid, remote_org = search_orcid(yaml_author["name"])
-            yaml_author["orcid"] = remote_orcid
-            yaml_author["organisation_name"] = remote_org
+            if remote_orcid:
+                yaml_author["orcid"] = remote_orcid
+            # if not "organisation_name" in yaml_author and remote_org:
+                # If the ror specified != remote_org, we have a problem
+                # yaml_author["organisation_name"] = remote_org
     # else:
         # if "orcid" in yaml_author:
             # If we have an ORCID but not a name, we can try to complete the name info, searching by ORCID,
@@ -531,7 +534,7 @@ def search_orcid(person_name: str) -> (str, str):
     # Submit the GET request
     try:
         print(
-            f"PROVENANCE | Searching ORCID and Organisation for author '{person_name}'"
+            f"PROVENANCE | PERSON '{person_name}: Searching ORCID and Organisation"
         )
         response = requests.get(url_base, headers=headers, params=params, timeout=1)
         if response.status_code == 200:
@@ -600,7 +603,7 @@ def search_ror(org_name: str) -> (str, str):
     obtained_org_name = None
     # Submit the GET request
     try:
-        print(f"PROVENANCE | Searching ROR for organisation '{org_name}'")
+        print(f"PROVENANCE | ORGANISATION '{org_name}': Searching ROR")
         response = requests.get(url_base, params=params, timeout=1)
         if response.status_code == 200:
             list_of_results = response.json()
