@@ -23,12 +23,128 @@ import socket
 from pathlib import Path
 from datetime import timezone
 from datetime import datetime
+import pytz
 
 from rocrate.rocrate import ROCrate
 from rocrate.model.contextentity import ContextEntity
 
 from provenance.utils.url_fixes import fix_dir_url
 from provenance.processing.entities import add_person_definition
+
+
+def get_stats_list(dp_path: str, start_time: datetime, end_time: datetime) -> list:
+    """
+    Function that provide a list of the statistical data recorded
+
+    :param dp_path: pathname of the dataprovenance.log
+    :param start_time: starting time of the execution
+    :param end_time: ending time of the execution
+
+    :return data_list: list of data parsed from dataprovenance.log
+    """
+    data_list = []
+    with open(dp_path, "r") as data_provenance:
+        for idx, row in enumerate(data_provenance.readlines()):
+            if idx == 1:
+                application_name = row.rstrip()
+                continue
+            elif idx < 3:
+                continue
+
+            parameter_list = list(filter(None, row.strip().split(" ")))
+            len_row = len(parameter_list)
+            if len_row >= 4:
+                data_list.append(parameter_list)
+
+        try:
+            start_time = start_time.timestamp()
+            end_time = end_time.timestamp()
+            execution_time = int((end_time - start_time) * 1000)
+            data_list.append(
+                ["overall", application_name, "executionTime", str(execution_time)]
+            )
+        except TypeError:
+            print("PROVENANCE | WARNING: could not retrieve execution time")
+
+    return data_list
+
+
+def add_execution(id_name: str, value: int) -> dict:
+    """
+    Function that generate a new dictionary of the number of executions.
+
+    :param id_name: id of the new item
+    :param value: value of the parameter passed
+
+    :return new_item: new item referred to the number of executions data
+    """
+    # If there is no execution, it means that it haven't been executed
+    if value == 0:
+        value = None
+    new_item = {
+        "id": id_name,
+        "@type": "PropertyValue",
+        "name": "executions",
+        "propertyID": "https://w3id.org/ro/terms/compss#executions",
+        "value": str(value),
+    }
+    return new_item
+
+
+def add_time(id_name: str, name_parameter: str, value: int) -> dict:
+    """
+    Function that generate a new dictionary of the item referred to a time.
+
+    :param id_name: identifier of the Data Entity that is generated
+    :param name_parameter: the name of the parameter
+    :param value: value of the parameter passed
+
+    :return new_item: new item referred to a time data
+    """
+    new_item = {
+        "id": id_name,
+        "@type": "PropertyValue",
+        "name": name_parameter,
+        "propertyID": f"https://w3id.org/ro/terms/compss#{name_parameter}",
+        "unitCode": "https://qudt.org/vocab/unit/MilliSEC",
+        "value": str(value),
+    }
+    return new_item
+
+
+def get_new_item(id_name: str, stat: str, value: int) -> dict:
+    if stat == "executions":
+        return add_execution(id_name, value)
+    else:
+        return add_time(id_name, stat, value)
+
+
+def get_resource_usage_dataset(
+    dp_path: str, start_time: datetime, end_time: datetime
+) -> list:
+    """
+    Function that provides a list of the statistical data recorded
+
+    :param dp_path: pathname of the dataprovenance.log
+    :param start_time: starting time of the execution
+    :param end_time: ending time of the execution
+
+    :return data_list: list of data parsed from dataprovenance.log
+    """
+    stats_list = get_stats_list(dp_path, start_time, end_time)
+    resource_dataset = []
+    for data in stats_list:
+        resource = data[0]
+        implementation = data[1]
+        stat = data[2]
+        try:
+            value = int(data[3])
+        except ValueError:
+            value = None
+        id_name = f"#{resource}.{implementation}.{stat}"
+        new_item = get_new_item(id_name, stat, value)
+        resource_dataset.append(new_item)
+    return resource_dataset
 
 
 def wrroc_create_action(
@@ -161,7 +277,7 @@ def wrroc_create_action(
         "@type": "CreateAction",
         "instrument": {"@id": resolved_main_entity},  # Resolved path of the main file
         "actionStatus": {"@id": "http://schema.org/CompletedActionStatus"},
-        "endTime": end_time,  # endTime of the application corresponds to the start of the provenance generation
+        "endTime": end_time.isoformat(),  # endTime of the application corresponds to the start of the provenance generation
         "name": name_property,
         "description": description_property,
     }
@@ -215,6 +331,22 @@ def wrroc_create_action(
             print(
                 f"PROVENANCE | WARNING: No 'endTime' found in dataprovenance.log. Using current time as 'endTime'"
             )
+
+    try:
+        print(f"PROVENANCE | RO-Crate adding statistical data")
+        # Add the resource usage to the ROCrate object
+        resource_usage_list = get_resource_usage_dataset(dp_log, start_time, end_time)
+        id_name_list = []
+        for resource_usage in resource_usage_list:
+            resource_id = resource_usage["id"]
+            del resource_usage["id"]
+            compss_crate.add(
+                ContextEntity(compss_crate, resource_id, properties=resource_usage)
+            )
+            id_name_list.append({"@id": resource_id})
+        create_action_properties["resourceUsage"] = id_name_list
+    except ValueError:
+        print(f"PROVENANCE | WARNING: No statistical data found in dataprovenance.log ")
 
     if agent:
         create_action_properties["agent"] = agent

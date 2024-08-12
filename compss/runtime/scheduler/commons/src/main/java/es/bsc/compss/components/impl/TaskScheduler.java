@@ -80,6 +80,10 @@ public class TaskScheduler {
     // Logger
     protected static final Logger LOGGER = LogManager.getLogger(Loggers.TS_COMP);
 
+    // Data Provenance logger
+    private static final Logger DP_LOGGER = LogManager.getLogger(Loggers.DATA_PROVENANCE);
+    private static final boolean DP_ENABLED = Boolean.parseBoolean(System.getProperty(COMPSsConstants.DATA_PROVENANCE));
+
     // Reference to action orchestrator (Task Dispatcher)
     private ActionOrchestrator orchestrator;
 
@@ -183,6 +187,10 @@ public class TaskScheduler {
         try {
             updateState();
             this.jsm.write();
+            if (DP_ENABLED) {
+                // Write application execution metrics to dataprovenance.log file
+                this.jsm.writeDataProvenance(DP_LOGGER);
+            }
         } catch (Exception e) {
             LOGGER.error(e);
         }
