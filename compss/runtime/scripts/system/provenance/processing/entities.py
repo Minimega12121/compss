@@ -65,8 +65,8 @@ def add_person_definition(
             if remote_orcid:
                 yaml_author["orcid"] = remote_orcid
             # if not "organisation_name" in yaml_author and remote_org:
-                # If the ror specified != remote_org, we have a problem
-                # yaml_author["organisation_name"] = remote_org
+            # If the ror specified != remote_org, we have a problem
+            # yaml_author["organisation_name"] = remote_org
     else:
         if "orcid" in yaml_author:
             # If we have an ORCID but not a name, we can try to complete the name info, searching by ORCID,
@@ -98,17 +98,28 @@ def add_person_definition(
         )
 
     # if "ror" in yaml_author and not "organisation_name" in yaml_author:
-        # We can try to complete the organisation_name info, searching by ROR, since the user has specified it
+    # We can try to complete the organisation_name info, searching by ROR, since the user has specified it
 
     if not "ror" in yaml_author:
         # We can try to complete Organisation data
         if "organisation_name" in yaml_author:
             # Either specified by the user, or updated earlier by Author name
-            remote_ror, remote_org_name, remote_url = search_ror(yaml_author["organisation_name"])
+            remote_ror, remote_org_name, remote_url = search_ror(
+                yaml_author["organisation_name"]
+            )
         else:
-            if not searched_author and "name" in yaml_author:
+            if not searched_author:
                 # No previous author search has been done, search now
-                remote_orcid, remote_org, remote_mail = search_orcid(yaml_author["name"])
+                if "orcid" in yaml_author:
+                    remote_name, remote_org, remote_mail = search_by_orcid(
+                        yaml_author["orcid"]
+                    )
+                else:
+                    # Should not enter here, all authors should have orcid at this point
+                    if "name" in yaml_author:
+                        remote_orcid, remote_org, remote_mail = search_orcid(
+                            yaml_author["name"]
+                        )
             remote_ror, remote_org_name, remote_url = search_ror(remote_org)
         if remote_ror:
             yaml_author["ror"] = remote_ror
@@ -120,7 +131,6 @@ def add_person_definition(
             if remote_org_name:
                 yaml_author["organisation_name"] = remote_org_name
         # else: we have ror and organisation_name, do nothing
-
 
     if remote_url:
         org_dict["url"] = remote_url
@@ -557,7 +567,7 @@ def search_orcid(person_name: str) -> (str, str, str):
         print(
             f"PROVENANCE | PERSON '{person_name}': Searching ORCID, Organisation and e-Mail"
         )
-        response = requests.get(url_base, headers=headers, params=params, timeout=1)
+        response = requests.get(url_base, headers=headers, params=params, timeout=5)
         if response.status_code == 200:
             list_of_results = response.json()
             # if 'num-found' in list_of_results:
@@ -621,7 +631,7 @@ def search_by_orcid(orcid_str: str) -> (str, str, str):
     if not orcid_str:
         return None, None
     # Get info from a specific ORCID
-    query_str = '"' + orcid_str.split('/')[-1] + '"'
+    query_str = '"' + orcid_str.split("/")[-1] + '"'
     url_base = "https://pub.orcid.org/v3.0/expanded-search"
     # Request headers
     headers = {"Accept": "application/json"}
@@ -636,7 +646,7 @@ def search_by_orcid(orcid_str: str) -> (str, str, str):
         print(
             f"PROVENANCE | PERSON '{orcid_str}': Searching Name, Organisation and e-Mail"
         )
-        response = requests.get(url_base, headers=headers, params=params, timeout=1)
+        response = requests.get(url_base, headers=headers, params=params, timeout=5)
         if response.status_code == 200:
             list_of_results = response.json()
             # import json
@@ -654,7 +664,9 @@ def search_by_orcid(orcid_str: str) -> (str, str, str):
                     )
                     list_emails = result.get("email")
                     e_mail = list_emails[0] if list_emails else None
-                    print(f"PROVENANCE | Fetched data. Name: {obtained_full_name}, Organisation: {res_institution}, e-Mail: {e_mail}")
+                    print(
+                        f"PROVENANCE | Fetched data. Name: {obtained_full_name}, Organisation: {res_institution}, e-Mail: {e_mail}"
+                    )
                     break
             else:
                 print(
@@ -666,14 +678,13 @@ def search_by_orcid(orcid_str: str) -> (str, str, str):
             )
         return obtained_full_name, res_institution, e_mail
     except requests.exceptions.Timeout:
-        print(
-            f"PROVENANCE | Searching Name for ORCID '{orcid_str}'. Request timeout"
-        )
+        print(f"PROVENANCE | Searching Name for ORCID '{orcid_str}'. Request timeout")
     except requests.exceptions.RequestException as e:
         print(
             f"PROVENANCE | Searching Name for ORCID '{orcid_str}'. Request exception: {e}"
         )
     return obtained_full_name, res_institution, e_mail
+
 
 def search_ror(org_name: str) -> (str, str, str):
     """
@@ -697,7 +708,7 @@ def search_ror(org_name: str) -> (str, str, str):
     # Submit the GET request
     try:
         print(f"PROVENANCE | ORGANISATION '{org_name}': Searching ROR and URL")
-        response = requests.get(url_base, params=params, timeout=1)
+        response = requests.get(url_base, params=params, timeout=5)
         if response.status_code == 200:
             list_of_results = response.json()
             # import json
@@ -762,7 +773,7 @@ def search_by_ror(org_ror: str) -> (str, str):
     # Submit the GET request
     try:
         print(f"PROVENANCE | ORGANISATION '{org_ror}': Searching for Name and URL")
-        response = requests.get(url_base, params=params, timeout=1)
+        response = requests.get(url_base, params=params, timeout=5)
         if response.status_code == 200:
             list_of_results = response.json()
             # import json

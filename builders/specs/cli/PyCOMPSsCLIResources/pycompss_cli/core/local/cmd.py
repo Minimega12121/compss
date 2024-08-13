@@ -188,18 +188,44 @@ def local_inspect(ro_crate_zip_or_dir: str):
                     author_str = c["name"] if "name" in c else c["@id"]
                     affiliation_e = c["affiliation"] if "affiliation" in c else None
                     if affiliation_e:
-                        affiliation_str = affiliation_e["name"] if "name" in affiliation_e else affiliation_e["@id"]
+                        affiliation_str = (
+                            affiliation_e["name"]
+                            if "name" in affiliation_e
+                            else affiliation_e["@id"]
+                        )
                     else:
                         affiliation_str = ""
                     email_e = c["contactPoint"] if "contactPoint" in c else None
                     if email_e:
-                        email_str = email_e["email"] if "email" in email_e else email_e["@id"]
+                        email_str = (
+                            email_e["email"] if "email" in email_e else email_e["@id"]
+                        )
                     else:
                         email_str = ""
                     if i == (len(creators) - 1):
-                        print(prefix + pointers[1] + author_str + ' (' + affiliation_str + ') ' + '(' + email_str + ')')
+                        print(
+                            prefix
+                            + pointers[1]
+                            + author_str
+                            + " ("
+                            + affiliation_str
+                            + ") "
+                            + "("
+                            + email_str
+                            + ")"
+                        )
                     else:
-                        print(prefix + pointers[0] + author_str + ' (' + affiliation_str + ') ' + '(' + email_str + ')')
+                        print(
+                            prefix
+                            + pointers[0]
+                            + author_str
+                            + " ("
+                            + affiliation_str
+                            + ") "
+                            + "("
+                            + email_str
+                            + ")"
+                        )
             desc_str = e.get("description")
             if "license" in e:
                 print(pointers[0] + "License")
@@ -245,7 +271,11 @@ def local_inspect(ro_crate_zip_or_dir: str):
             agent_str = agent_e["name"] if "name" in agent_e else agent_e["@id"]
             affiliation_e = agent_e["affiliation"] if "affiliation" in agent_e else None
             if affiliation_e:
-                affiliation_str = affiliation_e["name"] if "name" in affiliation_e else affiliation_e["@id"]
+                affiliation_str = (
+                    affiliation_e["name"]
+                    if "name" in affiliation_e
+                    else affiliation_e["@id"]
+                )
             else:
                 affiliation_str = ""
             email_e = agent_e["contactPoint"] if "contactPoint" in agent_e else None
@@ -253,7 +283,17 @@ def local_inspect(ro_crate_zip_or_dir: str):
                 email_str = email_e["email"] if "email" in email_e else email_e["@id"]
             else:
                 email_str = ""
-            print(prefix + pointers[1] + agent_str  + ' (' + affiliation_str + ') ' + '(' + email_str + ')')
+            print(
+                prefix
+                + pointers[1]
+                + agent_str
+                + " ("
+                + affiliation_str
+                + ") "
+                + "("
+                + email_str
+                + ")"
+            )
         if "instrument" in e_create_action:
             print(empty_prefix + pointers[0] + "Application's main file")
             print(prefix + pointers[1] + e_create_action.get("instrument")["name"])
@@ -283,6 +323,18 @@ def local_inspect(ro_crate_zip_or_dir: str):
                     print(prefix + pointers[1] + f"{env_item[0]} = {env_item[1]}")
                 else:
                     print(prefix + pointers[0] + f"{env_item[0]} = {env_item[1]}")
+
+        usage_e = e_create_action.get("resourceUsage", [])
+        usage_list = []
+        if usage_e:
+            for usage in usage_e:
+                usage_list.append((usage.get("@id", ""), usage.get("value", "")))
+            print(empty_prefix + pointers[0] + "Resource Usage")
+            for i, ru_item in enumerate(usage_list):
+                if i == (len(usage_list) - 1):
+                    print(prefix + pointers[1] + f"{ru_item[0]} = {ru_item[1]}")
+                else:
+                    print(prefix + pointers[0] + f"{ru_item[0]} = {ru_item[1]}")
 
         # Times
         e_startTime = e_create_action.get("startTime")
