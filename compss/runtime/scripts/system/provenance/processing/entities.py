@@ -16,6 +16,7 @@
 #
 import os
 import typing
+import requests
 
 from pathlib import Path
 
@@ -49,18 +50,42 @@ def add_person_definition(
     person_dict = {}
     mail_dict = {}
     org_dict = {}
+    remote_orcid = None
+    remote_org = None
+    remote_mail = None
+    remote_url = None
+    searched_author = False
+
+    if "name" in yaml_author:
+        person_dict["name"] = yaml_author["name"]
+        if not "orcid" in yaml_author:
+            # If we have a name, but not an ORCID, search by name
+            remote_orcid, remote_org, remote_mail = search_orcid(yaml_author["name"])
+            searched_author = True
+            if remote_orcid:
+                yaml_author["orcid"] = remote_orcid
+            # if not "organisation_name" in yaml_author and remote_org:
+            # If the ror specified != remote_org, we have a problem
+            # yaml_author["organisation_name"] = remote_org
+    else:
+        if "orcid" in yaml_author:
+            # If we have an ORCID but not a name, we can try to complete the name info, searching by ORCID,
+            # since the user has specified it
+            remote_name, remote_org, remote_mail = search_by_orcid(yaml_author["orcid"])
+            searched_author = True
+            if remote_name:
+                yaml_author["name"] = remote_name
+                person_dict["name"] = remote_name
 
     if not "orcid" in yaml_author:
         print(
             f"PROVENANCE | ERROR in your {info_yaml} file. A 'Person' is ignored, since it has no 'orcid' defined"
         )
         return False
-    if "name" in yaml_author:
-        person_dict["name"] = yaml_author["name"]
-    # Name is no longer mandatory in WFHub
-    # else:
-    #     print(f"PROVENANCE | ERROR in your {info_yaml} file. A 'Person' is ignored, since it has 'orcid' but no 'name' defined")
-    #     return False
+
+    if not "e-mail" in yaml_author and remote_mail:
+        yaml_author["e-mail"] = remote_mail
+
     if "e-mail" in yaml_author:
         person_dict["contactPoint"] = {"@id": "mailto:" + yaml_author["e-mail"]}
         mail_dict["@type"] = "ContactPoint"
@@ -71,7 +96,47 @@ def add_person_definition(
         compss_crate.add(
             ContextEntity(compss_crate, "mailto:" + yaml_author["e-mail"], mail_dict)
         )
+
+    # if "ror" in yaml_author and not "organisation_name" in yaml_author:
+    # We can try to complete the organisation_name info, searching by ROR, since the user has specified it
+
+    if not "ror" in yaml_author:
+        # We can try to complete Organisation data
+        if "organisation_name" in yaml_author:
+            # Either specified by the user, or updated earlier by Author name
+            remote_ror, remote_org_name, remote_url = search_ror(
+                yaml_author["organisation_name"]
+            )
+        else:
+            if not searched_author:
+                # No previous author search has been done, search now
+                if "orcid" in yaml_author:
+                    remote_name, remote_org, remote_mail = search_by_orcid(
+                        yaml_author["orcid"]
+                    )
+                else:
+                    # Should not enter here, all authors should have orcid at this point
+                    if "name" in yaml_author:
+                        remote_orcid, remote_org, remote_mail = search_orcid(
+                            yaml_author["name"]
+                        )
+            remote_ror, remote_org_name, remote_url = search_ror(remote_org)
+        if remote_ror:
+            yaml_author["ror"] = remote_ror
+            yaml_author["organisation_name"] = remote_org_name
+    else:
+        if not "organisation_name" in yaml_author:
+            # Search by ROR, if organisation_name has not been defined by the user
+            remote_org_name, remote_url = search_by_ror(yaml_author["ror"])
+            if remote_org_name:
+                yaml_author["organisation_name"] = remote_org_name
+        # else: we have ror and organisation_name, do nothing
+
+    if remote_url:
+        org_dict["url"] = remote_url
+
     if "ror" in yaml_author:
+        # Not an else from previous case
         person_dict["affiliation"] = {"@id": yaml_author["ror"]}
         # If ror defined, organisation_name becomes mandatory, if it is to be shown in WorkflowHub
         org_dict["@type"] = "Organization"
@@ -474,3 +539,278 @@ def get_manually_defined_software_requirements(
         )
 
     return software_requirements_list
+
+
+def search_orcid(person_name: str) -> (str, str, str):
+    """
+    Search at orcid.org the first ORCID matching the person's name
+
+    :param person_name: Name of the person to search
+
+    :returns: Name, organisation and e-mail of the first record found
+    """
+
+    # Base URL from ORCID for public search
+    url_base = "https://pub.orcid.org/v3.0/expanded-search"
+    # Request headers
+    headers = {"Accept": "application/json"}
+    # Search parameters
+    params = {"q": person_name, "rows": 1}
+
+    if not person_name:
+        return None, None
+    res_institution = None
+    orcid = None
+    e_mail = None
+    # Submit the GET request
+    try:
+        print(
+            f"PROVENANCE | PERSON '{person_name}': Searching ORCID, Organisation and e-Mail"
+        )
+        response = requests.get(url_base, headers=headers, params=params, timeout=5)
+        if response.status_code == 200:
+            list_of_results = response.json()
+            # if 'num-found' in list_of_results:
+            #    print(f"PROVENANCE | Records found: {list_of_results['num-found']}")
+            if "expanded-result" in list_of_results:
+                for result in list_of_results["expanded-result"]:
+                    orcid = "https://orcid.org/" + result.get("orcid-id")
+                    list_institutions = result.get("institution-name")
+                    res_institution = (
+                        list_institutions[0] if len(list_institutions) > 0 else None
+                    )
+                    obtained_full_name = (
+                        str(result.get("given-names"))
+                        + " "
+                        + str(result.get("family-names"))
+                    )
+                    list_emails = result.get("email")
+                    e_mail = list_emails[0] if list_emails else None
+                    if obtained_full_name.lower() == person_name.lower():
+                        print(
+                            f"PROVENANCE | Fetched data. Name: {obtained_full_name}, ORCID: {orcid}, Organisation: {res_institution}, e-Mail: {e_mail}"
+                        )
+                    else:
+                        print(
+                            f"PROVENANCE | Fetched name '{obtained_full_name}' does not match specified name '{person_name}'"
+                        )
+                        orcid = None
+                        res_institution = None
+                    break
+            else:
+                print(
+                    f"PROVENANCE | Searching ORCID for person '{person_name}'. No records where found"
+                )
+        else:
+            print(
+                f"PROVENANCE | Searching ORCID for person '{person_name}'. Request error {response.status_code}"
+            )
+        return orcid, res_institution, e_mail
+    except requests.exceptions.Timeout:
+        print(
+            f"PROVENANCE | Searching ORCID for person '{person_name}'. Request timeout"
+        )
+    except requests.exceptions.RequestException as e:
+        print(
+            f"PROVENANCE | Searching ORCID for person '{person_name}'. Request exception: {e}"
+        )
+    return orcid, res_institution, e_mail
+
+
+def search_by_orcid(orcid_str: str) -> (str, str, str):
+    """
+    Search at orcid.org the first ORCID matching the ORCID reference provided
+
+    :param orcid_str: ORCID of the person to search
+
+    :returns: Name, organisation and e-mail of the first record found
+    """
+
+    import json
+
+    if not orcid_str:
+        return None, None
+    # Get info from a specific ORCID
+    query_str = '"' + orcid_str.split("/")[-1] + '"'
+    url_base = "https://pub.orcid.org/v3.0/expanded-search"
+    # Request headers
+    headers = {"Accept": "application/json"}
+    # Search parameters
+    params = {"q": query_str, "rows": 1}
+
+    res_institution = None
+    obtained_full_name = None
+    e_mail = None
+    # Submit the GET request
+    try:
+        print(
+            f"PROVENANCE | PERSON '{orcid_str}': Searching Name, Organisation and e-Mail"
+        )
+        response = requests.get(url_base, headers=headers, params=params, timeout=5)
+        if response.status_code == 200:
+            list_of_results = response.json()
+            # import json
+            # print(json.dumps(list_of_results, indent=4, sort_keys=True))
+            if "expanded-result" in list_of_results:
+                for result in list_of_results["expanded-result"]:
+                    list_institutions = result.get("institution-name")
+                    res_institution = (
+                        list_institutions[0] if len(list_institutions) > 0 else None
+                    )
+                    obtained_full_name = (
+                        str(result.get("given-names"))
+                        + " "
+                        + str(result.get("family-names"))
+                    )
+                    list_emails = result.get("email")
+                    e_mail = list_emails[0] if list_emails else None
+                    print(
+                        f"PROVENANCE | Fetched data. Name: {obtained_full_name}, Organisation: {res_institution}, e-Mail: {e_mail}"
+                    )
+                    break
+            else:
+                print(
+                    f"PROVENANCE | Searching Name for ORCID '{orcid_str}'. No records where found"
+                )
+        else:
+            print(
+                f"PROVENANCE | Searching Name for ORCID '{orcid_str}'. Request error {response.status_code}"
+            )
+        return obtained_full_name, res_institution, e_mail
+    except requests.exceptions.Timeout:
+        print(f"PROVENANCE | Searching Name for ORCID '{orcid_str}'. Request timeout")
+    except requests.exceptions.RequestException as e:
+        print(
+            f"PROVENANCE | Searching Name for ORCID '{orcid_str}'. Request exception: {e}"
+        )
+    return obtained_full_name, res_institution, e_mail
+
+
+def search_ror(org_name: str) -> (str, str, str):
+    """
+    Search at ror.org the first ROR matching the institution's name
+
+    :param org_name: Name of the organisation to search
+
+    :returns: ROR, name and URL for the first record found
+    """
+
+    # ROR base URL API for searching
+    url_base = "https://api.ror.org/organizations"
+    # Search parameters
+    params = {"query": org_name}
+
+    if not org_name:
+        return None, None, None
+    obtained_ror = None
+    obtained_org_name = None
+    obtained_url = None
+    # Submit the GET request
+    try:
+        print(f"PROVENANCE | ORGANISATION '{org_name}': Searching ROR and URL")
+        response = requests.get(url_base, params=params, timeout=5)
+        if response.status_code == 200:
+            list_of_results = response.json()
+            # import json
+            # print(json.dumps(list_of_results, indent=4, sort_keys=True))
+            if "items" in list_of_results and list_of_results["items"]:
+                for result in list_of_results["items"]:
+                    obtained_ror = result.get("id")
+                    obtained_org_name = result.get("name")
+                    links = result.get("links")
+                    obtained_url = links[0] if links else None
+                    if obtained_org_name.lower() == org_name.lower():
+                        print(
+                            f"PROVENANCE | Fetched data. Organisation: {obtained_org_name}, ROR: {obtained_ror}, URL: {obtained_url}"
+                        )
+                    else:
+                        print(
+                            f"PROVENANCE | Fetched name '{obtained_org_name}' does not match specified name '{org_name}'"
+                        )
+                        obtained_ror = None
+                        obtained_org_name = None
+                        obtained_url = None
+                    break
+            else:
+                print(
+                    f"PROVENANCE | Searching ROR for organisation '{org_name}'. No records where found"
+                )
+        else:
+            print(
+                f"PROVENANCE | Searching ROR for organisation '{org_name}'. Request error {response.status_code}"
+            )
+        return obtained_ror, obtained_org_name, obtained_url
+    except requests.exceptions.Timeout:
+        print(
+            f"PROVENANCE | Searching ROR for organisation '{org_name}'. Request timeout"
+        )
+    except requests.exceptions.RequestException as e:
+        print(
+            f"PROVENANCE | Searching ROR for organisation '{org_name}'. Request exception: {e}"
+        )
+    return obtained_ror, obtained_org_name, obtained_url
+
+
+def search_by_ror(org_ror: str) -> (str, str):
+    """
+    Search at ror.org the first institution matching the ROR passed
+
+    :param org_ror: ROR of the organisation to search
+
+    :returns: Name and URL for the first record found
+    """
+
+    # ROR base URL API for searching
+    url_base = "https://api.ror.org/organizations"
+    # Search parameters
+    params = {"query": org_ror}
+
+    if not org_ror:
+        return None, None
+
+    obtained_org_name = None
+    obtained_url = None
+    # Submit the GET request
+    try:
+        print(f"PROVENANCE | ORGANISATION '{org_ror}': Searching for Name and URL")
+        response = requests.get(url_base, params=params, timeout=5)
+        if response.status_code == 200:
+            list_of_results = response.json()
+            # import json
+            # print(json.dumps(list_of_results, indent=4, sort_keys=True))
+            if "items" in list_of_results and list_of_results["items"]:
+                for result in list_of_results["items"]:
+                    obtained_ror = result.get("id")
+                    obtained_org_name = result.get("name")
+                    links = result.get("links")
+                    obtained_url = links[0] if links else None
+                    if obtained_ror == org_ror:
+                        print(
+                            f"PROVENANCE | Fetched data. Organisation: {obtained_org_name}, ROR: {obtained_ror}, URL: {obtained_url}"
+                        )
+                    else:
+                        print(
+                            f"PROVENANCE | Fetched ROR '{obtained_ror}' does not match specified name '{org_ror}'"
+                        )
+                        obtained_ror = None
+                        obtained_org_name = None
+                        obtained_url = None
+                    break
+            else:
+                print(
+                    f"PROVENANCE | Searching Name for organisation '{org_ror}'. No records where found"
+                )
+        else:
+            print(
+                f"PROVENANCE | Searching Name for organisation '{org_ror}'. Request error {response.status_code}"
+            )
+        return obtained_org_name, obtained_url
+    except requests.exceptions.Timeout:
+        print(
+            f"PROVENANCE | Searching Name for organisation '{org_ror}'. Request timeout"
+        )
+    except requests.exceptions.RequestException as e:
+        print(
+            f"PROVENANCE | Searching Name for organisation '{org_ror}'. Request exception: {e}"
+        )
+    return obtained_org_name, obtained_url

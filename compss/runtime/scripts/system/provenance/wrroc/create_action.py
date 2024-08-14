@@ -260,7 +260,28 @@ def wrroc_create_action(
         else:
             print(f"PROVENANCE | WARNING: 'Agent' in {info_yaml} wrongly defined")
 
-    if "Agent" not in yaml_content or not agent_added:
+    if not agent_added and "Submitter" in yaml_content:
+        # Make Submitter backwards compatible
+        print(
+            f"PROVENANCE | WARNING: deprecated term 'Submitter' used in {info_yaml}. Use 'Agent' instead"
+        )
+        if isinstance(yaml_content["Submitter"], list):
+            print(
+                f"PROVENANCE | WARNING: 'Submitter' in {info_yaml} can only be a single person. First item selected "
+                f"as the application submitter agent"
+            )
+            agent_entity = yaml_content["Submitter"][0]
+        else:
+            agent_entity = yaml_content["Submitter"]
+        if add_person_definition(compss_crate, "Agent", agent_entity, info_yaml):
+            agent = {"@id": agent_entity["orcid"]}
+            agent_added = True
+        else:
+            print(f"PROVENANCE | WARNING: 'Submitter' in {info_yaml} wrongly defined")
+
+    if (
+        "Agent" not in yaml_content and "Submitter" not in yaml_content
+    ) or not agent_added:
         # Choose first author, to avoid leaving it empty. May be true most of the times
         if author_list:
             agent = author_list[0]
