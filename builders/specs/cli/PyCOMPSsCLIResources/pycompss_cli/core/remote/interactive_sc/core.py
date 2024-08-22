@@ -213,7 +213,7 @@ def connect_job(scripts_path, job_id, login_info, modules, app_path, port_forwar
             elif line[0] == 'SERVER':
                 try:
                     server_out = ' '.join(line[1:])
-                    raw_token = re.search("token=\w*", server_out).group(0)
+                    raw_token = re.search(r"token=\w*", server_out).group(0)
                     token = raw_token.split('=')[1]
                 except AttributeError:
                     __display_error(ERROR_JUPYTER_SERVER)
